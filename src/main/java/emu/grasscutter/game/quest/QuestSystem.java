@@ -81,14 +81,18 @@ public class QuestSystem extends BaseGameSystem {
         return handler.execute(quest, condition, paramStr, params);
     }
 
-    public boolean triggerExec(GameQuest quest, QuestExecParam execParam, String... params) {
+    public void triggerExec(GameQuest quest, QuestExecParam execParam, String... params) {
         QuestExecHandler handler = execHandlers.get(execParam.getType().getValue());
 
         if (handler == null || quest.getQuestData() == null) {
             Grasscutter.getLogger().debug("Could not trigger exec {} at {}", execParam.getType().getValue(), quest.getQuestData());
-            return false;
+            return;
         }
 
-        return handler.execute(quest, execParam, params);
+        QuestManager.eventExecutor.submit(() -> {
+            if(!handler.execute(quest, execParam, params)){
+                Grasscutter.getLogger().debug("exec trigger failed {} at {}", execParam.getType().getValue(), quest.getQuestData());
+            }
+        });
     }
 }

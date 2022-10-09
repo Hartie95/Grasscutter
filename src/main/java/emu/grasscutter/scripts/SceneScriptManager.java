@@ -92,7 +92,7 @@ public class SceneScriptManager {
     }
 
     public Set<SceneTrigger> getTriggersByEvent(int eventId) {
-        return currentTriggers.computeIfAbsent(eventId, e -> new HashSet<>());
+        return currentTriggers.computeIfAbsent(eventId, e -> ConcurrentHashMap.newKeySet());
     }
     public int getTriggerCount() {
         return currentTriggers.size();
@@ -112,7 +112,7 @@ public class SceneScriptManager {
         Grasscutter.getLogger().debug("deregistered trigger {}", trigger.name);
     }
     public void resetTriggers(int eventId) {
-        currentTriggers.put(eventId, new HashSet<>());
+        currentTriggers.put(eventId, ConcurrentHashMap.newKeySet());
     }
 
     public void resetTriggersForGroupSuite(SceneGroup group, int suiteIndex) {
@@ -138,8 +138,9 @@ public class SceneScriptManager {
         if (!suite.sceneTriggers.isEmpty()) {
             groupSceneTriggers.addAll(suite.sceneTriggers);
             for (var trigger : groupSceneTriggers) {
-                this.currentTriggers.computeIfAbsent(trigger.event, k -> new HashSet<>())
-                    .add(trigger);
+                registerTrigger(trigger);
+                /*this.currentTriggers.computeIfAbsent(trigger.event, k -> ConcurrentHashMap.newKeySet())
+                    .add(trigger);*/
             }
         }
         triggersByGroupScene.put(group.id+"_"+suiteIndex, groupSceneTriggers);
@@ -379,7 +380,7 @@ public class SceneScriptManager {
                     .filter(p -> p.condition.contains(String.valueOf(params.param1)) &&
                         (p.source.isEmpty() || p.source.equals(params.getEventSource()))).toList();
                 relevantTriggers = new HashSet<>(relevantTriggersList);
-            } else {relevantTriggers =new HashSet<>(this.getTriggersByEvent(eventType));}
+            } else {relevantTriggers = new HashSet<>(this.getTriggersByEvent(eventType));}
             for (SceneTrigger trigger : relevantTriggers) {
                 handleEventForTrigger(eventType, params, trigger);
             }

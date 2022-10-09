@@ -302,7 +302,7 @@ public class World implements Iterable<Player> {
         player.sendPacket(new PacketPlayerEnterSceneNotify(player, enterType, enterReason, sceneId, teleportTo));
 
         if(teleportType != TeleportType.INTERNAL && teleportType != SCRIPT) {
-            player.getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_ANY_MANUAL_TRANSPORT);
+            player.getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_ANY_MANUAL_TRANSPORT);
         }
         return true;
     }

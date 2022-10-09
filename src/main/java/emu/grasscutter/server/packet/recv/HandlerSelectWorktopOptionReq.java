@@ -30,7 +30,7 @@ public class HandlerSelectWorktopOptionReq extends PacketHandler {
                     EventType.EVENT_SELECT_OPTION,
                     new ScriptArgs(entity.getConfigId(), req.getOptionId())
             );
-            session.getPlayer().getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_WORKTOP_SELECT, entity.getConfigId(), req.getOptionId());
+            session.getPlayer().getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_WORKTOP_SELECT, entity.getConfigId(), req.getOptionId());
         } finally {
             // Always send packet
             session.send(new PacketSelectWorktopOptionRsp(req.getGadgetEntityId(), req.getOptionId()));

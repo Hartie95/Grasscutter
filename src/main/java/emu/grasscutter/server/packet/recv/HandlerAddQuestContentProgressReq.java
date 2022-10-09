@@ -1,8 +1,6 @@
 package emu.grasscutter.server.packet.recv;
 
 import emu.grasscutter.data.GameData;
-import emu.grasscutter.data.excels.QuestData;
-import emu.grasscutter.game.quest.GameQuest;
 import emu.grasscutter.game.quest.enums.QuestTrigger;
 import emu.grasscutter.net.packet.Opcodes;
 import emu.grasscutter.net.packet.PacketHandler;
@@ -26,7 +24,7 @@ public class HandlerAddQuestContentProgressReq extends PacketHandler {
         Stream<QuestCondition> failCond = GameData.getQuestDataMap().get(req.getParam()).getFailCond().stream();
         List<QuestCondition> allCondMatch = Stream.concat(Stream.concat(acceptCond,failCond),finishCond).filter(p -> p.getType().getValue() == req.getContentType()).toList();
         for (QuestCondition cond : allCondMatch ) {
-            session.getPlayer().getQuestManager().triggerEvent(QuestTrigger.getContentTriggerByValue(req.getContentType()), cond.getParam());
+            session.getPlayer().getQuestManager().queueEvent(QuestTrigger.getContentTriggerByValue(req.getContentType()), cond.getParam());
         }
         session.send(new PacketAddQuestContentProgressRsp(req.getContentType()));
     }

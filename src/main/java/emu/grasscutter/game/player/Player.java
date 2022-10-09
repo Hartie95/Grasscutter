@@ -414,7 +414,7 @@ public class Player {
 
             // Handle open state unlocks from level-up.
             this.getProgressManager().tryUnlockOpenStates();
-            this.getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_PLAYER_LEVEL_UP, level);
+            this.getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_PLAYER_LEVEL_UP, level);
 
             return true;
         }
@@ -555,11 +555,11 @@ public class Player {
 
     public void onEnterRegion(SceneRegion region) {
         getQuestManager().forEachActiveQuest(quest -> {
-            if (quest.getTriggers().containsKey("ENTER_REGION_"+ String.valueOf(region.config_id))) {
+            if (quest.getTriggerData() != null && quest.getTriggers().containsKey("ENTER_REGION_"+ String.valueOf(region.config_id))) {
                 // If trigger hasn't been fired yet
                 if (!Boolean.TRUE.equals(quest.getTriggers().put("ENTER_REGION_"+ String.valueOf(region.config_id), true))) {
                     //getSession().send(new PacketServerCondMeetQuestListUpdateNotify());
-                    getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_TRIGGER_FIRE, quest.getTriggerData().get("ENTER_REGION_"+ String.valueOf(region.config_id)).getId(),0);
+                    getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_TRIGGER_FIRE, quest.getTriggerData().get("ENTER_REGION_"+ String.valueOf(region.config_id)).getId(),0);
                 }
             }
         });
@@ -572,7 +572,7 @@ public class Player {
                 // If trigger hasn't been fired yet
                 if (!Boolean.TRUE.equals(quest.getTriggers().put("LEAVE_REGION_"+ String.valueOf(region.config_id), true))) {
                     getSession().send(new PacketServerCondMeetQuestListUpdateNotify());
-                    getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_TRIGGER_FIRE, quest.getTriggerData().get("LEAVE_REGION_"+ String.valueOf(region.config_id)).getId(),0);
+                    getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_TRIGGER_FIRE, quest.getTriggerData().get("LEAVE_REGION_"+ String.valueOf(region.config_id)).getId(),0);
                 }
             }
         });
@@ -1125,13 +1125,13 @@ public class Player {
         // Load from db
         this.getAvatars().loadFromDatabase();
         this.getInventory().loadFromDatabase();
-        this.getAvatars().postLoad(); // Needs to be called after inventory is handled
 
         this.getFriendsList().loadFromDatabase();
         this.getMailHandler().loadFromDatabase();
         this.getQuestManager().loadFromDatabase();
 
         this.loadBattlePassManager();
+        this.getAvatars().postLoad(); // Needs to be called after inventory is handled
     }
 
     public void onPlayerBorn() {

@@ -864,12 +864,12 @@ public class InventorySystem extends BaseGameSystem {
             // Remove item from inventory since we used it
             player.getInventory().removeItem(useItem, used);
 
-            player.getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_USE_ITEM, itemData.getId());
+            player.getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_USE_ITEM, itemData.getId());
             return useItem;
         }
 
         if (useSuccess) {
-            player.getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_USE_ITEM, itemData.getId());
+            player.getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_USE_ITEM, itemData.getId());
             return useItem;
         }
 

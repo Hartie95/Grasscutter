@@ -12,6 +12,6 @@ public class ConditionActivityCond extends QuestBaseHandler {
 
     @Override
     public boolean execute(GameQuest quest, QuestData.QuestCondition condition, String paramStr, int... params) {
-        return quest.getOwner().getActivityManager().meetsCondition(params[0]);
+        return quest.getOwner().getActivityManager().meetsCondition(condition.getParam()[0]);
     }
 }

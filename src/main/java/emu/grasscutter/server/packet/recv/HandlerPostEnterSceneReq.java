@@ -13,9 +13,16 @@ public class HandlerPostEnterSceneReq extends PacketHandler {
 
     @Override
     public void handle(GameSession session, byte[] header, byte[] payload) throws Exception {
-        if (session.getPlayer().getScene().getSceneType() == SceneType.SCENE_ROOM) {
-            session.getPlayer().getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_ENTER_ROOM, session.getPlayer().getSceneId(),0);
+        var sceneId = session.getPlayer().getSceneId();
+        var questManager = session.getPlayer().getQuestManager();
+        switch (session.getPlayer().getScene().getSceneType()){
+            case SCENE_ROOM -> questManager.queueEvent(QuestTrigger.QUEST_CONTENT_ENTER_ROOM, sceneId,0);
+            case SCENE_WORLD -> {
+                questManager.queueEvent(QuestTrigger.QUEST_CONTENT_ENTER_MY_WORLD, sceneId);
+                questManager.queueEvent(QuestTrigger.QUEST_CONTENT_ENTER_MY_WORLD_SCENE, sceneId);
+            }
         }
+
 
         session.send(new PacketPostEnterSceneRsp(session.getPlayer()));
     }

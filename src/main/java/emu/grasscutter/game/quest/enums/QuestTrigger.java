@@ -86,6 +86,7 @@ public enum QuestTrigger {
 	QUEST_COND_NEW_HOMEWORLD_SHOP_ITEM (75), // missing, only Gadget groups
 	QUEST_COND_SCENE_POINT_UNLOCK (76), // missing, only NPC groups
 	QUEST_COND_SCENE_LEVEL_TAG_EQ (77), // missing
+	QUEST_COND_UNKNOWN (9999), // missing
 
 	QUEST_CONTENT_NONE (0),
 	QUEST_CONTENT_KILL_MONSTER (1), // currently unused
@@ -97,8 +98,8 @@ public enum QuestTrigger {
 	QUEST_CONTENT_CLEAR_GROUP_MONSTER (7), // missing, finish
 	QUEST_CONTENT_NOT_FINISH_PLOT (8), // missing triggers, fail
 	QUEST_CONTENT_ENTER_DUNGEON (9),
-	QUEST_CONTENT_ENTER_MY_WORLD (10), // missing, finish and fail
-	QUEST_CONTENT_FINISH_DUNGEON (11), // missing, finish
+	QUEST_CONTENT_ENTER_MY_WORLD (10),
+	QUEST_CONTENT_FINISH_DUNGEON (11),
 	QUEST_CONTENT_DESTROY_GADGET (12),
 	QUEST_CONTENT_OBTAIN_MATERIAL_WITH_SUBTYPE (13), // missing, finish
 	QUEST_CONTENT_NICK_NAME (14), // missing, currently unused
@@ -106,7 +107,7 @@ public enum QuestTrigger {
 	QUEST_CONTENT_SEAL_BATTLE_RESULT (16), // missing, currently unused
 	QUEST_CONTENT_ENTER_ROOM (17),
 	QUEST_CONTENT_GAME_TIME_TICK (18),
-	QUEST_CONTENT_FAIL_DUNGEON (19), // missing, fail
+	QUEST_CONTENT_FAIL_DUNGEON (19),
 	QUEST_CONTENT_LUA_NOTIFY (20),
 	QUEST_CONTENT_TEAM_DEAD (21), // missing, fail
 	QUEST_CONTENT_COMPLETE_ANY_TALK (22),

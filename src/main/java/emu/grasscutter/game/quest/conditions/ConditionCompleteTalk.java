@@ -20,7 +20,7 @@ public class ConditionCompleteTalk extends QuestBaseHandler {
             Grasscutter.getLogger().debug("Warning: mainQuest {} hasn't been started yet, or has no talks", condition.getParam()[0]/100);
             return false;
         }
-        MainQuestData.TalkData talkData = checkMainQuest.getTalks().get(Integer.valueOf(params[0]));
+        MainQuestData.TalkData talkData = checkMainQuest.getTalks().get(condition.getParam()[0]);
         return talkData != null || checkMainQuest.getChildQuestById(params[0]) != null;
     }
 

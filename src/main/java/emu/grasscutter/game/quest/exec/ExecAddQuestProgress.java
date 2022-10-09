@@ -17,7 +17,7 @@ public class ExecAddQuestProgress extends QuestExecHandler {
             .mapToInt(Integer::parseInt)
             .toArray();
 
-        quest.getOwner().getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_ADD_QUEST_PROGRESS, param);
+        quest.getOwner().getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_ADD_QUEST_PROGRESS, param);
 
         return true;
     }

@@ -1,6 +1,5 @@
 package emu.grasscutter.server.packet.send;
 
-import emu.grasscutter.Grasscutter;
 import emu.grasscutter.game.entity.EntityVehicle;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.entity.GameEntity;
@@ -34,7 +33,7 @@ public class PacketVehicleInteractRsp extends BasePacket {
 			switch(interactType){
 				case VEHICLE_INTERACT_TYPE_IN -> {
 					((EntityVehicle) vehicle).getVehicleMembers().add(vehicleMember);
-                    player.getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_ENTER_VEHICLE, ((EntityVehicle) vehicle).getGadgetId());
+                    player.getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_ENTER_VEHICLE, ((EntityVehicle) vehicle).getGadgetId());
 				}
 				case VEHICLE_INTERACT_TYPE_OUT -> {
 					((EntityVehicle) vehicle).getVehicleMembers().remove(vehicleMember);

@@ -195,7 +195,7 @@ public class DungeonManager {
     }
 
     public void startDungeon() {
-        scene.getPlayers().forEach(p-> p.getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_ENTER_DUNGEON, dungeonData.getId()));
+        scene.getPlayers().forEach(p-> p.getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_ENTER_DUNGEON, dungeonData.getId()));
     }
 
     public void finishDungeon() {
@@ -206,7 +206,7 @@ public class DungeonManager {
     public void notifyEndDungeon(boolean successfully){
         scene.getPlayers().forEach(p -> {
             // Quest trigger
-            p.getQuestManager().triggerEvent(successfully?
+            p.getQuestManager().queueEvent(successfully?
                 QuestTrigger.QUEST_CONTENT_FINISH_DUNGEON : QuestTrigger.QUEST_CONTENT_FAIL_DUNGEON,
                 dungeonData.getId());
 

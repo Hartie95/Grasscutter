@@ -98,7 +98,7 @@ public class Inventory extends BasePlayerManager implements Iterable<GameItem> {
 
         if (result != null) {
             getPlayer().getBattlePassManager().triggerMission(WatcherTriggerType.TRIGGER_OBTAIN_MATERIAL_NUM, result.getItemId(), result.getCount());
-            getPlayer().getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_OBTAIN_ITEM, result.getItemId(), result.getCount());
+            getPlayer().getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_OBTAIN_ITEM, result.getItemId(), result.getCount());
             getPlayer().sendPacket(new PacketStoreItemChangeNotify(result));
             return true;
         }
@@ -147,7 +147,7 @@ public class Inventory extends BasePlayerManager implements Iterable<GameItem> {
 
             if (result != null) {
                 getPlayer().getBattlePassManager().triggerMission(WatcherTriggerType.TRIGGER_OBTAIN_MATERIAL_NUM, result.getItemId(), result.getCount());
-                getPlayer().getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_OBTAIN_ITEM, result.getItemId(), result.getCount());
+                getPlayer().getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_OBTAIN_ITEM, result.getItemId(), result.getCount());
                 changedItems.add(result);
             }
         }
@@ -451,7 +451,7 @@ public class Inventory extends BasePlayerManager implements Iterable<GameItem> {
         // Battle pass trigger
         int removeCount = Math.min(count, item.getCount());
         getPlayer().getBattlePassManager().triggerMission(WatcherTriggerType.TRIGGER_COST_MATERIAL, item.getItemId(), removeCount);
-        getPlayer().getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_ITEM_LESS_THAN, item.getItemId(), item.getCount());
+        getPlayer().getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_ITEM_LESS_THAN, item.getItemId(), item.getCount());
 
         // Update in db
         item.save();

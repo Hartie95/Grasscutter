@@ -198,7 +198,7 @@ public final class AbilityManager extends BasePlayerManager {
     private void handleGlobalFloatValue(AbilityInvokeEntry invoke) throws InvalidProtocolBufferException {
         AbilityScalarValueEntry entry = AbilityScalarValueEntry.parseFrom(invoke.getAbilityData());
         if(entry.getKey().hasStr() && entry.getKey().getStr().equals("_ABILITY_UziExplode_Count") && entry.hasFloatValue() && entry.getFloatValue() == 2.0f){
-            player.getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_SKILL, 10006);
+            player.getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_SKILL, 10006);
         }
     }
 

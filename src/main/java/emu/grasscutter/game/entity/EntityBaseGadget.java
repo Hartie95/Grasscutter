@@ -20,7 +20,7 @@ public abstract class EntityBaseGadget extends GameEntity {
     public void onDeath(int killerId) {
         super.onDeath(killerId); // Invoke super class's onDeath() method.
 
-        getScene().getPlayers().forEach(p -> p.getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_DESTROY_GADGET, this.getGadgetId()));
+        getScene().getPlayers().forEach(p -> p.getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_DESTROY_GADGET, this.getGadgetId()));
     }
 
     @Override

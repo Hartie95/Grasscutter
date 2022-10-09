@@ -13,8 +13,8 @@ public class ConditionQuestGlobalVarEqual extends QuestBaseHandler {
 
     @Override
     public boolean execute(GameQuest quest, QuestData.QuestCondition condition, String paramStr, int... params) {
-        Integer questGlobalVarValue = quest.getMainQuest().getQuestManager().getQuestGlobalVarValue(Integer.valueOf(params[0]));
-        Grasscutter.getLogger().debug("questGlobarVar {} : {}", params[0],questGlobalVarValue);
-        return questGlobalVarValue.intValue() == params[1];
+        Integer questGlobalVarValue = quest.getMainQuest().getQuestManager().getQuestGlobalVarValue(condition.getParam()[0]);
+        Grasscutter.getLogger().debug("questGlobarVar {} : {}", condition.getParam()[0],questGlobalVarValue);
+        return questGlobalVarValue == condition.getParam()[1];
     }
 }

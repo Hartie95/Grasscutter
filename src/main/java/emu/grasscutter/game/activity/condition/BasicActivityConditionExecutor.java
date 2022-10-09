@@ -57,6 +57,9 @@ public class BasicActivityConditionExecutor implements ActivityConditionExecutor
         }
 
         PlayerActivityData activity = playerActivityDataByActivityCondId.get(activityCondId);
+        if(activity==null){
+            return false;
+        }
         ActivityConfigItem activityConfig = activityConfigItemMap.get(activity.getActivityId());
         List<BooleanSupplier> predicates = condData.getCond()
             .stream()

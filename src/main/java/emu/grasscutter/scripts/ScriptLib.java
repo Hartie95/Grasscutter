@@ -11,15 +11,10 @@ import emu.grasscutter.game.props.EntityType;
 import emu.grasscutter.game.quest.enums.QuestState;
 import emu.grasscutter.game.quest.enums.QuestTrigger;
 import emu.grasscutter.net.proto.EnterTypeOuterClass;
-import emu.grasscutter.net.proto.EntityMoveInfoOuterClass;
-import emu.grasscutter.net.proto.MotionInfoOuterClass;
-import emu.grasscutter.net.proto.SceneEntityMoveNotifyOuterClass;
 import emu.grasscutter.scripts.constants.GroupKillPolicy;
-import emu.grasscutter.scripts.data.SceneGadget;
 import emu.grasscutter.scripts.data.SceneGroup;
 import emu.grasscutter.scripts.data.SceneObject;
 import emu.grasscutter.scripts.data.ScriptArgs;
-import emu.grasscutter.server.event.player.PlayerTeleportEvent;
 import emu.grasscutter.server.packet.send.*;
 import emu.grasscutter.utils.Position;
 import io.netty.util.concurrent.FastThreadLocal;
@@ -565,6 +560,10 @@ public class ScriptLib {
     private GameEntity createGadget(int configId, SceneGroup group){
         var gadget = group.gadgets.get(configId);
         var entity = getSceneScriptManager().createGadget(group.id, group.block_id, gadget);
+        if(entity==null){
+            logger.warn("[LUA] Create gadget null with cid: {} gid: {} bid: {}", configId, group.id, group.block_id);
+            return null;
+        }
 
         getSceneScriptManager().addEntity(entity);
         return entity;
@@ -611,8 +610,8 @@ public class ScriptLib {
 				var1);
 
         for(var player : getSceneScriptManager().getScene().getPlayers()){
-            player.getQuestManager().triggerEvent(QuestTrigger.QUEST_COND_LUA_NOTIFY, var1);
-            player.getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_LUA_NOTIFY, var1);
+            player.getQuestManager().queueEvent(QuestTrigger.QUEST_COND_LUA_NOTIFY, var1);
+            player.getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_LUA_NOTIFY, var1);
         }
 
 		return 0;
