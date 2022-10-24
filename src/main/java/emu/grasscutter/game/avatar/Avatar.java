@@ -148,14 +148,7 @@ public class Avatar {
             .forEach(id -> this.setFightProperty(id, 0f));
 
         // Skill depot
-        this.setSkillDepotData(switch (this.avatarId) {
-            case GameConstants.MAIN_CHARACTER_MALE ->
-                GameData.getAvatarSkillDepotDataMap().get(504);  // Hack to start with anemo skills
-            case GameConstants.MAIN_CHARACTER_FEMALE ->
-                GameData.getAvatarSkillDepotDataMap().get(704);
-            default ->
-                data.getSkillDepot();
-        });
+        this.setSkillDepotData(data.getSkillDepot());
 
         // Set stats
         this.recalcStats();
