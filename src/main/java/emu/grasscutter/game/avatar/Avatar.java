@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.Set;
 
+
 import org.bson.types.ObjectId;
 
 import dev.morphia.annotations.Entity;
@@ -20,11 +21,13 @@ import dev.morphia.annotations.PostLoad;
 import dev.morphia.annotations.PrePersist;
 import dev.morphia.annotations.Transient;
 import emu.grasscutter.GameConstants;
+import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.OpenConfigEntry;
 import emu.grasscutter.data.binout.OpenConfigEntry.SkillPointModifier;
 import emu.grasscutter.data.common.FightPropData;
 import emu.grasscutter.data.excels.AvatarData;
+import emu.grasscutter.data.excels.AvatarCostumeData;
 import emu.grasscutter.data.excels.AvatarPromoteData;
 import emu.grasscutter.data.excels.AvatarSkillData;
 import emu.grasscutter.data.excels.AvatarSkillDepotData;
@@ -35,6 +38,9 @@ import emu.grasscutter.data.excels.ReliquaryAffixData;
 import emu.grasscutter.data.excels.ReliquaryLevelData;
 import emu.grasscutter.data.excels.ReliquaryMainPropData;
 import emu.grasscutter.data.excels.ReliquarySetData;
+import emu.grasscutter.data.excels.TrialAvatarData;
+import emu.grasscutter.data.excels.TrialAvatarTemplateData;
+import emu.grasscutter.data.excels.TrialReliquaryData;
 import emu.grasscutter.data.excels.WeaponCurveData;
 import emu.grasscutter.data.excels.WeaponPromoteData;
 import emu.grasscutter.data.excels.AvatarSkillDepotData.InherentProudSkillOpens;
@@ -53,10 +59,16 @@ import emu.grasscutter.game.props.PlayerProperty;
 import emu.grasscutter.net.proto.AvatarFetterInfoOuterClass.AvatarFetterInfo;
 import emu.grasscutter.net.proto.AvatarInfoOuterClass.AvatarInfo;
 import emu.grasscutter.net.proto.AvatarSkillInfoOuterClass.AvatarSkillInfo;
+import emu.grasscutter.net.proto.EquipOuterClass.Equip;
 import emu.grasscutter.net.proto.FetterDataOuterClass.FetterData;
+import emu.grasscutter.net.proto.ItemOuterClass.Item;
+import emu.grasscutter.net.proto.ReliquaryOuterClass.Reliquary;
 import emu.grasscutter.net.proto.ShowAvatarInfoOuterClass;
 import emu.grasscutter.net.proto.ShowAvatarInfoOuterClass.ShowAvatarInfo;
 import emu.grasscutter.net.proto.ShowEquipOuterClass.ShowEquip;
+import emu.grasscutter.net.proto.TrialAvatarInfoOuterClass.TrialAvatarInfo;
+import emu.grasscutter.net.proto.TrialAvatarGrantRecordOuterClass.TrialAvatarGrantRecord;
+import emu.grasscutter.net.proto.WeaponOuterClass.Weapon;
 import emu.grasscutter.server.packet.send.*;
 import emu.grasscutter.utils.ProtoHelper;
 import it.unimi.dsi.fastutil.ints.Int2FloatOpenHashMap;
@@ -111,6 +123,12 @@ public class Avatar {
 
     @Getter @Setter private int nameCardRewardId;
     @Getter @Setter private int nameCardId;
+
+    // trial avatar property
+    @Getter @Setter private int trialAvatarId = 0;
+    @Getter @Setter private int grantReason = 0;
+    @Getter @Setter private int fromParentQuestId = 0;
+    @Getter @Setter private int avatarType = 1;
 
     @Deprecated // Do not use. Morhpia only!
     public Avatar() {
@@ -180,6 +198,12 @@ public class Avatar {
         this.owner = player;
         this.ownerId = player.getUid();
         this.guid = player.getNextGameGuid();
+    }
+
+    public void removeOwner() {
+        this.owner = null;
+        this.ownerId = 0;
+        this.guid = 0;
     }
 
     static public int getMinPromoteLevel(int level) {
@@ -345,7 +369,6 @@ public class Avatar {
         if (itemEquipType == EquipType.EQUIP_NONE) {
             return false;
         }
-
         // Check if other avatars have this item equipped
         Avatar otherAvatar = getPlayer().getAvatars().getAvatarById(item.getEquipCharacter());
         if (otherAvatar != null) {
@@ -364,25 +387,20 @@ public class Avatar {
             // Unequip item in current slot if it exists
             unequipItem(itemEquipType);
         }
-
         // Set equip
         getEquips().put(itemEquipType.getValue(), item);
-
         if (itemEquipType == EquipType.EQUIP_WEAPON && getPlayer().getWorld() != null) {
             item.setWeaponEntityId(this.getPlayer().getWorld().getNextEntityId(EntityIdType.WEAPON));
         }
-
         item.setEquipCharacter(this.getAvatarId());
         item.save();
 
         if (this.getPlayer().hasSentLoginPackets()) {
             this.getPlayer().sendPacket(new PacketAvatarEquipChangeNotify(this, item));
         }
-
         if (shouldRecalc) {
             this.recalcStats();
         }
-
         return true;
     }
 
@@ -855,11 +873,9 @@ public class Avatar {
         int fetterLevel = this.getFetterLevel();
         AvatarFetterInfo.Builder avatarFetter = AvatarFetterInfo.newBuilder()
                 .setExpLevel(fetterLevel);
-
         if (fetterLevel != 10) {
             avatarFetter.setExpNumber(this.getFetterExp());
         }
-
 
         if (this.fetters != null) {
             this.fetters.forEach(fetterId -> avatarFetter.addFetterList(
@@ -867,13 +883,10 @@ public class Avatar {
                     .setFetterId(fetterId)
                     .setFetterState(FetterState.FINISH.getValue())));
         }
-
         int cardId = this.getNameCardId();
-
-        if (this.getPlayer().getNameCardList().contains(cardId)) {
-            avatarFetter.addRewardedFetterLevelList(10);
-        }
-
+        // if (this.getPlayer().getNameCardList().contains(cardId)) {
+        //     avatarFetter.addRewardedFetterLevelList(10);
+        // }
         AvatarInfo.Builder avatarInfo = AvatarInfo.newBuilder()
                 .setAvatarId(this.getAvatarId())
                 .setGuid(this.getGuid())
@@ -885,11 +898,15 @@ public class Avatar {
                 .putAllSkillLevelMap(this.getSkillLevelMap())
                 .addAllInherentProudSkillList(this.getProudSkillList())
                 .putAllProudSkillExtraLevelMap(getProudSkillBonusMap())
-                .setAvatarType(1)
+                .setAvatarType(this.getAvatarType())
                 .setBornTime(this.getBornTime())
-                .setFetterInfo(avatarFetter)
                 .setWearingFlycloakId(this.getFlyCloak())
-                .setCostumeId(this.getCostume());
+                .setCostumeId(this.getCostume())
+                .setIsFocus(false);
+
+        if (this.getAvatarType() == 1){
+            avatarInfo.setFetterInfo(avatarFetter);
+        }
 
         this.getSkillExtraChargeMap().forEach((skillId, count) ->
             avatarInfo.putSkillMap(skillId, AvatarSkillInfo.newBuilder().setMaxChargeCount(count).build()));
@@ -902,6 +919,7 @@ public class Avatar {
         avatarInfo.putPropMap(PlayerProperty.PROP_SATIATION_VAL.getId(), ProtoHelper.newPropValue(PlayerProperty.PROP_SATIATION_VAL, 0));
         avatarInfo.putPropMap(PlayerProperty.PROP_SATIATION_PENALTY_TIME.getId(), ProtoHelper.newPropValue(PlayerProperty.PROP_SATIATION_PENALTY_TIME, 0));
 
+        avatarInfo.setTrialAvatarInfo(trialAvatarInfoProto());
         return avatarInfo.build();
     }
 
@@ -943,6 +961,96 @@ public class Avatar {
         }
 
         return showAvatarInfo.build();
+    }
+
+    public void setTrialAvatarInfo(TrialAvatarData trialAvatar, int grantReason, int fromParentQuestId){
+        int avatarLevel = trialAvatar.getTrialAvatarParamList().get(1);
+        this.setLevel(avatarLevel);
+        this.setTrialItems(avatarLevel);
+        this.setTrialAvatarId(trialAvatar.getTrialAvatarId());
+        this.setGrantReason(grantReason);
+        this.setFromParentQuestId(fromParentQuestId);
+        this.setAvatarType(2);
+    }
+
+    public void setTrialItems(int trialAvatarLevel){
+        //add trial weapon
+        GameItem weapon = weapon = new GameItem(getAvatarData().getInitialWeapon()+100);
+        if (weapon.getItemData() == null){
+            weapon = new GameItem(getAvatarData().getInitialWeapon());
+        }
+        weapon.setLevel(trialAvatarLevel);
+        weapon.setExp(0);
+        weapon.setPromoteLevel(0);
+        getEquips().put(weapon.getEquipSlot(), weapon);
+
+        int trialAvatarTemplateLevel = 1;
+        if (trialAvatarLevel > 9){
+            // round trial level to fit template levels
+            trialAvatarTemplateLevel = (int) (Math.floor(trialAvatarLevel / 10) * 10); 
+        }
+        TrialAvatarTemplateData templateData = GameData.getTrialAvatarTemplateDataMap().get(trialAvatarTemplateLevel);
+        if (templateData == null){
+            return;
+        }
+
+        // add trial artifacts
+        for (int id : templateData.getTrialReliquaryList()){
+            TrialReliquaryData reliquaryData = GameData.getTrialReliquaryDataMap().get(id);
+            if (reliquaryData == null){
+                continue;
+            }
+            GameItem relic = new GameItem(reliquaryData.getReliquaryId());
+            relic.setLevel(reliquaryData.getLevel());
+            relic.setMainPropId(reliquaryData.getMainPropId());
+            List<Integer> appendPropList = reliquaryData.getAppendPropList();
+            if (appendPropList.size() > 0){
+                for (Integer trialAppendProp : appendPropList){
+                    relic.getAppendPropIdList().add(trialAppendProp);
+                }
+            }
+            getEquips().put(relic.getEquipSlot(), relic);
+        }
+
+        // add costume if any (ambor, rosiaria, mona)
+        for (Map.Entry<Integer, AvatarCostumeData> costumeData : GameData.getAvatarCostumeDataItemIdMap().entrySet()){
+            if (costumeData.getValue().getCharacterId() == this.getAvatarId()){
+                this.setCostume(costumeData.getValue().getId());
+                break;
+            }
+        }
+    }
+
+    public void equipTrialItems(){
+        getEquips().forEach((itemEquipTypeValues, item) -> {
+            item.setEquipCharacter(getAvatarId());
+            item.setOwner(getPlayer());
+            if (item.getItemData().getEquipType() == EquipType.EQUIP_WEAPON && getPlayer().getWorld() != null) {
+                item.setWeaponEntityId(this.getPlayer().getWorld().getNextEntityId(EntityIdType.WEAPON));
+                if (this.getPlayer().hasSentLoginPackets()) {
+                    this.getPlayer().sendPacket(new PacketAvatarEquipChangeNotify(this, item));
+                }
+            }  
+        });
+    }
+
+    public TrialAvatarInfo trialAvatarInfoProto(){
+        TrialAvatarInfo.Builder trialAvatar = TrialAvatarInfo.newBuilder()
+            .setTrialAvatarId(this.getTrialAvatarId())
+            .setGrantRecord(TrialAvatarGrantRecord.newBuilder()
+                .setGrantReason(this.getGrantReason())
+                .setFromParentQuestId(this.getFromParentQuestId()));
+        if (this.getTrialAvatarId() > 0){
+            // add artifacts or wepon for trial character
+            int itemCount = 0;
+            for (GameItem item : this.getEquips().values()) {
+                trialAvatar.addTrialEquipList(itemCount, item.toProto());
+                itemCount++;
+            }
+            
+        }
+
+        return trialAvatar.build();
     }
 
     @PostLoad

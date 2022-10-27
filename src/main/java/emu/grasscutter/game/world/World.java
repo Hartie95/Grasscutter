@@ -255,11 +255,11 @@ public class World implements Iterable<Player> {
         Scene newScene = this.getSceneById(sceneId);
         newScene.addPlayer(player);
 
-        // Dungeon
-        if(dungeonData!=null){
-            var dungeonManager = new DungeonManager(newScene, dungeonData);
-            dungeonManager.startDungeon();
-        }
+        // Dungeon TODO dungeon system already handling this, check if synchronised trigger is needed
+        // if(dungeonData!=null){
+        //     var dungeonManager = new DungeonManager(newScene, dungeonData);
+        //     dungeonManager.startDungeon();
+        // }
         SceneConfig config = newScene.getScriptManager().getConfig();
         if (teleportTo == null && config != null) {
             if (config.born_pos != null) {
