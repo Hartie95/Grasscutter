@@ -35,6 +35,7 @@ public class QuestData extends GameResource {
     private List<QuestExecParam> beginExec;
     private List<QuestExecParam> finishExec;
     private List<QuestExecParam> failExec;
+    private List<Integer> trialAvatarList;
     private Guide guide;
 
     //ResourceLoader not happy if you remove getId() ~~
@@ -86,6 +87,10 @@ public class QuestData extends GameResource {
 
     public List<QuestCondition> getFailCond() {
         return failCond;
+    }
+
+    public List<Integer> getTrialAvatarList(){
+        return trialAvatarList;
     }
 
     public void onLoad() {

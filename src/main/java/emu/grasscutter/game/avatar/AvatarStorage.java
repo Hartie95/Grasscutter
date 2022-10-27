@@ -3,15 +3,20 @@ package emu.grasscutter.game.avatar;
 import java.util.Iterator;
 import java.util.List;
 
+import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.AvatarData;
 import emu.grasscutter.data.excels.AvatarSkillDepotData;
+import emu.grasscutter.data.excels.TrialAvatarData;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.entity.EntityAvatar;
+import emu.grasscutter.game.inventory.EquipType;
 import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.player.BasePlayerManager;
 import emu.grasscutter.game.player.Player;
+import emu.grasscutter.game.props.EntityIdType;
 import emu.grasscutter.server.packet.send.PacketAvatarChangeCostumeNotify;
+import emu.grasscutter.server.packet.send.PacketAvatarEquipChangeNotify;
 import emu.grasscutter.server.packet.send.PacketAvatarFlycloakChangeNotify;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -48,22 +53,69 @@ public class AvatarStorage extends BasePlayerManager implements Iterable<Avatar>
         return getAvatars().containsKey(id);
     }
 
-    public boolean addAvatar(Avatar avatar) {
-        if (avatar.getAvatarData() == null || this.hasAvatar(avatar.getAvatarId())) {
-            return false;
-        }
-
+    public void addAvatarToPlayer(Avatar avatar) {
         // Set owner first
         avatar.setOwner(getPlayer());
 
         // Put into maps
         this.avatars.put(avatar.getAvatarId(), avatar);
         this.avatarsGuid.put(avatar.getGuid(), avatar);
+    }
 
+    public void removeAvatarFromPlayer(Avatar avatar){
+        // remove from maps
+        this.avatars.remove(avatar.getAvatarId());
+        this.avatarsGuid.remove(avatar.getGuid());
+        avatar.removeOwner();
+    }
+
+    public boolean addAvatar(Avatar avatar) {
+        if (avatar.getAvatarData() == null || this.hasAvatar(avatar.getAvatarId())) {
+            return false;
+        }
+        addAvatarToPlayer(avatar);
         avatar.save();
-
         return true;
     }
+
+    public void addTrialItems(Avatar avatar) {
+        // Make sure avatar owner is this player
+        if (avatar.getPlayer() != this.getPlayer()) {
+            return;
+        }
+
+        avatar.equipTrialItems();
+    }
+
+    public Avatar addTrialAvatar(int trialAvatarId, int questMainId){
+        TrialAvatarData trialAvatar = GameData.getTrialAvatarDataMap().get(trialAvatarId);
+        Avatar avatar = new Avatar(trialAvatar.getTrialAvatarParamList().get(0));
+        if (avatar.getAvatarData() == null) {
+            return null;
+        }
+        avatar.setTrialAvatarInfo(trialAvatar, 1, questMainId);
+        // Add trial weapons and relics
+        addAvatarToPlayer(avatar);
+        addTrialItems(avatar);
+        // Recalc stats
+        avatar.recalcStats();
+        return avatar;
+    }
+
+    public boolean removeTrialAvatar(int trialAvatarId){
+        Avatar avatarToRemove = null;
+        for (Avatar avatarInPlayer : getAvatars().values()){
+            if (avatarInPlayer.getTrialAvatarId() == trialAvatarId){
+                avatarToRemove = avatarInPlayer;
+            }
+        }
+        if (avatarToRemove == null) {
+            return false;
+        }
+        removeAvatarFromPlayer(avatarToRemove);
+        return true;
+    }
+
 
     public void addStartingWeapon(Avatar avatar) {
         // Make sure avatar owner is this player

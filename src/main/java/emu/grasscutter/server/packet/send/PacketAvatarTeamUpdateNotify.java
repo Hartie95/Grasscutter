@@ -1,7 +1,9 @@
 package emu.grasscutter.server.packet.send;
 
 import java.util.Map.Entry;
+import java.util.ArrayList;
 
+import emu.grasscutter.Grasscutter;
 import emu.grasscutter.game.avatar.Avatar;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.player.TeamInfo;
@@ -16,12 +18,23 @@ public class PacketAvatarTeamUpdateNotify extends BasePacket {
         super(PacketOpcodes.AvatarTeamUpdateNotify);
 
         AvatarTeamUpdateNotify.Builder proto = AvatarTeamUpdateNotify.newBuilder();
-
-        for (Entry<Integer, TeamInfo> entry : player.getTeamManager().getTeams().entrySet()) {
-            TeamInfo teamInfo = entry.getValue();
-            proto.putAvatarTeamMap(entry.getKey(), teamInfo.toProto(player));
+        boolean useTempTeams = false;
+        var tempAvatarGuidList = player.getTeamManager().getTrialTeamGuid();
+        if (tempAvatarGuidList != null){
+            proto.addAllTempAvatarGuidList(new ArrayList<Long>(tempAvatarGuidList.values()));
+            useTempTeams = true;
         }
-
+        if (!useTempTeams){
+            for (Entry<Integer, TeamInfo> entry : player.getTeamManager().getTeams().entrySet()) {
+                TeamInfo teamInfo = entry.getValue();
+                proto.putAvatarTeamMap(entry.getKey(), teamInfo.toProto(player));
+            }
+        }
         this.setData(proto);
+    }
+
+    public PacketAvatarTeamUpdateNotify() {
+        super(PacketOpcodes.AvatarTeamUpdateNotify);
+        this.setData(AvatarTeamUpdateNotify.newBuilder().build());
     }
 }

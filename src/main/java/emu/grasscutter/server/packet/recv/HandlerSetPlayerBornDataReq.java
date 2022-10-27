@@ -32,9 +32,9 @@ public class HandlerSetPlayerBornDataReq extends PacketHandler {
         int avatarId = req.getAvatarId();
         int startingSkillDepot;
         if (avatarId == GameConstants.MAIN_CHARACTER_MALE) {
-            startingSkillDepot = 504;
+            startingSkillDepot = 501;
         } else if (avatarId == GameConstants.MAIN_CHARACTER_FEMALE) {
-            startingSkillDepot = 704;
+            startingSkillDepot = 701;
         } else {
             return;
         }

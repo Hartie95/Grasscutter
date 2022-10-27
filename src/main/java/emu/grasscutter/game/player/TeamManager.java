@@ -5,6 +5,7 @@ import static emu.grasscutter.config.Configuration.*;
 import java.util.*;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Transient;
+import emu.grasscutter.Grasscutter;
 import emu.grasscutter.GameConstants;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.AvatarSkillDepotData;
@@ -62,7 +63,8 @@ public class TeamManager extends BasePlayerDataManager {
     @Transient @Getter private final IntSet teamResonancesConfig;
 
     @Transient private int useTemporarilyTeamIndex = -1;
-    @Transient private List<TeamInfo> temporaryTeam; // Temporary Team for tower
+    @Transient private List<TeamInfo> temporaryTeam; // Temporary Team for tower=
+    @Transient @Getter private Map<Integer, Long> trialTeamGuid; // Trial Teams
 
     public TeamManager() {
         this.mpTeam = new TeamInfo();
@@ -288,21 +290,37 @@ public class TeamManager extends BasePlayerDataManager {
         }
     }
 
+    public void updateTeamProperties(EntityAvatar currentEntity){
+        // Update team resonances
+        this.updateTeamResonances();
+
+        // Packets
+        this.getPlayer().getWorld().broadcastPacket(new PacketSceneTeamUpdateNotify(this.getPlayer()));
+
+        // Skill charges packet - Yes, this is official server behavior as of 2.6.0
+        this.getActiveTeam().stream().map(EntityAvatar::getAvatar).forEach(Avatar::sendSkillExtraChargeMap);
+
+
+        // Check if character changed
+        if (currentEntity != this.getCurrentAvatarEntity()) {
+            // Remove and Add
+            this.getPlayer().getScene().replaceEntity(currentEntity, this.getCurrentAvatarEntity());
+        }
+    }
+
     public void updateTeamEntities(BasePacket responsePacket) {
         // Sanity check - Should never happen
         if (this.getCurrentTeamInfo().getAvatars().size() <= 0) {
             return;
         }
-
         // If current team has changed
         EntityAvatar currentEntity = this.getCurrentAvatarEntity();
         Int2ObjectMap<EntityAvatar> existingAvatars = new Int2ObjectOpenHashMap<>();
-        int prevSelectedAvatarIndex = -1;
-
         for (EntityAvatar entity : this.getActiveTeam()) {
             existingAvatars.put(entity.getAvatar().getAvatarId(), entity);
         }
-
+        int prevSelectedAvatarIndex = -1;
+        
         // Clear active team entity list
         this.getActiveTeam().clear();
 
@@ -336,26 +354,13 @@ public class TeamManager extends BasePlayerDataManager {
             prevSelectedAvatarIndex = Math.min(this.currentCharacterIndex, this.getActiveTeam().size() - 1);
         }
         this.currentCharacterIndex = prevSelectedAvatarIndex;
-
-        // Update team resonances
-        this.updateTeamResonances();
-
-        // Packets
-        this.getPlayer().getWorld().broadcastPacket(new PacketSceneTeamUpdateNotify(this.getPlayer()));
-
-        // Skill charges packet - Yes, this is official server behavior as of 2.6.0
-        this.getActiveTeam().stream().map(EntityAvatar::getAvatar).forEach(Avatar::sendSkillExtraChargeMap);
-
+        
+        updateTeamProperties(currentEntity);
+        
         // Run callback
         if (responsePacket != null) {
             this.getPlayer().sendPacket(responsePacket);
-        }
-
-        // Check if character changed
-        if (currentEntity != this.getCurrentAvatarEntity()) {
-            // Remove and Add
-            this.getPlayer().getScene().replaceEntity(currentEntity, this.getCurrentAvatarEntity());
-        }
+        }        
     }
 
     public synchronized void setupAvatarTeam(int teamId, List<Long> list) {
@@ -408,6 +413,39 @@ public class TeamManager extends BasePlayerDataManager {
         // Clear current team info and add avatars from our new team
         teamInfo.getAvatars().clear();
         this.addAvatarsToTeam(teamInfo, newTeam);
+    }
+
+    public void addAvatarToTrialTeam(Avatar avatar){
+        // Set team data
+        if (this.trialTeamGuid == null){
+            this.trialTeamGuid = new HashMap<>();
+        }
+        this.getTrialTeamGuid().put(avatar.getAvatarId(), avatar.getGuid());
+
+        EntityAvatar currentEntity = this.getCurrentAvatarEntity();
+        EntityAvatar newEntity = new EntityAvatar(this.getPlayer().getScene(), avatar);
+        int index;
+        boolean isInTeam = false;
+        // replace avatar with trial avatar if in team already
+        for (index = 0; index < this.getActiveTeam().size(); index++){
+            EntityAvatar activeEntity = this.getActiveTeam().get(index);
+            if (activeEntity.getAvatar().getAvatarId() == avatar.getAvatarId()){
+                isInTeam = true;
+                this.getActiveTeam().set(index, newEntity);
+                break;
+            }
+        }
+        if (!isInTeam){
+            this.getActiveTeam().add(newEntity);
+        }
+        this.currentCharacterIndex = index;
+        this.updateTeamProperties(currentEntity);
+    }
+
+    public void resetTrialTeam(){
+        // Set team data
+        this.getTrialTeamGuid().clear();
+        this.updateTeamEntities(null);
     }
 
     public void setupTemporaryTeam(List<List<Long>> guidList) {

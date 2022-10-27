@@ -68,6 +68,7 @@ import emu.grasscutter.utils.DateHelper;
 import emu.grasscutter.utils.Position;
 import emu.grasscutter.utils.MessageHandler;
 import emu.grasscutter.utils.Utils;
+import org.sorapointa.proto.AvatarDelNotifyOuterClass.AvatarDelNotify;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.Getter;
@@ -189,6 +190,7 @@ public class Player {
     @Getter @Setter private int nextResinRefresh;
     @Getter @Setter private int lastDailyReset;
     @Getter private transient MpSettingType mpSetting = MpSettingType.MP_SETTING_TYPE_ENTER_AFTER_APPLY;  // TODO
+
 
     @Deprecated
     @SuppressWarnings({"rawtypes", "unchecked"}) // Morphia only!
@@ -779,6 +781,38 @@ public class Player {
         addAvatar(avatar, true);
     }
 
+    public boolean addTrialAvatar(int trialAvatarId, int questMainId){
+        Avatar avatar = getAvatars().addTrialAvatar(trialAvatarId, questMainId);
+
+        if (avatar == null || !hasSentLoginPackets()) {
+            return false;
+        }
+        try{
+            // Packet, mimic official server behaviour, add to player's bag but not saving to db
+            sendPacket(new PacketAvatarAddNotify(avatar, false));
+            // add to avatar to temporary trial team
+            this.getTeamManager().addAvatarToTrialTeam(avatar);
+            // Packet, mimic official server behaviour, temporarily put trial avatar in active team   
+            sendPacket(new PacketAvatarTeamUpdateNotify(this));
+        } catch (Exception e){
+            Grasscutter.getLogger().info("From trial avatar {}", trialAvatarId, e);
+        }
+        return true;
+    }
+
+    public boolean removeTrialAvatar(int trialAvatarId){
+        boolean result = getAvatars().removeTrialAvatar(trialAvatarId);
+        if (!result || !hasSentLoginPackets()) {
+            return false;
+        }
+        // Packet, mimic official server behaviour, remove from player's bag
+        sendPacket(new PacketAvatarDelNotify(new ArrayList<Long>(this.getTeamManager().getTrialTeamGuid().values())));
+        // Reset trial team properties
+        this.getTeamManager().resetTrialTeam();
+        // Packet, mimic official server behaviour, clear current active team 
+        sendPacket(new PacketAvatarTeamUpdateNotify());
+        return true;
+    }
     public void addFlycloak(int flycloakId) {
         this.getFlyCloakList().add(flycloakId);
         this.sendPacket(new PacketAvatarGainFlycloakNotify(flycloakId));

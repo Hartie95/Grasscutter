@@ -189,6 +189,9 @@ public class GameQuest {
 
         getQuestData().getFailExec().forEach(e -> getOwner().getServer().getQuestSystem().triggerExec(this, e, e.getParam()));
 
+        if (getQuestData().getTrialAvatarList() != null){
+            getOwner().removeTrialAvatar(getQuestData().getTrialAvatarList().get(0));
+        }
     }
     // Return true if it did the rewind
     public boolean rewind(boolean notifyDelete) {
