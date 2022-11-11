@@ -17,6 +17,7 @@
 * Co-op *partially* works
 * Spawning monsters via console
 * Inventory features (receiving items/characters, upgrading items/characters, etc)
+* Quests (not completely), see `Especial quests feature` below in readme
 
 ## Quick setup guide
 
@@ -96,6 +97,14 @@ chmod +x gradlew
 ```
 
 You can find the output jar in the root of the project folder.
+
+## Especial quests feature
+1. Server need resources https://github.com/tamilpp25/Grasscutter_Resources, unzip folder `Resources` nearby `grasscutter.jar`
+2. If you haven't `config.json` and `data` folder nearby `grasscutter.jar` file - run `java -jar grasscutter.jar`, wait until they are created and close the server
+3. In `config.json` change `questing` to `true` and `enableScriptInBigWorld` to `true`
+4. Download https://github.com/akatatsu27/MoarGCResources and put `ScriptSceneData` folder inside `Resources` folder nearby `grasscutter.js`
+5. Start server `java -jar grasscutter.jar`
+6. If you start a new game (clear the database) - the initial quests will be added automatically otherwise use `quest add <questId>` (for `<questId>` see HandBook)
 
 ### Commands have moved to the [wiki](https://github.com/Grasscutters/Grasscutter/wiki/Commands)!
 
