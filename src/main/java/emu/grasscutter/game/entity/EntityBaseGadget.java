@@ -7,11 +7,23 @@ import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.scripts.data.ScriptArgs;
 
 import static emu.grasscutter.scripts.constants.EventType.EVENT_SPECIFIC_GADGET_HP_CHANGE;
+import emu.grasscutter.utils.Position;
+import lombok.Getter;
 
 public abstract class EntityBaseGadget extends GameEntity {
+    @Getter(onMethod = @__(@Override))
+    protected final Position position;
+    @Getter(onMethod = @__(@Override))
+    protected final Position rotation;
 
     public EntityBaseGadget(Scene scene) {
+        this(scene, null, null);
+    }
+
+    public EntityBaseGadget(Scene scene, Position position, Position rotation) {
         super(scene);
+        this.position = position != null ? position.clone() : new Position();
+        this.rotation = rotation != null ? rotation.clone() : new Position();
     }
 
     public abstract int getGadgetId();

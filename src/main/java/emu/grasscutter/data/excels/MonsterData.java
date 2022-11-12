@@ -2,6 +2,9 @@ package emu.grasscutter.data.excels;
 
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
+
+import com.google.gson.annotations.SerializedName;
 
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
@@ -9,17 +12,19 @@ import emu.grasscutter.data.GameResource;
 import emu.grasscutter.data.ResourceType;
 import emu.grasscutter.data.ResourceType.LoadPriority;
 import emu.grasscutter.data.common.PropGrowCurve;
+import emu.grasscutter.game.props.FightProperty;
 import emu.grasscutter.game.props.MonsterType;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 @ResourceType(name = "MonsterExcelConfigData.json", loadPriority = LoadPriority.LOW)
-@EqualsAndHashCode(callSuper=false)
-@Data
+@Getter
 public class MonsterData extends GameResource {
-	private int id;
-	
-	private String monsterName;
+    static public Set<FightProperty> definedFightProperties = Set.of(FightProperty.FIGHT_PROP_BASE_HP, FightProperty.FIGHT_PROP_BASE_ATTACK, FightProperty.FIGHT_PROP_BASE_DEFENSE, FightProperty.FIGHT_PROP_PHYSICAL_SUB_HURT, FightProperty.FIGHT_PROP_FIRE_SUB_HURT, FightProperty.FIGHT_PROP_ELEC_SUB_HURT, FightProperty.FIGHT_PROP_WATER_SUB_HURT, FightProperty.FIGHT_PROP_GRASS_SUB_HURT, FightProperty.FIGHT_PROP_WIND_SUB_HURT, FightProperty.FIGHT_PROP_ROCK_SUB_HURT, FightProperty.FIGHT_PROP_ICE_SUB_HURT);
+
+    @Getter(onMethod = @__(@Override))
+    private int id;
+
+    private String monsterName;
     private MonsterType type;
     private String serverScript;
     private List<Integer> affix;
@@ -34,9 +39,14 @@ public class MonsterData extends GameResource {
     private int describeId;
     private int combatBGMLevel;
     private int entityBudgetLevel;
-    private float hpBase;
-    private float attackBase;
-    private float defenseBase;
+
+    @SerializedName("hpBase")
+    private float baseHp;
+    @SerializedName("attackBase")
+    private float baseAttack;
+    @SerializedName("defenseBase")
+    private float baseDefense;
+
     private float fireSubHurt;
     private float elecSubHurt;
     private float grassSubHurt;
@@ -48,28 +58,11 @@ public class MonsterData extends GameResource {
     private List<PropGrowCurve> propGrowCurves;
     private long nameTextMapHash;
     private int campID;
-    
+
     // Transient
     private int weaponId;
     private MonsterDescribeData describeData;
 	private int specialNameId; // will only be set if describe data is available
-    
-	@Override
-	public int getId() {
-		return this.id;
-	}
-
-	public float getBaseHp() {
-		return hpBase;
-	}
-
-	public float getBaseAttack() {
-		return attackBase;
-	}
-
-	public float getBaseDefense() {
-		return defenseBase;
-	}
 
 	@Override
 	public void onLoad() {
@@ -99,15 +92,26 @@ public class MonsterData extends GameResource {
 		}
 	}
 	
+    @Getter
 	public class HpDrops {
 	    private int DropId;
 	    private int HpPercent;
-
-	    public int getDropId(){
-	        return this.DropId;
-	    }
-	    public int getHpPercent(){
-	        return this.HpPercent;
-	    }
 	}
+
+    public float getFightProperty(FightProperty prop) {
+        return switch (prop) {
+            case FIGHT_PROP_BASE_HP -> this.baseHp;
+            case FIGHT_PROP_BASE_ATTACK -> this.baseAttack;
+            case FIGHT_PROP_BASE_DEFENSE -> this.baseDefense;
+            case FIGHT_PROP_PHYSICAL_SUB_HURT -> this.physicalSubHurt;
+            case FIGHT_PROP_FIRE_SUB_HURT -> this.fireSubHurt;
+            case FIGHT_PROP_ELEC_SUB_HURT -> this.elecSubHurt;
+            case FIGHT_PROP_WATER_SUB_HURT -> this.waterSubHurt;
+            case FIGHT_PROP_GRASS_SUB_HURT -> this.grassSubHurt;
+            case FIGHT_PROP_WIND_SUB_HURT -> this.windSubHurt;
+            case FIGHT_PROP_ROCK_SUB_HURT -> this.rockSubHurt;
+            case FIGHT_PROP_ICE_SUB_HURT -> this.iceSubHurt;
+            default -> 0f;
+        };
+    }
 }

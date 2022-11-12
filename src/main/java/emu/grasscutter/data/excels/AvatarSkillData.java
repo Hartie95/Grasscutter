@@ -7,7 +7,9 @@ import emu.grasscutter.game.props.ElementType;
 import lombok.Getter;
 
 @ResourceType(name = "AvatarSkillExcelConfigData.json", loadPriority = LoadPriority.HIGHEST)
+@Getter
 public class AvatarSkillData extends GameResource {
+    @Getter(onMethod = @__(@Override))
     private int id;
     @Getter private float cdTime;
     @Getter private float costElemVal; // fight prop update uses float
@@ -20,10 +22,6 @@ public class AvatarSkillData extends GameResource {
     @Getter private long descTextMapHash;
     @Getter private String abilityName;
 
-    @Override
-    public int getId() {
-        return this.id;
-    }
 
     @Override
     public void onLoad() {
