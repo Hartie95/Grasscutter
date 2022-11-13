@@ -13,7 +13,6 @@ import java.util.stream.Stream;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.common.ItemParamData;
-import emu.grasscutter.data.excels.AvatarData;
 import emu.grasscutter.data.excels.AvatarPromoteData;
 import emu.grasscutter.data.excels.AvatarSkillDepotData;
 import emu.grasscutter.data.excels.ItemData;
@@ -25,7 +24,7 @@ import emu.grasscutter.game.inventory.MaterialType;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.FightProperty;
 import emu.grasscutter.game.props.ItemUseOp;
-import emu.grasscutter.game.quest.enums.QuestTrigger;
+import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.game.props.ItemUseAction.ItemUseAddExp;
 import emu.grasscutter.game.props.ItemUseAction.ItemUseAddReliquaryExp;
 import emu.grasscutter.game.props.ItemUseAction.ItemUseAddWeaponExp;
@@ -795,7 +794,7 @@ public class InventorySystem extends BaseGameSystem {
         // Use
         var actions = itemData.getItemUseActions();
         Grasscutter.getLogger().info("Using - actions - {}", actions);
-        params.player.getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_USE_ITEM, itemData.getId());
+        params.player.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_USE_ITEM, itemData.getId());
         if (actions == null) return true;  // Maybe returning false would be more appropriate?
         return actions.stream()
                 .map(use -> use.useItem(params))

@@ -3,7 +3,7 @@ package emu.grasscutter.server.packet.recv;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.MainQuestData;
 import emu.grasscutter.data.binout.MainQuestData.TalkData;
-import emu.grasscutter.game.quest.enums.QuestTrigger;
+import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.net.packet.Opcodes;
 import emu.grasscutter.net.packet.PacketOpcodes;
 import emu.grasscutter.net.proto.NpcTalkReqOuterClass.NpcTalkReq;
@@ -42,9 +42,9 @@ public class HandlerNpcTalkReq extends PacketHandler {
             }
 
             // Fire quest triggers.
-            session.getPlayer().getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_COMPLETE_ANY_TALK, String.valueOf(req.getTalkId()), 0, 0);
-            session.getPlayer().getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_COMPLETE_TALK, req.getTalkId(), 0);
-            session.getPlayer().getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_FINISH_PLOT, req.getTalkId(), 0);
+            session.getPlayer().getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_COMPLETE_ANY_TALK, String.valueOf(req.getTalkId()), 0, 0);
+            session.getPlayer().getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_COMPLETE_TALK, req.getTalkId(), 0);
+            session.getPlayer().getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_FINISH_PLOT, req.getTalkId(), 0);
         }
 
         session.send(new PacketNpcTalkRsp(req.getNpcEntityId(), req.getTalkId(), req.getEntityId()));

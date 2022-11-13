@@ -5,8 +5,8 @@ import emu.grasscutter.data.binout.ScenePointEntry;
 import emu.grasscutter.data.excels.OpenStateData;
 import emu.grasscutter.data.excels.OpenStateData.OpenStateCondType;
 import emu.grasscutter.game.props.ActionReason;
+import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.game.quest.enums.QuestState;
-import emu.grasscutter.game.quest.enums.QuestTrigger;
 import emu.grasscutter.net.proto.RetcodeOuterClass.Retcode;
 import emu.grasscutter.scripts.data.ScriptArgs;
 import emu.grasscutter.server.packet.send.PacketOpenStateChangeNotify;
@@ -212,7 +212,7 @@ public class PlayerProgressManager extends BasePlayerDataManager {
         // this.player.sendPacket(new PacketPlayerPropChangeReasonNotify(this.player.getProperty(PlayerProperty.PROP_PLAYER_EXP), PlayerProperty.PROP_PLAYER_EXP, PropChangeReason.PROP_CHANGE_REASON_PLAYER_ADD_EXP));
 
         // Fire quest and script trigger for trans point unlock.
-        this.player.getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_UNLOCK_TRANS_POINT, sceneId, pointId);
+        this.player.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_UNLOCK_TRANS_POINT, sceneId, pointId);
         this.player.getScene().getScriptManager().callEvent(new ScriptArgs(EVENT_UNLOCK_TRANS_POINT, sceneId, pointId));
 
         // Send packet.
@@ -226,6 +226,6 @@ public class PlayerProgressManager extends BasePlayerDataManager {
 
         // Send packet.
         this.player.sendPacket(new PacketSceneAreaUnlockNotify(sceneId, areaId));
-        this.player.getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_UNLOCK_AREA, sceneId, areaId);
+        this.player.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_UNLOCK_AREA, sceneId, areaId);
     }
 }

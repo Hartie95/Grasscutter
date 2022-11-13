@@ -1,17 +1,17 @@
 package emu.grasscutter.game.quest.conditions;
 
-import emu.grasscutter.game.quest.QuestValue;
-import emu.grasscutter.data.excels.QuestData.QuestCondition;
+import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.game.quest.GameQuest;
-import emu.grasscutter.game.quest.enums.QuestTrigger;
-import emu.grasscutter.game.quest.handlers.QuestBaseHandler;
+import emu.grasscutter.game.quest.QuestValueCond;
 
-@QuestValue(QuestTrigger.QUEST_COND_PLAYER_LEVEL_EQUAL_GREATER)
-public class ConditionPlayerLevelEqualGreater extends QuestBaseHandler {
+import static emu.grasscutter.game.quest.enums.QuestCond.QUEST_COND_PLAYER_LEVEL_EQUAL_GREATER;
 
-	@Override
-	public boolean execute(GameQuest quest, QuestCondition condition, String paramStr, int... params) {
-		return quest.getOwner().getLevel() >= condition.getParam()[0];
-	}
+@QuestValueCond(QUEST_COND_PLAYER_LEVEL_EQUAL_GREATER)
+public class ConditionPlayerLevelEqualGreater extends BaseCondition {
+
+    @Override
+    public boolean execute(GameQuest quest, QuestData.QuestAcceptCondition condition, String paramStr, int... params) {
+        return quest.getOwner().getLevel() >= condition.getParam()[0];
+    }
 
 }

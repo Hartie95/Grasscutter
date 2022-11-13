@@ -6,11 +6,13 @@ import emu.grasscutter.data.binout.*;
 import emu.grasscutter.data.binout.AbilityModifier.AbilityModifierAction;
 import emu.grasscutter.data.binout.routes.SceneRoutes;
 import emu.grasscutter.data.common.PointData;
+import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.game.dungeons.DungeonDrop;
 import emu.grasscutter.game.managers.blossom.BlossomConfig;
 import emu.grasscutter.game.quest.QuestEncryptionKey;
 import emu.grasscutter.game.quest.RewindData;
 import emu.grasscutter.game.quest.TeleportData;
+import emu.grasscutter.game.quest.enums.QuestCond;
 import emu.grasscutter.game.world.SpawnDataEntry;
 import emu.grasscutter.game.world.SpawnDataEntry.GridBlockId;
 import emu.grasscutter.game.world.SpawnDataEntry.SpawnGroupEntry;
@@ -90,6 +92,7 @@ public class ResourceLoader {
         // Load special ability in certain scene/dungeon
         loadConfigLevelEntityData();
         loadQuestShareConfig();
+        cacheQuestCondition();
         Grasscutter.getLogger().info(translate("messages.status.resources.finish"));
         loadedAll = true;
     }
@@ -143,7 +146,7 @@ public class ResourceLoader {
         }
     }
 
-    public class ScenePointConfig {  // Sadly this doesn't work as a local class in loadScenePoints()
+    public static class ScenePointConfig {  // Sadly this doesn't work as a local class in loadScenePoints()
         public Map<Integer, PointData> points;
     }
     private static void loadScenePoints() {
@@ -425,6 +428,30 @@ public class ResourceLoader {
         Grasscutter.getLogger().debug("Loaded " + GameData.getMainQuestDataMap().size() + " MainQuestDatas.");
     }
 
+    private static void cacheQuestCondition() {
+        val cacheMap = GameData.getBeginCondQuestMap();
+        GameData.getQuestDataMap().forEach((id, quest) -> {
+            if(quest.getAcceptCond() == null){
+                Grasscutter.getLogger().warn("missing AcceptConditions for quest {}", quest.getSubId());
+                return;
+            }
+            if(quest.getAcceptCond().isEmpty()){
+                val list = cacheMap.computeIfAbsent(QuestData.questConditionKey(QuestCond.QUEST_COND_NONE, 0, null), e -> new ArrayList<>());
+                list.add(quest);
+            } else {
+                quest.getAcceptCond().forEach(questCondition -> {
+                    if (questCondition.getType() == null) {
+                        return;
+                    }
+                    val key = questCondition.asKey();
+                    val list = cacheMap.computeIfAbsent(key, e -> new ArrayList<>());
+                    list.add(quest);
+                });
+            }
+        });
+        Grasscutter.getLogger().debug("cached " + GameData.getBeginCondQuestMap().size() + " quest accept conditions.");
+    }
+
     public static void loadScriptSceneData() {
         try {
             Files.list(getResourcePath("ScriptSceneData/")).forEach(path -> {
@@ -565,7 +592,7 @@ public class ResourceLoader {
             Files.newDirectoryStream(getResourcePath("Scripts/Quest/Share/"), "Q*ShareConfig.lua").forEach(path -> {
                 val matcher = pattern.matcher(path.getFileName().toString());
                 if (!matcher.find()) return;
-                
+
                 CompiledScript cs = ScriptLoader.getScript("Quest/Share/"+path.getFileName().toString());
                 if (cs == null) return;
 
@@ -577,7 +604,7 @@ public class ResourceLoader {
                     // convert them to Map<Integer, class> and cache
                     GameData.getTeleportDataMap().putAll(teleportDataMap.entrySet().stream().collect(Collectors.toMap(entry -> Integer.valueOf(entry.getKey()), Entry::getValue)));
                     GameData.getRewindDataMap().putAll(rewindDataMap.entrySet().stream().collect(Collectors.toMap(entry -> Integer.valueOf(entry.getKey()), Entry::getValue)));
-                    
+
                 } catch (Throwable e){
                     Grasscutter.getLogger().error("Error while loading Quest Share Config: {}", path.getFileName().toString());
                 }
@@ -586,7 +613,7 @@ public class ResourceLoader {
             Grasscutter.getLogger().error("Error loading Quest Share Config: no files found");
             return;
         }
-        if (GameData.getTeleportDataMap() == null || GameData.getTeleportDataMap().isEmpty() 
+        if (GameData.getTeleportDataMap() == null || GameData.getTeleportDataMap().isEmpty()
             || GameData.getRewindDataMap() == null || GameData.getRewindDataMap().isEmpty()) {
             Grasscutter.getLogger().error("No Quest Share Config loaded!");
             return;

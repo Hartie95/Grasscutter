@@ -11,7 +11,7 @@ import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.ActionReason;
 import emu.grasscutter.game.props.WatcherTriggerType;
 import emu.grasscutter.game.quest.enums.LogicType;
-import emu.grasscutter.game.quest.enums.QuestTrigger;
+import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.scripts.constants.EventType;
 import emu.grasscutter.scripts.data.ScriptArgs;
@@ -203,7 +203,7 @@ public class DungeonManager {
     }
 
     public void startDungeon() {
-        scene.getPlayers().forEach(p-> p.getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_ENTER_DUNGEON, dungeonData.getId()));
+        scene.getPlayers().forEach(p-> p.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_ENTER_DUNGEON, dungeonData.getId()));
     }
 
     public void finishDungeon() {
@@ -215,7 +215,7 @@ public class DungeonManager {
         scene.getPlayers().forEach(p -> {
             // Quest trigger
             p.getQuestManager().queueEvent(successfully?
-                QuestTrigger.QUEST_CONTENT_FINISH_DUNGEON : QuestTrigger.QUEST_CONTENT_FAIL_DUNGEON,
+                    QuestContent.QUEST_CONTENT_FINISH_DUNGEON : QuestContent.QUEST_CONTENT_FAIL_DUNGEON,
                 dungeonData.getId());
 
             // Battle pass trigger

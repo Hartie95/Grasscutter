@@ -6,15 +6,15 @@ import emu.grasscutter.data.binout.MainQuestData;
 import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.game.quest.GameMainQuest;
 import emu.grasscutter.game.quest.GameQuest;
-import emu.grasscutter.game.quest.QuestValue;
-import emu.grasscutter.game.quest.enums.QuestTrigger;
-import emu.grasscutter.game.quest.handlers.QuestBaseHandler;
+import emu.grasscutter.game.quest.QuestValueCond;
 
-@QuestValue(QuestTrigger.QUEST_COND_COMPLETE_TALK)
-public class ConditionCompleteTalk extends QuestBaseHandler {
+import static emu.grasscutter.game.quest.enums.QuestCond.QUEST_COND_COMPLETE_TALK;
+
+@QuestValueCond(QUEST_COND_COMPLETE_TALK)
+public class ConditionCompleteTalk extends BaseCondition {
 
     @Override
-    public boolean execute(GameQuest quest, QuestData.QuestCondition condition, String paramStr, int... params) {
+    public boolean execute(GameQuest quest, QuestData.QuestAcceptCondition condition, String paramStr, int... params) {
         GameMainQuest checkMainQuest = quest.getOwner().getQuestManager().getMainQuestById(condition.getParam()[0]/100);
         if (checkMainQuest == null || GameData.getMainQuestDataMap().get(checkMainQuest.getParentQuestId()).getTalks() == null) {
             Grasscutter.getLogger().debug("Warning: mainQuest {} hasn't been started yet, or has no talks", condition.getParam()[0]/100);

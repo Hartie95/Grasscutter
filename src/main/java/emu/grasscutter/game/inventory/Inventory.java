@@ -17,7 +17,7 @@ import emu.grasscutter.game.props.ActionReason;
 import emu.grasscutter.game.props.ItemUseAction.UseItemParams;
 import emu.grasscutter.game.props.PlayerProperty;
 import emu.grasscutter.game.props.WatcherTriggerType;
-import emu.grasscutter.game.quest.enums.QuestTrigger;
+import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.net.proto.ItemParamOuterClass.ItemParam;
 import emu.grasscutter.server.packet.send.PacketAddNoGachaAvatarCardNotify;
 import emu.grasscutter.server.packet.send.PacketAvatarEquipChangeNotify;
@@ -165,11 +165,11 @@ public class Inventory extends BasePlayerManager implements Iterable<GameItem> {
 
     private void triggerAddItemEvents(GameItem result){
         getPlayer().getBattlePassManager().triggerMission(WatcherTriggerType.TRIGGER_OBTAIN_MATERIAL_NUM, result.getItemId(), result.getCount());
-        getPlayer().getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_OBTAIN_ITEM, result.getItemId(), result.getCount());
+        getPlayer().getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_OBTAIN_ITEM, result.getItemId(), result.getCount());
     }
     private void triggerRemItemEvents(GameItem item, int removeCount){
         getPlayer().getBattlePassManager().triggerMission(WatcherTriggerType.TRIGGER_COST_MATERIAL, item.getItemId(), removeCount);
-        getPlayer().getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_ITEM_LESS_THAN, item.getItemId(), item.getCount());
+        getPlayer().getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_ITEM_LESS_THAN, item.getItemId(), item.getCount());
     }
 
     public void addItemParams(Collection<ItemParam> items) {

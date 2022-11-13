@@ -15,7 +15,7 @@ import emu.grasscutter.game.props.SceneType;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.DungeonData;
 import emu.grasscutter.data.excels.SceneData;
-import emu.grasscutter.game.quest.enums.QuestTrigger;
+import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.proto.EnterTypeOuterClass.EnterType;
 import emu.grasscutter.scripts.data.SceneConfig;
@@ -284,7 +284,7 @@ public class World implements Iterable<Player> {
 
         // Get enter types
         EnterType enterType = EnterType.ENTER_TYPE_JUMP;
-        EnterReason enterReason = switch (teleportType) { 
+        EnterReason enterReason = switch (teleportType) {
             // shouldn't affect the teleportation, but its clearer when inspecting the packets
             // TODO add more conditions for different reason.
             case INTERNAL -> EnterReason.TransPoint;
@@ -311,7 +311,7 @@ public class World implements Iterable<Player> {
         player.sendPacket(new PacketPlayerEnterSceneNotify(player, enterType, enterReason, sceneId, teleportTo));
 
         if(teleportType != TeleportType.INTERNAL && teleportType != SCRIPT) {
-            player.getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_ANY_MANUAL_TRANSPORT);
+            player.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_ANY_MANUAL_TRANSPORT);
         }
         return true;
     }

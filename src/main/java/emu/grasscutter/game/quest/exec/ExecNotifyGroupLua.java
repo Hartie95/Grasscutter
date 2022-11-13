@@ -3,17 +3,15 @@ package emu.grasscutter.game.quest.exec;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.game.quest.GameQuest;
-import emu.grasscutter.game.quest.QuestGroupSuite;
-import emu.grasscutter.game.quest.QuestValue;
+import emu.grasscutter.game.quest.QuestValueExec;
 import emu.grasscutter.game.quest.enums.QuestState;
-import emu.grasscutter.game.quest.enums.QuestTrigger;
+import emu.grasscutter.game.quest.enums.QuestExec;
 import emu.grasscutter.game.quest.handlers.QuestExecHandler;
 import emu.grasscutter.scripts.constants.EventType;
 import emu.grasscutter.scripts.data.ScriptArgs;
-import emu.grasscutter.server.packet.send.PacketGroupSuiteNotify;
 import lombok.val;
 
-@QuestValue(QuestTrigger.QUEST_EXEC_NOTIFY_GROUP_LUA)
+@QuestValueExec(QuestExec.QUEST_EXEC_NOTIFY_GROUP_LUA)
 public class ExecNotifyGroupLua extends QuestExecHandler {
 
     @Override

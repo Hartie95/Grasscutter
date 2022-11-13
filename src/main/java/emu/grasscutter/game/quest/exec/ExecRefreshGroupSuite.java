@@ -4,14 +4,12 @@ import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.game.quest.GameQuest;
 import emu.grasscutter.game.quest.QuestGroupSuite;
-import emu.grasscutter.game.quest.QuestValue;
-import emu.grasscutter.game.quest.enums.QuestTrigger;
+import emu.grasscutter.game.quest.QuestValueExec;
+import emu.grasscutter.game.quest.enums.QuestExec;
 import emu.grasscutter.game.quest.handlers.QuestExecHandler;
 import emu.grasscutter.server.packet.send.PacketGroupSuiteNotify;
 
-import java.util.Arrays;
-
-@QuestValue(QuestTrigger.QUEST_EXEC_REFRESH_GROUP_SUITE)
+@QuestValueExec(QuestExec.QUEST_EXEC_REFRESH_GROUP_SUITE)
 public class ExecRefreshGroupSuite extends QuestExecHandler {
 
     @Override

@@ -12,7 +12,11 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.common.DynamicFloat;
+import emu.grasscutter.game.quest.enums.QuestCond;
+import emu.grasscutter.game.quest.enums.QuestContent;
+import emu.grasscutter.game.quest.enums.QuestExec;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.val;
@@ -66,6 +70,51 @@ public class JsonAdapters {
 
         @Override
         public void write(JsonWriter writer, IntList i) {};
+    }
+
+    static class QuestAcceptConditionAdapter extends QuestEnumAdapter<QuestCond> {
+        QuestAcceptConditionAdapter(){
+            super(QuestCond.class, QuestCond.QUEST_COND_UNKNOWN, null);
+        }
+    }
+    static class QuestContentAdapter extends QuestEnumAdapter<QuestContent> {
+        QuestContentAdapter(){
+            super(QuestContent.class, QuestContent.QUEST_CONTENT_UNKNOWN, null);
+        }
+    }
+    static class QuestExecAdapter extends QuestEnumAdapter<QuestExec> {
+        QuestExecAdapter(){
+            super(QuestExec.class, QuestExec.QUEST_EXEC_UNKNOWN, null);
+        }
+    }
+
+    static class QuestEnumAdapter<T extends Enum<T>> extends TypeAdapter<T> {
+        Class<T> enumClass;
+        T unknownValue;
+        T missingValue;
+
+        QuestEnumAdapter(Class<T> enumClass, T unknownValue, T missingValue){
+            this.enumClass = enumClass;
+            this.unknownValue = unknownValue;
+            this.missingValue = missingValue;
+        }
+
+        @Override
+        public T read(JsonReader reader) throws IOException {
+            val key = reader.nextString();
+            if(key == null){
+                return missingValue;
+            }
+            try {
+                return Enum.valueOf(enumClass, key);
+            } catch (Exception ex){
+                Grasscutter.getLogger().info("missing quest enum value {}", key);
+            }
+            return unknownValue;
+        }
+
+        @Override
+        public void write(JsonWriter writer, T i) {};
     }
 
     static class EnumTypeAdapterFactory implements TypeAdapterFactory {

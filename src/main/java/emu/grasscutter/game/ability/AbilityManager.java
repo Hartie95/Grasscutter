@@ -10,7 +10,7 @@ import emu.grasscutter.game.entity.GameEntity;
 import emu.grasscutter.game.entity.gadget.GadgetGatherObject;
 import emu.grasscutter.game.player.BasePlayerManager;
 import emu.grasscutter.game.player.Player;
-import emu.grasscutter.game.quest.enums.QuestTrigger;
+import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.net.proto.AbilityInvokeEntryHeadOuterClass.AbilityInvokeEntryHead;
 import emu.grasscutter.net.proto.AbilityInvokeEntryOuterClass.AbilityInvokeEntry;
 import emu.grasscutter.net.proto.AbilityMetaModifierChangeOuterClass.AbilityMetaModifierChange;
@@ -198,7 +198,7 @@ public final class AbilityManager extends BasePlayerManager {
     private void handleGlobalFloatValue(AbilityInvokeEntry invoke) throws InvalidProtocolBufferException {
         AbilityScalarValueEntry entry = AbilityScalarValueEntry.parseFrom(invoke.getAbilityData());
         if(entry.getKey().hasStr() && entry.getKey().getStr().equals("_ABILITY_UziExplode_Count") && entry.hasFloatValue() && entry.getFloatValue() == 2.0f){
-            player.getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_SKILL, 10006);
+            player.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_SKILL, 10006);
         }
     }
 

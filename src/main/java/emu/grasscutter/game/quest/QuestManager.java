@@ -13,9 +13,7 @@ import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.player.BasePlayerManager;
 import emu.grasscutter.game.player.Player;
-import emu.grasscutter.game.quest.enums.ParentQuestState;
-import emu.grasscutter.game.quest.enums.QuestTrigger;
-import emu.grasscutter.game.quest.enums.QuestState;
+import emu.grasscutter.game.quest.enums.*;
 import emu.grasscutter.server.packet.send.*;
 import emu.grasscutter.utils.Position;
 import io.netty.util.concurrent.FastThreadLocalThread;
@@ -249,15 +247,23 @@ public class QuestManager extends BasePlayerManager {
 
         }
     }
-    public void queueEvent(QuestTrigger condType, int... params) {
+    public void queueEvent(QuestCond condType, int... params) {
+        queueEvent(condType, "", params);
+    }
+    public void queueEvent(QuestContent condType, int... params) {
         queueEvent(condType, "", params);
     }
 
-    //TODO
-    public void queueEvent(QuestTrigger condType, String paramStr, int... params) {
+    public void queueEvent(QuestContent condType, String paramStr, int... params) {
         eventExecutor.submit(() -> triggerEvent(condType, paramStr, params));
     }
-    public void triggerEvent(QuestTrigger condType, String paramStr, int... params){
+    public void queueEvent(QuestCond condType, String paramStr, int... params) {
+        eventExecutor.submit(() -> triggerEvent(condType, paramStr, params));
+    }
+
+    //QUEST_EXEC are handled directly by each subQuest
+
+    public void triggerEvent(QuestCond condType, String paramStr, int... params) {
         Grasscutter.getLogger().debug("Trigger Event {}, {}, {}", condType, paramStr, params);
         List<GameMainQuest> checkMainQuests = this.getMainQuests().values().stream()
             .filter(i -> i.getState() != ParentQuestState.PARENT_QUEST_STATE_FINISHED)
@@ -285,6 +291,18 @@ public class QuestManager extends BasePlayerManager {
                 }
                 break;
 
+            // unused
+            case QUEST_COND_PLAYER_CHOOSE_MALE:
+            default:
+                Grasscutter.getLogger().error("Unhandled QuestCondition {}", condType);
+        }
+    }
+    public void triggerEvent(QuestContent condType, String paramStr, int... params) {
+        Grasscutter.getLogger().debug("Trigger Event {}, {}, {}", condType, paramStr, params);
+        List<GameMainQuest> checkMainQuests = this.getMainQuests().values().stream()
+            .filter(i -> i.getState() != ParentQuestState.PARENT_QUEST_STATE_FINISHED)
+            .toList();
+        switch (condType) {
             //fail Conds
             case QUEST_CONTENT_NOT_FINISH_PLOT:
             case QUEST_CONTENT_ANY_MANUAL_TRANSPORT:
@@ -334,11 +352,10 @@ public class QuestManager extends BasePlayerManager {
                     mainQuest.tryFinishSubQuests(condType, paramStr, params);
                 }
                 break;
-            //QUEST_EXEC are handled directly by each subQuest
 
             //Unused
             case QUEST_CONTENT_QUEST_STATE_NOT_EQUAL:
-            case QUEST_COND_PLAYER_CHOOSE_MALE:
+            case QUEST_CONTENT_WORKTOP_SELECT:
             default:
                 Grasscutter.getLogger().error("Unhandled QuestTrigger {}", condType);
         }

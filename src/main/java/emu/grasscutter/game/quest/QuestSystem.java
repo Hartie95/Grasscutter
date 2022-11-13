@@ -1,5 +1,7 @@
 package emu.grasscutter.game.quest;
 
+import emu.grasscutter.game.quest.conditions.BaseCondition;
+import emu.grasscutter.game.quest.content.BaseContent;
 import emu.grasscutter.game.quest.handlers.QuestExecHandler;
 import emu.grasscutter.server.game.BaseGameSystem;
 import emu.grasscutter.server.game.GameServer;
@@ -8,14 +10,13 @@ import org.reflections.Reflections;
 
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.excels.QuestData.*;
-import emu.grasscutter.game.quest.handlers.QuestBaseHandler;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 @SuppressWarnings("unchecked")
 public class QuestSystem extends BaseGameSystem {
-    private final Int2ObjectMap<QuestBaseHandler> condHandlers;
-    private final Int2ObjectMap<QuestBaseHandler> contHandlers;
+    private final Int2ObjectMap<BaseCondition> condHandlers;
+    private final Int2ObjectMap<BaseContent> contHandlers;
     private final Int2ObjectMap<QuestExecHandler> execHandlers;
 
     public QuestSystem(GameServer server) {
@@ -29,8 +30,8 @@ public class QuestSystem extends BaseGameSystem {
     }
 
     public void registerHandlers() {
-        this.registerHandlers(this.condHandlers, "emu.grasscutter.game.quest.conditions", QuestBaseHandler.class);
-        this.registerHandlers(this.contHandlers, "emu.grasscutter.game.quest.content", QuestBaseHandler.class);
+        this.registerHandlers(this.condHandlers, "emu.grasscutter.game.quest.conditions", BaseCondition.class);
+        this.registerHandlers(this.contHandlers, "emu.grasscutter.game.quest.content", BaseContent.class);
         this.registerHandlers(this.execHandlers, "emu.grasscutter.game.quest.exec", QuestExecHandler.class);
     }
 
@@ -45,13 +46,25 @@ public class QuestSystem extends BaseGameSystem {
 
     public <T> void registerPacketHandler(Int2ObjectMap<T> map, Class<? extends T> handlerClass) {
         try {
-            QuestValue opcode = handlerClass.getAnnotation(QuestValue.class);
-
-            if (opcode == null || opcode.value().getValue() <= 0) {
+            int value = 0;
+            if(handlerClass.isAnnotationPresent(QuestValueExec.class)) {
+                QuestValueExec opcode = handlerClass.getAnnotation(QuestValueExec.class);
+                value = opcode.value().getValue();
+            } else if(handlerClass.isAnnotationPresent(QuestValueContent.class)) {
+                QuestValueContent opcode = handlerClass.getAnnotation(QuestValueContent.class);
+                value = opcode.value().getValue();
+            } else if(handlerClass.isAnnotationPresent(QuestValueCond.class)) {
+                QuestValueCond opcode = handlerClass.getAnnotation(QuestValueCond.class);
+                value = opcode.value().getValue();
+            } else {
                 return;
             }
 
-            map.put(opcode.value().getValue(), handlerClass.getDeclaredConstructor().newInstance());
+            if (value <= 0) {
+                return;
+            }
+
+            map.put(value, handlerClass.newInstance());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -59,8 +72,8 @@ public class QuestSystem extends BaseGameSystem {
 
     // TODO make cleaner
 
-    public boolean triggerCondition(GameQuest quest, QuestCondition condition, String paramStr, int... params) {
-        QuestBaseHandler handler = condHandlers.get(condition.getType().getValue());
+    public boolean triggerCondition(GameQuest quest, QuestAcceptCondition condition, String paramStr, int... params) {
+        BaseCondition handler = condHandlers.get(condition.getType().getValue());
 
         if (handler == null || quest.getQuestData() == null) {
             Grasscutter.getLogger().debug("Could not trigger condition {} at {}", condition.getType().getValue(), quest.getQuestData());
@@ -70,8 +83,8 @@ public class QuestSystem extends BaseGameSystem {
         return handler.execute(quest, condition, paramStr, params);
     }
 
-    public boolean triggerContent(GameQuest quest, QuestCondition condition, String paramStr, int... params) {
-        QuestBaseHandler handler = contHandlers.get(condition.getType().getValue());
+    public boolean triggerContent(GameQuest quest, QuestContentCondition condition, String paramStr, int... params) {
+        BaseContent handler = contHandlers.get(condition.getType().getValue());
 
         if (handler == null || quest.getQuestData() == null) {
             Grasscutter.getLogger().debug("Could not trigger content {} at {}", condition.getType().getValue(), quest.getQuestData());

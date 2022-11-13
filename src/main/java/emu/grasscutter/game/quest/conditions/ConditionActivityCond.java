@@ -1,17 +1,16 @@
 package emu.grasscutter.game.quest.conditions;
 
-import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.game.quest.GameQuest;
-import emu.grasscutter.game.quest.QuestValue;
-import emu.grasscutter.game.quest.enums.QuestTrigger;
-import emu.grasscutter.game.quest.handlers.QuestBaseHandler;
+import emu.grasscutter.game.quest.QuestValueCond;
 
-@QuestValue(QuestTrigger.QUEST_COND_ACTIVITY_COND)
-public class ConditionActivityCond extends QuestBaseHandler {
+import static emu.grasscutter.game.quest.enums.QuestCond.QUEST_COND_ACTIVITY_COND;
+
+@QuestValueCond(QUEST_COND_ACTIVITY_COND)
+public class ConditionActivityCond extends BaseCondition {
 
     @Override
-    public boolean execute(GameQuest quest, QuestData.QuestCondition condition, String paramStr, int... params) {
+    public boolean execute(GameQuest quest, QuestData.QuestAcceptCondition condition, String paramStr, int... params) {
         return quest.getOwner().getActivityManager().meetsCondition(condition.getParam()[0]);
     }
 }

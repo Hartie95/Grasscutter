@@ -4,16 +4,15 @@ import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.game.props.ElementType;
 import emu.grasscutter.game.quest.GameQuest;
-import emu.grasscutter.game.quest.QuestValue;
-import emu.grasscutter.game.quest.enums.QuestTrigger;
+import emu.grasscutter.game.quest.QuestValueExec;
+import emu.grasscutter.game.quest.enums.QuestExec;
 import emu.grasscutter.game.quest.handlers.QuestExecHandler;
-import emu.grasscutter.Grasscutter;
 import lombok.val;
 
 /**
  * Changes the main avatar's element. First parameter is the elementType id
  */
-@QuestValue(QuestTrigger.QUEST_EXEC_CHANGE_AVATAR_ELEMET)
+@QuestValueExec(QuestExec.QUEST_EXEC_CHANGE_AVATAR_ELEMET)
 public class ExecChangeAvatarElemet extends QuestExecHandler {
     @Override
     public boolean execute(GameQuest quest, QuestData.QuestExecParam condition, String... paramStr) {

@@ -1,17 +1,17 @@
 package emu.grasscutter.game.quest.content;
 
-import emu.grasscutter.game.quest.QuestValue;
-import emu.grasscutter.data.excels.QuestData.QuestCondition;
+import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.game.quest.GameQuest;
-import emu.grasscutter.game.quest.enums.QuestTrigger;
-import emu.grasscutter.game.quest.handlers.QuestBaseHandler;
+import emu.grasscutter.game.quest.QuestValueContent;
 
-@QuestValue(QuestTrigger.QUEST_CONTENT_FAIL_DUNGEON)
-public class ContentFailDungeon extends QuestBaseHandler {
+import static emu.grasscutter.game.quest.enums.QuestContent.QUEST_CONTENT_FAIL_DUNGEON;
+
+@QuestValueContent(QUEST_CONTENT_FAIL_DUNGEON)
+public class ContentFailDungeon extends BaseContent {
 
     // params[0] dungeon ID
     @Override
-    public boolean execute(GameQuest quest, QuestCondition condition, String paramStr, int... params) {
+    public boolean execute(GameQuest quest, QuestData.QuestContentCondition condition, String paramStr, int... params) {
         return condition.getParam()[0] == params[0];
     }
 

@@ -8,8 +8,9 @@ import emu.grasscutter.game.entity.*;
 import emu.grasscutter.game.entity.gadget.GadgetWorktop;
 import emu.grasscutter.game.props.ClimateType;
 import emu.grasscutter.game.props.EntityType;
+import emu.grasscutter.game.quest.enums.QuestCond;
+import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.game.quest.enums.QuestState;
-import emu.grasscutter.game.quest.enums.QuestTrigger;
 import emu.grasscutter.net.proto.EnterTypeOuterClass;
 import emu.grasscutter.scripts.constants.GroupKillPolicy;
 import emu.grasscutter.scripts.data.SceneGroup;
@@ -611,8 +612,8 @@ public class ScriptLib {
 				var1);
 
         for(var player : getSceneScriptManager().getScene().getPlayers()){
-            player.getQuestManager().queueEvent(QuestTrigger.QUEST_COND_LUA_NOTIFY, var1);
-            player.getQuestManager().queueEvent(QuestTrigger.QUEST_CONTENT_LUA_NOTIFY, var1);
+            player.getQuestManager().queueEvent(QuestCond.QUEST_COND_LUA_NOTIFY, var1);
+            player.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_LUA_NOTIFY, var1);
         }
 
 		return 0;

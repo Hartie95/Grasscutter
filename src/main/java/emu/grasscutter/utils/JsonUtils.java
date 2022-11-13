@@ -17,6 +17,9 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 import emu.grasscutter.data.common.DynamicFloat;
+import emu.grasscutter.game.quest.enums.QuestCond;
+import emu.grasscutter.game.quest.enums.QuestContent;
+import emu.grasscutter.game.quest.enums.QuestExec;
 import emu.grasscutter.utils.JsonAdapters.*;
 import it.unimi.dsi.fastutil.ints.IntList;
 
@@ -26,6 +29,9 @@ public final class JsonUtils {
         .registerTypeAdapter(DynamicFloat.class, new DynamicFloatAdapter())
         .registerTypeAdapter(IntList.class, new IntListAdapter())
         .registerTypeAdapterFactory(new EnumTypeAdapterFactory())
+        .registerTypeAdapter(QuestCond.class, new QuestAcceptConditionAdapter())
+        .registerTypeAdapter(QuestContent.class, new QuestContentAdapter())
+        .registerTypeAdapter(QuestExec.class, new QuestExecAdapter())
         .create();
 
     /*
