@@ -1,106 +1,137 @@
 package emu.grasscutter.game.drop;
 
 import emu.grasscutter.Grasscutter;
-import emu.grasscutter.data.DataLoader;
 import emu.grasscutter.data.GameData;
-import emu.grasscutter.data.excels.ItemData;
-import emu.grasscutter.game.entity.EntityItem;
-import emu.grasscutter.game.entity.EntityMonster;
-import emu.grasscutter.game.inventory.GameItem;
-import emu.grasscutter.game.inventory.ItemType;
-import emu.grasscutter.game.player.Player;
-import emu.grasscutter.game.props.ActionReason;
-import emu.grasscutter.game.world.Scene;
+import emu.grasscutter.data.common.DropItemData;
+import emu.grasscutter.data.excels.DropSubTableData;
+import emu.grasscutter.data.excels.DropTableData;
+import emu.grasscutter.game.entity.GameEntity;
 import emu.grasscutter.server.game.BaseGameSystem;
 import emu.grasscutter.server.game.GameServer;
-import emu.grasscutter.utils.Position;
-import emu.grasscutter.utils.Utils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
-import java.util.List;
+import java.util.Random;
 
 public class DropSystem extends BaseGameSystem {
-    private final Int2ObjectMap<List<DropData>> dropData;
+    private final Int2ObjectMap<DropSubTableData> dropSubTable;
+    private final Int2ObjectMap<DropTableData> dropTable;
+    private final Random rand;
 
     public DropSystem(GameServer server) {
         super(server);
-        this.dropData = new Int2ObjectOpenHashMap<>();
-        this.load();
+        rand = new Random();
+        dropTable = GameData.getDropTableDataMap();
+        dropSubTable = GameData.getDropSubTableDataMap();
     }
 
-    public Int2ObjectMap<List<DropData>> getDropData() {
-        return dropData;
+    public boolean handleChestDrop(int chestDropId, int dropCount, int level, GameEntity bornFrom) {
+        //TODO:not clear the usage of level field.
+        Grasscutter.getLogger().info("ChestDrop:chest_drop_id={},drop_count={},level={}", chestDropId, dropCount, level);
+        return processDrop(chestDropId, dropCount, bornFrom);
     }
 
-    public synchronized void load() {
-        getDropData().clear();
-        try {
-            List<DropInfo> banners = DataLoader.loadList("Drop.json", DropInfo.class);
-            if (banners.size() > 0) {
-                for (DropInfo di : banners) {
-                    getDropData().put(di.getMonsterId(), di.getDropDataList());
+    public boolean handleChestDrop(String dropTag, int level, GameEntity bornFrom) {
+        Grasscutter.getLogger().info("ChestDrop:drop_tag={},level={}", dropTag, level);
+        //TODO
+        return false;
+    }
+
+    private boolean processDrop(int dropId, int count, GameEntity bornFrom) {
+        if (!dropTable.containsKey(dropId)) return false;
+        var dropData = dropTable.get(dropId);
+        if (dropData.getNodeType() != 1) return false;
+        processSubDrop(dropData, count, bornFrom,dropData.isFallToGround());
+        return true;
+    }
+
+    private void processSubDrop(DropSubTableData dropData, int count, GameEntity bornFrom,boolean fallToGround) {
+        //TODO:Not clear on the meaning of some fields,like "dropLevel".Will ignore them.
+        //TODO:solve drop limits,like everydayLimit.
+
+        if (dropData.getRandomType() == 0) {
+            int weightSum = 0;
+            for (var i : dropData.getDropVec()) {
+                int id = i.getId();
+                if (id == 0) continue;
+                weightSum += i.getWeight();
+            }
+            int weight = rand.nextInt(weightSum);
+            int sum = 0;
+            for (var i : dropData.getDropVec()) {
+                int id = i.getId();
+                if (id == 0) continue;
+                sum += i.getWeight();
+                if (weight < sum) {
+                    //win the item
+                    int amount = calculateDropAmount(i) * count;
+                    if (dropSubTable.containsKey(id)) {
+                        processSubDrop(dropSubTable.get(id), amount, bornFrom,fallToGround);
+                    } else {
+                        if(fallToGround) dropItem(id, amount, bornFrom);
+                        else giveItem(id,amount,bornFrom);
+                    }
+                    break;
                 }
-                Grasscutter.getLogger().debug("Drop data successfully loaded.");
-            } else {
-                Grasscutter.getLogger().error("Unable to load drop data. Drop data size is 0.");
             }
-        } catch (Exception e) {
-            Grasscutter.getLogger().error("Unable to load drop data.", e);
-        }
-    }
-    private void addDropEntity(DropData dd, Scene dropScene, ItemData itemData, Position pos, int num, Player target) {
-        if (!dd.isGive() && (itemData.getItemType() != ItemType.ITEM_VIRTUAL || itemData.getGadgetId() != 0)) {
-            EntityItem entity = new EntityItem(dropScene, target, itemData, pos, num, dd.isShare());
-            if (!dd.isShare())
-                dropScene.addEntityToSingleClient(target, entity);
-            else
-                dropScene.addEntity(entity);
-        } else {
-            if (target != null) {
-                target.getInventory().addItem(new GameItem(itemData, num), ActionReason.SubfieldDrop, true);
-            } else {
-                // target is null if items will be added are shared. no one could pick it up because of the combination(give + shared)
-                // so it will be sent to all players' inventories directly.
-                dropScene.getPlayers().forEach(x -> x.getInventory().addItem(new GameItem(itemData, num), ActionReason.SubfieldDrop, true));
-            }
-        }
-    }
-
-    private void processDrop(DropData dd, EntityMonster em, Player gp) {
-        int target = Utils.randomRange(1, 10000);
-        if (target >= dd.getMinWeight() && target < dd.getMaxWeight()) {
-            ItemData itemData = GameData.getItemDataMap().get(dd.getItemId());
-            int num = Utils.randomRange(dd.getMinCount(), dd.getMaxCount());
-
-            if (itemData == null) {
-                return;
-            }
-            if (itemData.isEquip()) {
-                for (int i = 0; i < num; i++) {
-                    float range = (2.5f + (.05f * num));
-                    Position pos = em.getPosition().nearby2d(range).addY(3f);
-                    addDropEntity(dd, em.getScene(), itemData, pos, num, gp);
-                }
-            } else {
-                Position pos = em.getPosition().clone().addY(3f);
-                addDropEntity(dd, em.getScene(), itemData, pos, num, gp);
-            }
-        }
-    }
-
-    public void callDrop(EntityMonster em) {
-        int id = em.getMonsterData().getId();
-        if (getDropData().containsKey(id)) {
-            for (DropData dd : getDropData().get(id)) {
-                if (dd.isShare())
-                    processDrop(dd, em, null);
-                else {
-                    for (Player gp : em.getScene().getPlayers()) {
-                        processDrop(dd, em, gp);
+        } else if (dropData.getRandomType() == 1) {
+            for (var i : dropData.getDropVec()) {
+                int id = i.getId();
+                if (id == 0) continue;
+                if (rand.nextInt(10000) < i.getWeight()) {
+                    int amount = calculateDropAmount(i) * count;
+                    if (dropSubTable.containsKey(id)) {
+                        processSubDrop(dropSubTable.get(id), amount, bornFrom,fallToGround);
+                    } else {
+                        if(fallToGround) dropItem(id, amount, bornFrom);
+                        else giveItem(id,amount,bornFrom);
                     }
                 }
             }
         }
+    }
+
+    private int calculateDropAmount(DropItemData i) {
+        int amount = 0;
+        if (i.getCountRange().contains(";")) {
+            String[] ranges = i.getCountRange().split(";");
+            amount = rand.nextInt(Integer.parseInt(ranges[0]), Integer.parseInt(ranges[1]) + 1);
+        } else if (i.getCountRange().contains(".")) {
+            double expectAmount = Double.parseDouble(i.getCountRange());
+            int chance = (int) expectAmount + 1;
+            while ((chance--) > 0) {
+                if (rand.nextDouble() < expectAmount / chance) amount++;
+            }
+        } else {
+            amount = Integer.parseInt(i.getCountRange());
+        }
+        return amount;
+    }
+
+    /**
+     * @param broadcast Whether other players in the scene could see the drop items.
+     */
+    private void dropItem(int itemId, int amount, GameEntity bornFrom, boolean broadcast) {
+        //TODO:more fluent drop
+        Grasscutter.getLogger().info("Drop:{}*{}", itemId, amount);
+        //TODO:should not broadcast chest item drop to other players.
+        //TODO:send ItemAddHintNotify on auto-pick items like 102,202,etc.
+        switch (itemId){
+            case 201:
+            case 202:
+            case 102:
+                bornFrom.getScene().getWorld().getHost().getInventory().addItem(itemId,amount);
+            default:
+                bornFrom.getScene().addItemEntity(itemId,amount,bornFrom);
+        }
+    }
+
+    private void dropItem(int itemId, int amount, GameEntity bornFrom) {
+        dropItem(itemId, amount, bornFrom, false);
+    }
+    private void giveItem(int itemId,int amount,GameEntity bornFrom,boolean broadcast){
+        bornFrom.getScene().getWorld().getHost().getInventory().addItem(itemId,amount);
+    }
+    private void giveItem(int itemId,int amount,GameEntity bornFrom){
+        giveItem(itemId,amount,bornFrom,false);
     }
 }
