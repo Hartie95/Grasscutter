@@ -27,23 +27,29 @@ public class GadgetChest extends GadgetContent {
      */
     public boolean onInteract(Player player, GadgetInteractReq req) {
         //TODO:handle boss chests
-        Grasscutter.getLogger().info("OpenChest:chest_drop_id={},drop_tag={}", getGadget().getMetaGadget().chest_drop_id, this.getGadget().getMetaGadget().drop_tag);
+        //If bigWorldScript enabled,use new drop system.
         if (Grasscutter.getConfig().server.game.enableScriptInBigWorld) {
+            //only the owner of the world can open chests.
+            if (player != player.getWorld().getHost()) return false;
             SceneGadget chest = getGadget().getMetaGadget();
-            DropSystem dropSystem = getGadget().getScene().getWorld().getServer().getDropSystem();
+            Grasscutter.getLogger().info("OpenChest:chest_drop_id={},drop_tag={}", chest.chest_drop_id, chest.drop_tag);
+            DropSystem dropSystem = player.getServer().getDropSystem();
             boolean status = false;
             if (chest.drop_tag != null) {
-                status = dropSystem.handleChestDrop(chest.drop_tag, chest.level,getGadget());
+                status = dropSystem.handleChestDrop(chest.drop_tag, chest.level, getGadget());
             } else if (chest.chest_drop_id != 0) {
-                status = dropSystem.handleChestDrop(chest.chest_drop_id, chest.drop_count, chest.level,getGadget());
+                status = dropSystem.handleChestDrop(chest.chest_drop_id, chest.drop_count, getGadget());
             }
-            return false;
-//            if(status){
-//                getGadget().updateState(ScriptGadgetState.ChestOpened);
-//                player.sendPacket(new PacketGadgetInteractRsp(getGadget(), InteractTypeOuterClass.InteractType.INTERACT_TYPE_OPEN_CHEST));
-//                return chest.isOneoff;
-//            }
+            //TODO: remove
+            //return false;
+            //TODO: uncomment
+            if (status) {
+                getGadget().updateState(ScriptGadgetState.ChestOpened);
+                player.sendPacket(new PacketGadgetInteractRsp(getGadget(), InteractTypeOuterClass.InteractType.INTERACT_TYPE_OPEN_CHEST));
+                return chest.isOneoff;
+            }
             //if failed,fallback to legacy drop system.
+            Grasscutter.getLogger().warn("Can not solve chest drop:chest_drop_id={},drop_tag={}.Fallback to legacy drop system.", chest.chest_drop_id, chest.drop_tag);
         }
         var chestInteractHandlerMap = getGadget().getScene().getWorld().getServer().getWorldDataSystem().getChestInteractHandlerMap();
         var handler = chestInteractHandlerMap.get(getGadget().getGadgetData().getJsonName());
@@ -71,6 +77,7 @@ public class GadgetChest extends GadgetContent {
             player.sendPacket(new PacketGadgetInteractRsp(this.getGadget(), InteractTypeOuterClass.InteractType.INTERACT_TYPE_OPEN_CHEST));
 
         }
+        //TODO:change to true
         return false;
     }
 

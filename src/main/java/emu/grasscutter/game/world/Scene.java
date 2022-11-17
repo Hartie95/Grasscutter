@@ -10,8 +10,10 @@ import emu.grasscutter.game.avatar.Avatar;
 import emu.grasscutter.game.dungeons.DungeonManager;
 import emu.grasscutter.game.dungeons.DungeonPassConditionType;
 import emu.grasscutter.game.dungeons.DungeonSettleListener;
+import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.entity.*;
 import emu.grasscutter.game.entity.gadget.GadgetWorktop;
+import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.managers.blossom.BlossomManager;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.player.TeamInfo;
@@ -19,7 +21,6 @@ import emu.grasscutter.game.props.FightProperty;
 import emu.grasscutter.game.props.LifeState;
 import emu.grasscutter.game.props.SceneType;
 import emu.grasscutter.game.quest.QuestGroupSuite;
-import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.proto.AttackResultOuterClass.AttackResult;
 import emu.grasscutter.net.proto.SelectWorktopOptionReqOuterClass;
@@ -748,9 +749,39 @@ public class Scene {
             addEntity(entity);
         }
     }
+
+    public void addDropEntity(GameItem item, GameEntity bornForm, Player player, boolean share) {
+        //TODO:optimize EntityItem.java. Maybe we should make other players can't see the ItemEntity.
+        ItemData itemData = GameData.getItemDataMap().get(item.getItemId());
+        if (itemData == null) return;
+        if (itemData.isEquip()) {
+            float range = (1.5f + (.05f * item.getCount()));
+            for (int j = 0; j < item.getCount(); j++) {
+                Position pos = bornForm.getPosition().nearby2d(range).addZ(.9f);  // Why Z?
+                EntityItem entity = new EntityItem(this, player, itemData, pos, item.getCount(), share);
+                addEntity(entity);
+            }
+        } else {
+            EntityItem entity = new EntityItem(this, player, itemData, bornForm.getPosition().clone().addZ(.9f), item.getCount(), share);  // Why Z?
+            addEntity(entity);
+        }
+
+    }
+
+    /**
+     * @param share If false,only the player can see the items but others can't.If true,all players will see.
+     */
+    public void addDropEntities(List<GameItem> items, GameEntity bornForm, Player player, boolean share) {
+        //TODO:optimize EntityItem.java. Maybe we should make other players can't see the ItemEntity.
+        for (var i : items) {
+            addDropEntity(i, bornForm, player, share);
+        }
+    }
+
     public void loadNpcForPlayerEnter(Player player) {
         this.npcBornEntrySet.addAll(loadNpcForPlayer(player));
     }
+
     private List<SceneNpcBornEntry> loadNpcForPlayer(Player player) {
         var pos = player.getPosition();
         var data = GameData.getSceneNpcBornData().get(getId());
