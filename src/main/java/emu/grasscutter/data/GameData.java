@@ -1,31 +1,20 @@
 package emu.grasscutter.data;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.binout.*;
 import emu.grasscutter.data.binout.routes.Route;
+import emu.grasscutter.data.excels.*;
 import emu.grasscutter.game.dungeons.DungeonDropEntry;
 import emu.grasscutter.game.quest.QuestEncryptionKey;
 import emu.grasscutter.game.quest.RewindData;
 import emu.grasscutter.game.quest.TeleportData;
 import emu.grasscutter.utils.Utils;
-import emu.grasscutter.data.excels.*;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.ints.*;
 import lombok.Getter;
 import lombok.experimental.Tolerate;
+
+import java.lang.reflect.Field;
+import java.util.*;
 
 public class GameData {
     // BinOutputs
@@ -79,8 +68,8 @@ public class GameData {
     @Getter private static final Int2ObjectMap<CookRecipeData> cookRecipeDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<CompoundData> compoundDataMap=new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<DailyDungeonData> dailyDungeonDataMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<DropSubTableData> dropSubTableDataMap=new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<DropTableData> dropTableDataMap=new Int2ObjectOpenHashMap<>();
+    @Getter private static final Int2ObjectMap<DropMaterialData> dropMaterialDataMap=new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<DungeonData> dungeonDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<DungeonEntryData> dungeonEntryDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<EnvAnimalGatherConfigData> envAnimalGatherConfigDataMap = new Int2ObjectOpenHashMap<>();
@@ -141,8 +130,8 @@ public class GameData {
     @Getter private static final Map<Integer, List<Integer>> scenePointsPerScene = new HashMap<>();
     @Getter private static final Map<String, ScriptSceneData> scriptSceneDataMap = new HashMap<>();
     @Getter private static final Map<String, ConfigLevelEntity> configLevelEntityDataMap = new HashMap<>();
-    private static Map<Integer, List<Integer>> fetters = new HashMap<>();
-    private static Map<Integer, List<ShopGoodsData>> shopGoods = new HashMap<>();
+    private static final Map<Integer, List<Integer>> fetters = new HashMap<>();
+    private static final Map<Integer, List<ShopGoodsData>> shopGoods = new HashMap<>();
     protected static Int2ObjectMap<IntSet> proudSkillGroupLevels = new Int2ObjectOpenHashMap<>();
     protected static Int2IntMap proudSkillGroupMaxLevels = new Int2IntOpenHashMap();
     protected static Int2ObjectMap<IntSet> avatarSkillLevels = new Int2ObjectOpenHashMap<>();

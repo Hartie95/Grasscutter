@@ -4,22 +4,21 @@ import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.DataLoader;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.common.DropItemData;
-import emu.grasscutter.data.excels.DropSubTableData;
+import emu.grasscutter.data.excels.DropMaterialData;
 import emu.grasscutter.data.excels.DropTableData;
 import emu.grasscutter.game.entity.GameEntity;
 import emu.grasscutter.game.inventory.GameItem;
-import emu.grasscutter.game.inventory.MaterialType;
+import emu.grasscutter.game.inventory.ItemType;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.ActionReason;
 import emu.grasscutter.server.game.BaseGameSystem;
 import emu.grasscutter.server.game.GameServer;
-import emu.grasscutter.server.packet.send.PacketItemAddHintNotify;
+import emu.grasscutter.server.packet.send.PacketDropHintNotify;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
 import java.util.*;
 
 public class DropSystem extends BaseGameSystem {
-    private final Int2ObjectMap<DropSubTableData> dropSubTable;
     private final Int2ObjectMap<DropTableData> dropTable;
     private final Map<String, List<ChestDropData>> chestReward;
     private final Random rand;
@@ -28,7 +27,6 @@ public class DropSystem extends BaseGameSystem {
         super(server);
         rand = new Random();
         dropTable = GameData.getDropTableDataMap();
-        dropSubTable = GameData.getDropSubTableDataMap();
         chestReward = new HashMap<>();
         try {
             List<ChestDropData> dataList = DataLoader.loadList("ChestDrop.json", ChestDropData.class);
@@ -79,7 +77,7 @@ public class DropSystem extends BaseGameSystem {
         return true;
     }
 
-    private void processSubDrop(DropSubTableData dropData, int count, List<GameItem> items) {
+    private void processSubDrop(DropTableData dropData, int count, List<GameItem> items) {
         //TODO:Not clear on the meaning of some fields,like "dropLevel".Will ignore them.
         //TODO:solve drop limits,like everydayLimit.
 
@@ -90,6 +88,7 @@ public class DropSystem extends BaseGameSystem {
                 if (id == 0) continue;
                 weightSum += i.getWeight();
             }
+            if (weightSum == 0) return;
             int weight = rand.nextInt(weightSum);
             int sum = 0;
             for (var i : dropData.getDropVec()) {
@@ -99,8 +98,8 @@ public class DropSystem extends BaseGameSystem {
                 if (weight < sum) {
                     //win the item
                     int amount = calculateDropAmount(i) * count;
-                    if (dropSubTable.containsKey(id)) {
-                        processSubDrop(dropSubTable.get(id), amount, items);
+                    if (dropTable.containsKey(id)) {
+                        processSubDrop(dropTable.get(id), amount, items);
                     } else {
                         items.add(new GameItem(id, amount));
                     }
@@ -113,8 +112,8 @@ public class DropSystem extends BaseGameSystem {
                 if (id == 0) continue;
                 if (rand.nextInt(10000) < i.getWeight()) {
                     int amount = calculateDropAmount(i) * count;
-                    if (dropSubTable.containsKey(id)) {
-                        processSubDrop(dropSubTable.get(id), amount, items);
+                    if (dropTable.containsKey(id)) {
+                        processSubDrop(dropTable.get(id), amount, items);
                     } else {
                         items.add(new GameItem(id, amount));
                     }
@@ -131,7 +130,7 @@ public class DropSystem extends BaseGameSystem {
         } else if (i.getCountRange().contains(".")) {
             double expectAmount = Double.parseDouble(i.getCountRange());
             int chance = (int) expectAmount + 1;
-            while ((chance--) > 0) {
+            for (int k = 0; k < chance; k++) {
                 if (rand.nextDouble() < expectAmount / chance) amount++;
             }
         } else {
@@ -144,46 +143,63 @@ public class DropSystem extends BaseGameSystem {
      * @param share Whether other players in the scene could see the drop items.
      */
     private void dropItem(int itemId, int amount, ActionReason reason, Player player, GameEntity bornFrom, boolean share) {
-        if (GameData.getItemDataMap().get(itemId).getMaterialType() == MaterialType.MATERIAL_ADSORBATE) {
-            //auto-pick items
-            giveItem(itemId, amount, reason, player, share);
+        DropMaterialData drop = GameData.getDropMaterialDataMap().get(itemId);
+        if (GameData.getItemDataMap().get(itemId).getItemType() == ItemType.ITEM_VIRTUAL || (drop != null && drop.isAutoPick())) {
+            if (share) {
+                for (var p : player.getScene().getPlayers()) {
+                    p.sendPacket(new PacketDropHintNotify(itemId, bornFrom.getPosition().toProto()));
+                }
+            } else {
+                player.sendPacket(new PacketDropHintNotify(itemId, bornFrom.getPosition().toProto()));
+            }
         } else {
+            //TODO:solve share problem
             player.getScene().addDropEntity(new GameItem(itemId, amount), bornFrom, player, share);
         }
     }
 
     private void dropItems(List<GameItem> items, ActionReason reason, GameEntity bornFrom, Player player, boolean share) {
         for (var i : items) {
-            if (GameData.getItemDataMap().get(i.getItemId()).getMaterialType() == MaterialType.MATERIAL_ADSORBATE) {
-                //auto-pick items
-                giveItem(i.getItemId(), i.getCount(), reason, player, share);
-                items.remove(i);
+            DropMaterialData drop = GameData.getDropMaterialDataMap().get(i.getItemId());
+            if (i.getItemData().getItemType() == ItemType.ITEM_VIRTUAL || (drop != null && drop.isAutoPick())) {
+                giveItem(i,reason,player,share);
             }
         }
+        //TODO:solve share problem
         player.getScene().addDropEntities(items, bornFrom, player, share);
     }
 
-    private void giveItem(int itemId, int amount, ActionReason reason, Player player, boolean share) {
+    private void giveItem(GameItem item, ActionReason reason, Player player, boolean share) {
         if (share) {
             for (var p : player.getScene().getPlayers()) {
-                p.getInventory().addItem(itemId, amount, reason);
-                p.sendPacket(new PacketItemAddHintNotify(new GameItem(itemId, amount), reason));
+                p.sendPacket(new PacketDropHintNotify(item.getItemId(), player.getPosition().toProto()));
+                p.getInventory().addItem(item, reason);
             }
         } else {
-            player.getInventory().addItem(itemId, amount, reason);
-            player.sendPacket(new PacketItemAddHintNotify(new GameItem(itemId, amount), reason));
+            player.sendPacket(new PacketDropHintNotify(item.getItemId(), player.getPosition().toProto()));
+            player.getInventory().addItem(item, reason);
         }
     }
 
     private void giveItems(List<GameItem> items, ActionReason reason, Player player, boolean share) {
+        for (var i : items) {
+            DropMaterialData drop = GameData.getDropMaterialDataMap().get(i.getItemId());
+            if (i.getItemData().getItemType() == ItemType.ITEM_VIRTUAL || (drop != null && drop.isAutoPick())) {
+                if (share) {
+                    for (var p : player.getScene().getPlayers()) {
+                        p.sendPacket(new PacketDropHintNotify(i.getItemId(), player.getPosition().toProto()));
+                    }
+                } else {
+                    player.sendPacket(new PacketDropHintNotify(i.getItemId(), player.getPosition().toProto()));
+                }
+            }
+        }
         if (share) {
             for (var p : player.getScene().getPlayers()) {
                 p.getInventory().addItems(items, reason);
-                p.sendPacket(new PacketItemAddHintNotify(items, reason));
             }
         } else {
             player.getInventory().addItems(items, reason);
-            player.sendPacket(new PacketItemAddHintNotify(items, reason));
         }
     }
 }

@@ -21,6 +21,7 @@ import emu.grasscutter.game.props.FightProperty;
 import emu.grasscutter.game.props.LifeState;
 import emu.grasscutter.game.props.SceneType;
 import emu.grasscutter.game.quest.QuestGroupSuite;
+import emu.grasscutter.game.world.SpawnDataEntry.GridBlockId;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.proto.AttackResultOuterClass.AttackResult;
 import emu.grasscutter.net.proto.SelectWorktopOptionReqOuterClass;
@@ -58,7 +59,7 @@ public class Scene {
     @Getter @Setter private boolean dontDestroyWhenEmpty;
 
     @Getter private int time;
-    private long startTime;
+    private final long startTime;
 
     @Getter private SceneScriptManager scriptManager;
     @Getter @Setter private WorldChallenge challenge;
@@ -431,8 +432,7 @@ public class Scene {
     public synchronized void checkSpawns() {
         Set<SpawnDataEntry.GridBlockId> loadedGridBlocks = new HashSet<>();
         for (Player player : this.getPlayers()) {
-            for (SpawnDataEntry.GridBlockId block : SpawnDataEntry.GridBlockId.getAdjacentGridBlockIds(player.getSceneId(), player.getPosition()))
-                loadedGridBlocks.add(block);
+            Collections.addAll(loadedGridBlocks, GridBlockId.getAdjacentGridBlockIds(player.getSceneId(), player.getPosition()));
         }
         if (this.loadedGridBlocks.containsAll(loadedGridBlocks)) {  // Don't recalculate static spawns if nothing has changed
             return;
@@ -689,12 +689,11 @@ public class Scene {
     public void onPlayerDestroyGadget(int entityId) {
         GameEntity entity = getEntities().get(entityId);
 
-        if (entity == null || !(entity instanceof EntityClientGadget)) {
+        if (entity == null || !(entity instanceof EntityClientGadget gadget)) {
             return;
         }
 
         // Get and remove entity
-        EntityClientGadget gadget = (EntityClientGadget) entity;
         this.removeEntityDirectly(gadget);
 
         // Remove from owner's gadget list
@@ -740,12 +739,12 @@ public class Scene {
         if (itemData.isEquip()) {
             float range = (1.5f + (.05f * amount));
             for (int i = 0; i < amount; i++) {
-                Position pos = bornForm.getPosition().nearby2d(range).addZ(.9f);  // Why Z?
+                Position pos = bornForm.getPosition().nearby2d(range).addY(1.5f);  // Why Z?
                 EntityItem entity = new EntityItem(this, null, itemData, pos, 1);
                 addEntity(entity);
             }
         } else {
-            EntityItem entity = new EntityItem(this, null, itemData, bornForm.getPosition().clone().addZ(.9f), amount);  // Why Z?
+            EntityItem entity = new EntityItem(this, null, itemData, bornForm.getPosition().clone().addY(1.5f), amount);  // Why Z?
             addEntity(entity);
         }
     }
@@ -757,12 +756,12 @@ public class Scene {
         if (itemData.isEquip()) {
             float range = (1.5f + (.05f * item.getCount()));
             for (int j = 0; j < item.getCount(); j++) {
-                Position pos = bornForm.getPosition().nearby2d(range).addZ(.9f);  // Why Z?
+                Position pos = bornForm.getPosition().nearby2d(range).addY(1.5f);  //TODO
                 EntityItem entity = new EntityItem(this, player, itemData, pos, item.getCount(), share);
                 addEntity(entity);
             }
         } else {
-            EntityItem entity = new EntityItem(this, player, itemData, bornForm.getPosition().clone().addZ(.9f), item.getCount(), share);  // Why Z?
+            EntityItem entity = new EntityItem(this, player, itemData, bornForm.getPosition().clone().addY(1.5f), item.getCount(), share);  //TODO:improve
             addEntity(entity);
         }
 

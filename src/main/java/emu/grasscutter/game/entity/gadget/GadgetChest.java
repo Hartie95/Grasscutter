@@ -40,17 +40,16 @@ public class GadgetChest extends GadgetContent {
             } else if (chest.chest_drop_id != 0) {
                 status = dropSystem.handleChestDrop(chest.chest_drop_id, chest.drop_count, getGadget());
             }
-            //TODO: remove
-            //return false;
-            //TODO: uncomment
             if (status) {
                 getGadget().updateState(ScriptGadgetState.ChestOpened);
-                player.sendPacket(new PacketGadgetInteractRsp(getGadget(), InteractTypeOuterClass.InteractType.INTERACT_TYPE_OPEN_CHEST));
+                player.sendPacket(new PacketGadgetInteractRsp(getGadget(), InteractType.INTERACT_TYPE_OPEN_CHEST,InterOpType.INTER_OP_TYPE_FINISH));
                 return chest.isOneoff;
             }
             //if failed,fallback to legacy drop system.
             Grasscutter.getLogger().warn("Can not solve chest drop:chest_drop_id={},drop_tag={}.Fallback to legacy drop system.", chest.chest_drop_id, chest.drop_tag);
         }
+
+        //Legacy chest drop system
         var chestInteractHandlerMap = getGadget().getScene().getWorld().getServer().getWorldDataSystem().getChestInteractHandlerMap();
         var handler = chestInteractHandlerMap.get(getGadget().getGadgetData().getJsonName());
         if (handler == null) {
@@ -77,8 +76,7 @@ public class GadgetChest extends GadgetContent {
             player.sendPacket(new PacketGadgetInteractRsp(this.getGadget(), InteractTypeOuterClass.InteractType.INTERACT_TYPE_OPEN_CHEST));
 
         }
-        //TODO:change to true
-        return false;
+        return true;
     }
 
     public void onBuildProto(SceneGadgetInfo.Builder gadgetInfo) {
