@@ -212,28 +212,28 @@ public class World implements Iterable<Player> {
         this.getScenes().remove(scene.getId());
     }
 
-    public boolean transferPlayerToScene(Player player, int sceneId, Position pos) {
-        return this.transferPlayerToScene(player, sceneId, TeleportType.INTERNAL, null, pos);
+    public boolean transferPlayerToScene(Player player, int sceneId, Position pos, Position rot) {
+        return this.transferPlayerToScene(player, sceneId, TeleportType.INTERNAL, null, pos, rot);
     }
 
-    public boolean transferPlayerToScene(Player player, int sceneId, TeleportType teleportType, Position pos) {
-        return this.transferPlayerToScene(player, sceneId, teleportType, null, pos);
+    public boolean transferPlayerToScene(Player player, int sceneId, TeleportType teleportType, Position pos, Position rot) {
+        return this.transferPlayerToScene(player, sceneId, teleportType, null, pos, rot);
     }
 
     public boolean transferPlayerToScene(Player player, int sceneId, DungeonData data) {
-        return this.transferPlayerToScene(player, sceneId, TeleportType.DUNGEON, data, null);
+        return this.transferPlayerToScene(player, sceneId, TeleportType.DUNGEON, data, null, null);
     }
 
-    public boolean transferPlayerToScene(Player player, int sceneId, TeleportType teleportType, DungeonData dungeonData, Position teleportTo) {
+    public boolean transferPlayerToScene(Player player, int sceneId, TeleportType teleportType, DungeonData dungeonData, Position teleportPos, Position teleportRot) {
         // Call player teleport event.
-        PlayerTeleportEvent event = new PlayerTeleportEvent(player, teleportType, player.getPosition(), teleportTo);
+        PlayerTeleportEvent event = new PlayerTeleportEvent(player, teleportType, player.getPosition(), teleportPos);
         // Call event & check if it was canceled.
         event.call(); if (event.isCanceled()) {
             return false; // Teleport was canceled.
         }
 
         // Set the destination.
-        teleportTo = event.getDestination();
+        teleportPos = event.getDestination();
 
         if (GameData.getSceneDataMap().get(sceneId) == null) {
             return false;
@@ -262,9 +262,9 @@ public class World implements Iterable<Player> {
         //     dungeonManager.startDungeon();
         // }
         SceneConfig config = newScene.getScriptManager().getConfig();
-        if (teleportTo == null && config != null) {
+        if (teleportPos == null && config != null) {
             if (config.born_pos != null) {
-                teleportTo = newScene.getScriptManager().getConfig().born_pos;
+                teleportPos = newScene.getScriptManager().getConfig().born_pos;
             }
             if (config.born_rot != null) {
                 player.getRotation().set(config.born_rot);
@@ -272,11 +272,18 @@ public class World implements Iterable<Player> {
         }
 
         // Set player position
-        if (teleportTo == null) {
-            teleportTo = player.getPosition();
+        if (teleportPos == null) {
+            teleportPos = player.getPosition();
         }
 
-        player.getPosition().set(teleportTo);
+        if (teleportRot == null) {
+            teleportRot = player.getRotation();
+        }
+
+        Position prevPos = player.getPosition().clone();
+
+        player.getPosition().set(teleportPos);
+        player.getRotation().set(teleportRot);
 
         if (oldScene != null && newScene != oldScene) {
             newScene.setPrevScene(oldScene.getId());
@@ -294,12 +301,14 @@ public class World implements Iterable<Player> {
             case COMMAND -> EnterReason.Gm;
             case SCRIPT -> EnterReason.Lua;
             case CLIENT -> EnterReason.ClientTransmit;
+            case QUIT_DUNGEON -> EnterReason.DungeonQuit;
             default -> EnterReason.None;
         };
 
         if (dungeonData != null) {
             enterType = EnterType.ENTER_TYPE_DUNGEON;
             enterReason = EnterReason.DungeonEnter;
+            player.getScene().setDungeonId(dungeonData.getId());
         } else if (oldScene == newScene) {
             enterType = EnterType.ENTER_TYPE_GOTO;
         } else if (newScene.getSceneType() == SceneType.SCENE_HOME_WORLD) {
@@ -309,7 +318,7 @@ public class World implements Iterable<Player> {
         }
 
         // Teleport packet
-        player.sendPacket(new PacketPlayerEnterSceneNotify(player, enterType, enterReason, sceneId, teleportTo));
+        player.sendPacket(new PacketPlayerEnterSceneNotify(player, enterType, enterReason, sceneId, prevPos));
 
         if(teleportType != TeleportType.INTERNAL && teleportType != SCRIPT) {
             player.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_ANY_MANUAL_TRANSPORT);

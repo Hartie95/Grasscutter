@@ -76,7 +76,7 @@ public class MapMarksManager extends BasePlayerManager {
         }
 
         Position pos = mapMark.getPosition();
-        player.getWorld().transferPlayerToScene(player, mapMark.getSceneId(), TeleportType.MAP, new Position(pos.getX(), y, pos.getZ()));
+        player.getWorld().transferPlayerToScene(player, mapMark.getSceneId(), TeleportType.MAP, new Position(pos.getX(), y, pos.getZ()), player.getRotation());
         player.getScene().broadcastPacket(new PacketSceneEntityAppearNotify(player));
     }
 }

@@ -81,9 +81,8 @@ public final class SetConstCommand implements CommandHandler {
     private void reloadScene(Player player) {
         World world = player.getWorld();
         Scene scene = player.getScene();
-        Position pos = player.getPosition();
-        world.transferPlayerToScene(player, 1, pos);
-        world.transferPlayerToScene(player, scene.getId(), pos);
+        world.transferPlayerToScene(player, 1, player.getPosition(), player.getRotation());
+        world.transferPlayerToScene(player, scene.getId(), player.getPosition(), player.getRotation());
         scene.broadcastPacket(new PacketSceneEntityAppearNotify(player));
     }
 }
