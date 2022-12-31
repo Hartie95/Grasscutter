@@ -70,6 +70,7 @@ public class Scene {
     private Set<SceneNpcBornEntry> npcBornEntrySet;
     private final HashSet<Integer> unlockedForces;
     @Getter private boolean finishedLoading = false;
+    @Getter @Setter private int dungeonId = 0;
     private final List<Runnable> afterLoadedCallbacks = new ArrayList<>();
 
     public Scene(World world, SceneData sceneData) {
@@ -176,7 +177,7 @@ public class Scene {
     public synchronized void removePlayer(Player player) {
         // Remove from challenge if leaving
         if (this.getChallenge() != null && this.getChallenge().inProgress()) {
-            player.sendPacket(new PacketDungeonChallengeFinishNotify(this.getChallenge()));
+            player.sendPacket(new PacketDungeonChallengeFinishNotify(this.getChallenge(), 0));
         }
 
         // Remove player from scene

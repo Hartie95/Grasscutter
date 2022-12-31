@@ -141,6 +141,12 @@ public class Position implements Serializable {
         return this;
     }
 
+    public boolean isWithinArea(Position minArea, Position maxArea) {
+        return (maxArea.getX() >= getX()) && (getX() >= minArea.getX())
+            && (maxArea.getY() >= getY()) && (getY() >= minArea.getY())
+            && (maxArea.getZ() >= getZ()) && (getZ() >= minArea.getZ());
+    }
+    
     @Override
     public Position clone() {
         return new Position(x, y, z);

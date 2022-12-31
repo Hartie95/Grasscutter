@@ -11,6 +11,7 @@ import emu.grasscutter.data.excels.ItemData;
 import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.player.BasePlayerManager;
 import emu.grasscutter.game.player.Player;
+import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.game.props.ActionReason;
 import emu.grasscutter.net.proto.CookRecipeDataOuterClass;
 import emu.grasscutter.net.proto.PlayerCookArgsReqOuterClass.PlayerCookArgsReq;
@@ -51,7 +52,7 @@ public class CookingManager extends BasePlayerManager {
         // Tell the client that this blueprint is now unlocked and add the unlocked item to the player.
         this.player.getUnlockedRecipies().put(id, 0);
         this.player.sendPacket(new PacketCookRecipeDataNotify(id));
-
+        this.player.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_UNLOCKED_RECIPE, id);
         return true;
     }
 

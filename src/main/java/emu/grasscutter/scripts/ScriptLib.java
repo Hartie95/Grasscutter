@@ -1086,13 +1086,19 @@ public class ScriptLib {
         return 0;
     }
 
-    public int ShowReminderRadius(int var1, LuaTable var2, int var3){
-        logger.warn("[LUA] Call unimplemented ShowReminderRadius with {} {} {}", var1, printTable(var2), var3);
-        //TODO implement var2 is a postion
+    public int ShowReminderRadius(int reminderId, LuaTable reminderPos, int radius){
+        logger.debug("[LUA] Call ShowReminderRadius with {} {} {}", reminderId, printTable(reminderPos), radius);
+        val pos = luaToPos(reminderPos);
+        // TODO check
+        getSceneScriptManager().getScene().getPlayers().forEach(p -> {
+            if (p.getPosition().computeDistance(pos) > radius) return;
+            getSceneScriptManager().getScene().broadcastPacket(new PacketDungeonShowReminderNotify(reminderId));
+        });
         return 0;
     }
     public int ShowClientGuide(String guideName){
-        logger.debug("[LUA] Call unimplemented ShowClientGuide with {}", guideName);
+        logger.debug("[LUA] Call ShowClientGuide with {}", guideName);
+        // TODO check
         if (GameData.getGuideTriggerDataStringMap().get(guideName) != null) {
             // if should handle by open state, dont send packet here
             // not entirely sure what return value is about

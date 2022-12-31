@@ -165,12 +165,6 @@ public class Avatar {
         this.guid = player.getNextGameGuid();
     }
 
-    public void removeOwner() {
-        this.owner = null;
-        this.ownerId = 0;
-        this.guid = 0;
-    }
-
     static public int getMinPromoteLevel(int level) {
         if (level > 80) {
             return 6;
@@ -240,15 +234,18 @@ public class Avatar {
      * @return false if failed or already using that element, true if it actually changed
      */
     public boolean changeElement(@Nonnull ElementType elementTypeToChange) {
+        return changeSkillDepot(elementTypeToChange.getDepotIndex());
+    }
+
+    public boolean changeSkillDepot(int skillDepotIndex) {
         val candSkillDepotIdsList = data.getCandSkillDepotIds();
-        val candSkillDepotIndex = elementTypeToChange.getDepotIndex();
 
         // if no candidate skill to change or index out of bound
-        if (candSkillDepotIdsList == null || candSkillDepotIndex >= candSkillDepotIdsList.size()) {
+        if (candSkillDepotIdsList == null || skillDepotIndex >= candSkillDepotIdsList.size()) {
             return false;
         }
 
-        int candSkillDepotId = candSkillDepotIdsList.get(candSkillDepotIndex);
+        int candSkillDepotId = candSkillDepotIdsList.get(skillDepotIndex);
 
         // Sanity checks for skill depots
         val skillDepot = GameData.getAvatarSkillDepotDataMap().get(candSkillDepotId);
@@ -1002,14 +999,6 @@ public class Avatar {
             }
             getEquips().put(relic.getEquipSlot(), relic);
         }
-
-        // add costume if any (ambor, rosiaria, mona, Jean)
-        for (AvatarCostumeData costumeData : GameData.getAvatarCostumeDataItemIdMap().values()){
-            if (costumeData.getCharacterId() == this.getAvatarId()){
-                this.setCostume(costumeData.getId());
-                break;
-            }
-        }
     }
 
     public void equipTrialItems(){
@@ -1021,14 +1010,6 @@ public class Avatar {
                 getPlayer().sendPacket(new PacketAvatarEquipChangeNotify(this, item));
             }  
         });
-    }
-
-    public void removeTrialItems(){
-        getEquips().forEach((itemEquipTypeValues, item) -> {
-            item.setEquipCharacter(0);
-            item.removeOwner();
-        });
-        getEquips().clear();
     }
 
     public TrialAvatarInfo trialAvatarInfoProto(){

@@ -17,6 +17,7 @@ import emu.grasscutter.game.props.ActionReason;
 import emu.grasscutter.game.props.ItemUseAction.UseItemParams;
 import emu.grasscutter.game.props.PlayerProperty;
 import emu.grasscutter.game.props.WatcherTriggerType;
+import emu.grasscutter.game.quest.enums.QuestCond;
 import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.net.proto.ItemParamOuterClass.ItemParam;
 import emu.grasscutter.server.packet.send.PacketAddNoGachaAvatarCardNotify;
@@ -141,6 +142,9 @@ public class Inventory extends BasePlayerManager implements Iterable<GameItem> {
         List<GameItem> changedItems = new ArrayList<>();
         for (var item : items) {
             if (item.getItemId() == 0) continue;
+            if (item.getItemData().getMaterialType() == MaterialType.MATERIAL_AVATAR && reason != null){
+                getPlayer().sendPacket(new PacketAddNoGachaAvatarCardNotify((item.getItemId() % 1000) + 10000000, reason, item));
+            }
             GameItem result = null;
             try {
                 // putItem might throws exception
@@ -166,10 +170,15 @@ public class Inventory extends BasePlayerManager implements Iterable<GameItem> {
     private void triggerAddItemEvents(GameItem result){
         getPlayer().getBattlePassManager().triggerMission(WatcherTriggerType.TRIGGER_OBTAIN_MATERIAL_NUM, result.getItemId(), result.getCount());
         getPlayer().getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_OBTAIN_ITEM, result.getItemId(), result.getCount());
+        getPlayer().getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_OBTAIN_VARIOUS_ITEM);
+        getPlayer().getQuestManager().queueEvent(QuestCond.QUEST_COND_PACK_HAVE_ITEM, result.getItemId());
+        getPlayer().getQuestManager().queueEvent(QuestCond.QUEST_COND_HISTORY_GOT_ANY_ITEM, result.getItemId());
     }
+
     private void triggerRemItemEvents(GameItem item, int removeCount){
         getPlayer().getBattlePassManager().triggerMission(WatcherTriggerType.TRIGGER_COST_MATERIAL, item.getItemId(), removeCount);
         getPlayer().getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_ITEM_LESS_THAN, item.getItemId(), item.getCount());
+        getPlayer().getQuestManager().queueEvent(QuestCond.QUEST_COND_ITEM_NUM_LESS_THAN, item.getItemId());
     }
 
     public void addItemParams(Collection<ItemParam> items) {
@@ -250,7 +259,6 @@ public class Inventory extends BasePlayerManager implements Iterable<GameItem> {
     }
 
     private synchronized void putItem(GameItem item, InventoryTab tab) {
-        this.player.getCodex().checkAddedItem(item);
         // Set owner and guid FIRST!
         item.setOwner(this.player);
         // Put in item store
@@ -258,6 +266,7 @@ public class Inventory extends BasePlayerManager implements Iterable<GameItem> {
         if (tab != null) {
             tab.onAddItem(item);
         }
+        this.player.getCodex().checkAddedItem(item);
     }
 
     private void addVirtualItem(int itemId, int count) {
@@ -310,7 +319,7 @@ public class Inventory extends BasePlayerManager implements Iterable<GameItem> {
         return null;
     }
 
-    private int getVirtualItemCount(int itemId) {
+    public int getVirtualItemCount(int itemId) {
         switch (itemId) {
             case 201:  // Primogem
                 return this.player.getPrimogems();
