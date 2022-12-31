@@ -11,7 +11,7 @@ public class ContentLeaveScene extends BaseContent {
 
     @Override
     public boolean execute(GameQuest quest, QuestData.QuestContentCondition condition, String paramStr, int... params) {
-        return quest.getOwner().getScene().getPrevScene() == params[0];
+        return quest.getOwner().getScene().getPrevScene() == condition.getParam()[0];
     }
 
 }
