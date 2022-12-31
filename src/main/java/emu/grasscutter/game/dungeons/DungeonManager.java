@@ -22,6 +22,7 @@ import emu.grasscutter.utils.Utils;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.NonNull;
 import lombok.val;
 
@@ -207,24 +208,16 @@ public class DungeonManager {
         scene.getPlayers().forEach(p-> p.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_ENTER_DUNGEON, dungeonData.getId()));
     }
 
+    public void endDungeon(BaseDungeonResult.DungeonEndReason endReason) {
+        if(scene.getDungeonSettleListeners()!=null) {
+            scene.getDungeonSettleListeners().forEach(o -> o.onDungeonSettle(this, endReason));
+        }
+        ended = true;
+    }
+
     public void finishDungeon() {
         notifyEndDungeon(true);
         endDungeon(BaseDungeonResult.DungeonEndReason.COMPLETED);
-    }
-
-    public void notifyEndDungeon(boolean successfully){
-        scene.getPlayers().forEach(p -> {
-            // Quest trigger
-            p.getQuestManager().queueEvent(successfully?
-                    QuestContent.QUEST_CONTENT_FINISH_DUNGEON : QuestContent.QUEST_CONTENT_FAIL_DUNGEON,
-                dungeonData.getId());
-
-            // Battle pass trigger
-            if(dungeonData.getType().isCountsToBattlepass() && successfully) {
-                p.getBattlePassManager().triggerMission(WatcherTriggerType.TRIGGER_FINISH_DUNGEON);
-            }
-        });
-        scene.getScriptManager().callEvent(new ScriptArgs(EventType.EVENT_DUNGEON_SETTLE, successfully ? 1 : 0));
     }
 
     public void quitDungeon() {
@@ -237,11 +230,21 @@ public class DungeonManager {
         endDungeon(BaseDungeonResult.DungeonEndReason.FAILED);
     }
 
-    public void endDungeon(BaseDungeonResult.DungeonEndReason endReason) {
-        if(scene.getDungeonSettleListeners()!=null) {
-            scene.getDungeonSettleListeners().forEach(o -> o.onDungeonSettle(this, endReason));
-        }
-        ended = true;
+    public void notifyEndDungeon(boolean successfully){
+        scene.getPlayers().forEach(p -> {
+            if (successfully && p.getPlotDungeon(dungeonData.getId(), false) != null) 
+                p.getPlotDungeon(dungeonData.getId(), false).finish();
+
+            p.getQuestManager().queueEvent(successfully?
+                    QuestContent.QUEST_CONTENT_FINISH_DUNGEON : QuestContent.QUEST_CONTENT_FAIL_DUNGEON,
+                dungeonData.getId());
+
+            // Battle pass trigger
+            if(dungeonData.getType().isCountsToBattlepass() && successfully) {
+                p.getBattlePassManager().triggerMission(WatcherTriggerType.TRIGGER_FINISH_DUNGEON);
+            }
+        });
+        scene.getScriptManager().callEvent(new ScriptArgs(EventType.EVENT_DUNGEON_SETTLE, successfully ? 1 : 0));
     }
 
     public void restartDungeon() {

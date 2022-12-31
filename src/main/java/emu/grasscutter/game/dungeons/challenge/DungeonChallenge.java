@@ -36,7 +36,7 @@ public class DungeonChallenge extends WorldChallenge {
         getScene().triggerDungeonEvent(DungeonPassConditionType.DUNGEON_COND_FINISH_CHALLENGE, getChallengeId(), getChallengeIndex());
         if (this.isSuccess()) {
             // Settle
-            settle();
+            // settle(); // shouldn't dungeon manager handle this already?
         }
     }
 

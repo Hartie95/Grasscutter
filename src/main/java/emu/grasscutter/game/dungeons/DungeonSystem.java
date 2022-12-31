@@ -6,12 +6,15 @@ import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.ScenePointEntry;
 import emu.grasscutter.data.excels.DungeonData;
 import emu.grasscutter.data.excels.DungeonPassConfigData;
+import emu.grasscutter.game.dungeons.enums.DungeonType;
 import emu.grasscutter.game.dungeons.handlers.DungeonBaseHandler;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.SceneType;
+import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.packet.PacketOpcodes;
+import emu.grasscutter.server.event.player.PlayerTeleportEvent.TeleportType;
 import emu.grasscutter.server.game.BaseGameSystem;
 import emu.grasscutter.server.game.GameServer;
 import emu.grasscutter.server.packet.send.PacketDungeonEntryInfoRsp;
@@ -60,8 +63,8 @@ public class DungeonSystem extends BaseGameSystem {
         }
     }
 
-    public void getEntryInfo(Player player, int pointId) {
-        ScenePointEntry entry = GameData.getScenePointEntryById(player.getScene().getId(), pointId);
+    public void getEntryInfo(Player player, int sceneId, int pointId) {
+        ScenePointEntry entry = GameData.getScenePointEntryById(sceneId, pointId);
 
         if (entry == null) {
             // Error
@@ -69,7 +72,7 @@ public class DungeonSystem extends BaseGameSystem {
             return;
         }
 
-        player.sendPacket(new PacketDungeonEntryInfoRsp(player, entry.getPointData()));
+        player.sendPacket(new PacketDungeonEntryInfoRsp(player, sceneId, entry.getPointData()));
     }
 
     public boolean triggerCondition(DungeonPassConfigData.DungeonPassCondition condition, int... params) {
@@ -98,7 +101,6 @@ public class DungeonSystem extends BaseGameSystem {
         if (player.getWorld().transferPlayerToScene(player, sceneId, data)) {
             scene = player.getScene();
             var dungeonManager = new DungeonManager(scene, data);
-            dungeonManager.startDungeon();
             scene.addDungeonSettleObserver(basicDungeonSettleObserver);
         }
 
@@ -137,13 +139,15 @@ public class DungeonSystem extends BaseGameSystem {
         // Get previous position
         var dungeonManager = scene.getDungeonManager();
         DungeonData dungeonData =  dungeonManager != null ? dungeonManager.getDungeonData() : null;
-        Position prevPos = new Position(GameConstants.START_POSITION);
+        Position nextPos = new Position(GameConstants.START_POSITION);
+        Position nextRot = new Position(0, 0, 0);
 
         if (dungeonData != null) {
-            ScenePointEntry entry = GameData.getScenePointEntryById(prevScene, scene.getPrevScenePoint());
+            ScenePointEntry entry = GameData.getExitDungeonPoint(scene.getPrevScenePoint());
 
             if (entry != null) {
-                prevPos.set(entry.getPointData().getTranPos());
+                nextPos.set(entry.getPointData().getPos());
+                nextRot.set(entry.getPointData().getRot());
             }
             if(!dungeonManager.isFinishedSuccessfully()){
                 dungeonManager.quitDungeon();
@@ -153,8 +157,10 @@ public class DungeonSystem extends BaseGameSystem {
         player.getTeamManager().cleanTemporaryTeam();
         player.getTowerManager().clearEntry();
 
-        // Transfer player back to world
-        player.getWorld().transferPlayerToScene(player, prevScene, prevPos);
+        Grasscutter.getGameServer().getScheduler().scheduleDelayedTask(() -> {
+            player.getWorld().transferPlayerToScene(player, prevScene, TeleportType.QUIT_DUNGEON, nextPos, nextRot);
+        }, dungeonManager.isFinishedSuccessfully() ? 0 : dungeonData.getQuitSettleCountdownTime());
+        
         player.sendPacket(new BasePacket(PacketOpcodes.PlayerQuitDungeonRsp));
     }
 

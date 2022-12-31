@@ -95,7 +95,7 @@ public class WorldChallenge {
         this.progress = false;
         this.success = success;
         this.finishedTime = (int)((System.currentTimeMillis() - this.startedAt) / 1000L);
-        getScene().broadcastPacket(new PacketDungeonChallengeFinishNotify(this));
+        getScene().broadcastPacket(new PacketDungeonChallengeFinishNotify(this, 0));
     }
 
     public int increaseScore(){
