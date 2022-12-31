@@ -37,17 +37,16 @@ public final class QuestCommand implements CommandHandler {
 
         switch (cmd) {
             case "enable" -> {
-                targetPlayer.getQuestManager().enableQuests();
+                targetPlayer.getQuestManager().enableQuests(true);
                 CommandHandler.sendMessage(sender, translate(sender, "commands.quest.enabled"));
             }
             case "add" -> {
-                GameQuest quest = targetPlayer.getQuestManager().addQuest(questId);
+                GameQuest quest = targetPlayer.getQuestManager().addQuest(questId, true);
 
                 if (quest != null) {
                     CommandHandler.sendMessage(sender, translate(sender, "commands.quest.added", questId));
                     return;
                 }
-
                 CommandHandler.sendMessage(sender, translate(sender, "commands.quest.not_found"));
             }
             case "finish" -> {

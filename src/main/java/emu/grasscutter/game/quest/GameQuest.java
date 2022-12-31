@@ -66,7 +66,7 @@ public class GameQuest {
         this.triggers = new HashMap<>();
     }
 
-    public void start() {
+    public void start(boolean shouldNotify) {
         clearProgress(false);
         this.acceptTime = Utils.getCurrentSeconds();
         this.startTime = this.acceptTime;
@@ -74,13 +74,14 @@ public class GameQuest {
 
         checkAndLoadTrigger();
 
-        getOwner().sendPacket(new PacketQuestListUpdateNotify(this));
+        if (shouldNotify) 
+            getOwner().sendPacket(new PacketQuestListUpdateNotify(this));
 
         getOwner().getQuestManager().checkChapter(subQuestId, true);
 
         //Some subQuests and talks become active when some other subQuests are unfinished (even from different MainQuests)
-        getOwner().getQuestManager().queueEvent(QUEST_CONTENT_QUEST_STATE_EQUAL, getSubQuestId(), getState().getValue(),0,0,0);
-        getOwner().getQuestManager().queueEvent(QUEST_COND_STATE_EQUAL, getSubQuestId(), getState().getValue(),0,0,0);
+        getOwner().getQuestManager().queueEvent(QUEST_CONTENT_QUEST_STATE_EQUAL, getSubQuestId(), getState().getValue());
+        getOwner().getQuestManager().queueEvent(QUEST_COND_STATE_EQUAL, getSubQuestId(), getState().getValue());
 
         getQuestData().getBeginExec().forEach(e -> getOwner().getServer().getQuestSystem().triggerExec(this, e, e.getParam()));
         getOwner().getQuestManager().checkQuestAlreadyFullfilled(this);
@@ -138,6 +139,10 @@ public class GameQuest {
 
     private boolean shouldFail(){
         return LogicType.calculate(questData.getFailCondComb(), failProgressList);
+    }
+
+    public boolean isUnfinished() {
+        return getState() == QuestState.QUEST_STATE_UNFINISHED;
     }
 
     public void tryFinish(QuestContent condType, String paramStr, int... params){
@@ -229,18 +234,20 @@ public class GameQuest {
     private void triggerFinishQuestEvents() {
         //Some subQuests have conditions that subQuests are finished (even from different MainQuests)
         val questManager = getOwner().getQuestManager();
-        questManager.queueEvent(QUEST_CONTENT_QUEST_STATE_EQUAL, this.subQuestId, this.state.getValue());
-        questManager.queueEvent(QUEST_CONTENT_FINISH_PLOT, this.subQuestId);
-        questManager.queueEvent(QUEST_COND_STATE_EQUAL, this.subQuestId, this.state.getValue());
+        getOwner().getQuestManager().queueEvent(QUEST_CONTENT_QUEST_STATE_EQUAL, getSubQuestId(), getState().getValue());
+        getOwner().getQuestManager().queueEvent(QUEST_COND_STATE_EQUAL, getSubQuestId(), getState().getValue());
+        // getOwner().getQuestManager().queueEvent(QUEST_CONTENT_FINISH_PLOT, getSubQuestId());
         getOwner().getScene().triggerDungeonEvent(DUNGEON_COND_FINISH_QUEST, getSubQuestId());
         getOwner().getProgressManager().tryUnlockOpenStates();
     }
 
     private void triggerQuestWorkarounds(){
-        // hard coding to give amber
-        if(getQuestData().getSubId() == 35402){
-            getOwner().getInventory().addItem(1021, 1, ActionReason.QuestItem); // amber item id
-        }
+        // hard coding to give quest item
+        getOwner().getInventory().addItem(switch (getQuestData().getSubId()) {
+            case 35402 -> 1021; // amber itemId
+            case 46203 -> 100171; // kaeya story quest item
+            default -> 0;
+        }, 1, ActionReason.QuestItem);
     }
 
     //TODO
@@ -258,6 +265,10 @@ public class GameQuest {
         getQuestData().getFailExec().forEach(e -> getOwner().getServer().getQuestSystem().triggerExec(this, e, e.getParam()));
 
         Grasscutter.getLogger().debug("Quest {} is failed", subQuestId);
+
+        if (getQuestData().getTrialAvatarList() == null) return;
+        
+        getQuestData().getTrialAvatarList().forEach(t -> getOwner().removeTrialAvatar(t));
     }
 
     // Return true if it did the rewind
@@ -266,7 +277,7 @@ public class GameQuest {
             q.clearProgress(notifyDelete);
         });
         clearProgress(notifyDelete);
-        this.start();
+        this.start(notifyDelete);
         return true;
     }
 
