@@ -4,21 +4,24 @@ import java.util.List;
 
 import emu.grasscutter.data.GameResource;
 import emu.grasscutter.data.ResourceType;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 import emu.grasscutter.data.common.ItemParamData;
 
 @ResourceType(name = "RewardExcelConfigData.json")
+@Getter @Setter @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RewardData extends GameResource {
-    public int rewardId;
-    public List<ItemParamData> rewardItemList;
+    int rewardId;
+    int hcoin;
+    int playerExp;
+    List<ItemParamData> rewardItemList;
 
     @Override
 	public int getId() {
 		return rewardId;
 	}
-
-    public List<ItemParamData> getRewardItemList() {
-        return rewardItemList;
-    }
 
     @Override
     public void onLoad() {

@@ -14,7 +14,10 @@ import lombok.Setter;
 public class PointData {
     @Getter @Setter private int id;
     private String $type;
+    @Getter private Position pos;
+    @Getter private Position rot;
     @Getter private Position tranPos;
+    @Getter private Position tranRot;
 
     @SerializedName(value="dungeonIds", alternate={"JHHFPGJNMIN"})
     @Getter private int[] dungeonIds;
@@ -24,6 +27,8 @@ public class PointData {
 
     @SerializedName(value="tranSceneId", alternate={"JHBICGBAPIH"})
     @Getter @Setter private int tranSceneId;
+
+    @Getter private int entryPointId;
 
     public String getType() {
         return $type;

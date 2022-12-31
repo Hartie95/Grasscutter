@@ -1,6 +1,7 @@
 package emu.grasscutter.data.excels;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.google.gson.annotations.SerializedName;
@@ -104,12 +105,18 @@ public class QuestData extends GameResource {
     }
 
     private void addToCache(){
-        if(getAcceptCond() == null){
+        getFinishCond().stream().forEach(x -> {
+            if (x.getType() != QuestContent.QUEST_CONTENT_ENTER_DUNGEON) return;
+            GameData.getQuestDungeonMap().computeIfAbsent(x.getParam()[1], s -> new HashMap<>())
+                .put(getSubId(), x.getParam()[0]);
+        });
+        
+        if (getAcceptCond() == null) {
             Grasscutter.getLogger().warn("missing AcceptConditions for quest {}", getSubId());
             return;
         }
         val cacheMap = GameData.getBeginCondQuestMap();
-        if(getAcceptCond().isEmpty()){
+        if (getAcceptCond().isEmpty()) {
             val list = cacheMap.computeIfAbsent(QuestData.questConditionKey(QuestCond.QUEST_COND_NONE, 0, null), e -> new ArrayList<>());
             list.add(this);
         } else {

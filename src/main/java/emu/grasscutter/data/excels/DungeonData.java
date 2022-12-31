@@ -29,6 +29,8 @@ public class DungeonData extends GameResource {
     @Getter private int statueCostCount;
 
     @Getter private RewardPreviewData rewardPreviewData;
+    @Getter private String entryPicPath;
+    @Getter private List<Integer> enterCostItems;
 
 	@Override
 	public int getId() {

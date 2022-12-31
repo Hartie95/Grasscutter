@@ -5,6 +5,7 @@ import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.binout.*;
 import emu.grasscutter.data.binout.AbilityModifier.AbilityModifierAction;
 import emu.grasscutter.data.binout.routes.SceneRoutes;
+import emu.grasscutter.data.binout.SceneWorldArea;
 import emu.grasscutter.data.common.PointData;
 import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.game.dungeons.DungeonDrop;
@@ -92,6 +93,7 @@ public class ResourceLoader {
         // Load special ability in certain scene/dungeon
         loadConfigLevelEntityData();
         loadQuestShareConfig();
+        loadSceneWorldAreaData();
         Grasscutter.getLogger().info(translate("messages.status.resources.finish"));
         loadedAll = true;
     }
@@ -600,6 +602,35 @@ public class ResourceLoader {
             || GameData.getRewindDataMap() == null || GameData.getRewindDataMap().isEmpty()) {
             Grasscutter.getLogger().error("No Quest Share Config loaded!");
             return;
+        }
+    }
+
+    private static void loadSceneWorldAreaData() {
+        try {
+            Files.newDirectoryStream(getResourcePath("BinOutput/Scene/WorldArea"), "scene*_worldArea.json").forEach(path -> {
+                try {
+                    val sceneWorldArea = JsonUtils.loadToClass(path, SceneWorldArea.class);
+                    int sceneId = Integer.parseInt(path.getFileName().toString().split("_")[0].substring(5));
+
+                    if (sceneWorldArea.getLevel1Areas() == null) {
+                        Grasscutter.getLogger().debug("No world area found for scene {}", sceneId);
+                        return;
+                    }
+                    
+                    sceneWorldArea.getLevel1Areas().stream().map(x -> x.getLevel2Areas())
+                        .forEach(x -> {
+                            if (x == null) return;
+                            GameData.getSceneLevel2AreaMap().computeIfAbsent(sceneId, s -> new ArrayList<>())
+                            .addAll(x);
+                        });
+                } catch (Exception e) {
+                    Grasscutter.getLogger().error("failed to load scene world area for " + path.toString(), e);
+                }
+            });
+
+            Grasscutter.getLogger().debug("Loaded SceneWorldArea for {} scenes.", GameData.getSceneLevel2AreaMap().size());
+        } catch (IOException e) {
+            Grasscutter.getLogger().error("Failed to load SceneWorldArea folder.");
         }
     }
     // BinOutput configs

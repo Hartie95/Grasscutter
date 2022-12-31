@@ -15,7 +15,7 @@ public class DungeonEntryData extends GameResource {
 
     @Override
     public int getId() {
-        return this.id;
+        return this.dungeonEntryId;
     }
 
     @Override

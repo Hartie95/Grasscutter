@@ -69,6 +69,7 @@ public class GameData {
     @Getter private static final Int2ObjectMap<BuffData> buffDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<ChapterData> chapterDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<CityData> cityDataMap = new Int2ObjectOpenHashMap<>();
+    @Getter private static final Int2ObjectMap<CityLevelUpData> cityLevelUpDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<CodexAnimalData> codexAnimalDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<CodexMaterialData> codexMaterialDataIdMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<CodexQuestData> codexQuestDataIdMap = new Int2ObjectOpenHashMap<>();
@@ -93,6 +94,7 @@ public class GameData {
     @Getter private static final Int2ObjectMap<HomeWorldLevelData> homeWorldLevelDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<InvestigationMonsterData> investigationMonsterDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<ItemData> itemDataMap = new Int2ObjectOpenHashMap<>();
+    @Getter private static final Int2ObjectMap<MapAreaData> mapAreaDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<MonsterCurveData> monsterCurveDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<MonsterData> monsterDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<MonsterDescribeData> monsterDescribeDataMap = new Int2ObjectOpenHashMap<>();
@@ -110,9 +112,11 @@ public class GameData {
     @Getter private static final Int2ObjectMap<RewardData> rewardDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<RewardPreviewData> rewardPreviewDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<SceneData> sceneDataMap = new Int2ObjectLinkedOpenHashMap<>();
+    @Getter private static final Int2ObjectMap<SceneTagData> sceneTagDataMap = new Int2ObjectLinkedOpenHashMap<>();
     @Getter private static final Int2ObjectMap<TowerFloorData> towerFloorDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<TowerLevelData> towerLevelDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<TowerScheduleData> towerScheduleDataMap = new Int2ObjectOpenHashMap<>();
+    @Getter private static final Int2ObjectMap<TransPointRewardData> transPointRewardDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<TrialAvatarData> trialAvatarDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<TrialAvatarTemplateData> trialAvatarTemplateDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<TrialReliquaryData> trialReliquaryDataMap = new Int2ObjectOpenHashMap<>();
@@ -150,12 +154,13 @@ public class GameData {
     protected static Int2IntMap proudSkillGroupMaxLevels = new Int2IntOpenHashMap();
     protected static Int2ObjectMap<IntSet> avatarSkillLevels = new Int2ObjectOpenHashMap<>();
     @Getter private static final Map<String, List<QuestData>> beginCondQuestMap = new HashMap<>();
+    @Getter private static final Map<Integer, Map<Integer, Integer>> questDungeonMap = new HashMap<>();
+    @Getter private static final Map<Integer, List<SceneWorldArea.AreaData>> sceneLevel2AreaMap = new HashMap<>();
     @Getter private static final Map<Integer, Integer> questTalkMap = new HashMap<>();
     @Getter private static final Set<Integer> trackQuests= new TreeSet<>(); // tracking quests
 
     // Getters with wrong names, remove later
     @Deprecated(forRemoval = true) public static Int2ObjectMap<CodexReliquaryData> getcodexReliquaryIdMap() {return codexReliquaryDataIdMap;}
-    @Deprecated(forRemoval = true) public static Int2ObjectMap<DungeonEntryData> getDungeonEntryDatatMap() {return dungeonEntryDataMap;}
     @Deprecated(forRemoval = true) @Tolerate public static ArrayList<CodexReliquaryData> getcodexReliquaryArrayList() {return codexReliquaryArrayList;}
 
     // Getters with different names that stay for now
@@ -185,6 +190,13 @@ public class GameData {
 
     public static ScenePointEntry getScenePointEntryById(int sceneId, int pointId) {
         return scenePointEntryMap.get((sceneId << 16) + pointId);
+    }
+
+    public static ScenePointEntry getExitDungeonPoint(int prevScenePointId) {
+        return scenePointEntryMap.values().stream()
+            .filter(x -> x.getPointData().getType().equals("DungeonExit"))
+            .filter(x -> x.getPointData().getEntryPointId() == prevScenePointId)
+            .findFirst().orElse(null);
     }
 
     // Non-nullable value getters
@@ -264,5 +276,30 @@ public class GameData {
     @Nullable
     public static List<QuestData> getQuestDataByConditions(QuestCond questCond, int param0, String questStr){
         return beginCondQuestMap.get(QuestData.questConditionKey(questCond, param0, questStr));
+    }
+
+    public static Map<Integer, Integer> getQuestDungeonEntry(int sceneId, int pointId) {
+        if (dungeonEntryDataMap.get(pointId) == null ||
+            dungeonEntryDataMap.get(pointId).getSceneId() != sceneId) return null;
+        return questDungeonMap.getOrDefault(pointId, null);
+    }
+
+    public static int getCityBySceneArea(int sceneId, int areaId) {
+        return getCityDataMap().values().stream()
+            .filter(x -> x.getSceneId() == sceneId && x.getAreaIdVec().contains(areaId))
+            .map(CityData::getCityId).findAny().orElse(0);
+    }
+
+    public static List<CityLevelUpData> getLevelUpDataByCity(int cityId) {
+        return getCityLevelUpDataMap().values().stream()
+            .filter(e -> e.getCityId() == cityId)
+            .toList();
+    }
+
+    public static List<Integer> getDefaultSceneTag(int sceneId) {
+        return getSceneTagDataMap().values().stream()
+            .filter(x -> x.getSceneId() == sceneId && x.isDefaultValid())
+            .map(SceneTagData::getId)
+            .toList();
     }
 }
