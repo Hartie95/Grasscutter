@@ -16,9 +16,9 @@ public class PacketGetSceneAreaRsp extends BasePacket {
         GetSceneAreaRsp p = GetSceneAreaRsp.newBuilder()
                 .setSceneId(sceneId)
                 .addAllAreaIdList(player.getUnlockedSceneAreas(sceneId))
-                .addCityInfoList(CityInfo.newBuilder().setCityId(1).setLevel(1).build())
-                .addCityInfoList(CityInfo.newBuilder().setCityId(2).setLevel(1).build())
-                .addCityInfoList(CityInfo.newBuilder().setCityId(3).setLevel(1).build())
+                .addAllCityInfoList(player.getCityLevelMap().keySet().stream()
+                    .map(e -> player.getProgressManager().cityInfoToProto(e))
+                    .toList())
                 .build();
 
         this.setData(p);
