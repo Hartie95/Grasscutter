@@ -2,14 +2,22 @@ package emu.grasscutter.game.player;
 
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.ScenePointEntry;
+import emu.grasscutter.data.common.ItemParamData;
+import emu.grasscutter.data.excels.CityData;
+import emu.grasscutter.data.excels.CityLevelUpData;
 import emu.grasscutter.data.excels.OpenStateData;
 import emu.grasscutter.data.excels.OpenStateData.*;
+import emu.grasscutter.data.excels.RewardData;
+import emu.grasscutter.data.excels.TransPointRewardData;
+import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.props.ActionReason;
 import emu.grasscutter.game.quest.enums.ParentQuestState;
 import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.game.quest.enums.QuestState;
+import emu.grasscutter.net.proto.CityInfoOuterClass.CityInfo;
 import emu.grasscutter.net.proto.RetcodeOuterClass.Retcode;
 import emu.grasscutter.scripts.data.ScriptArgs;
+import emu.grasscutter.server.packet.send.PacketLevelUpCityRsp;
 import emu.grasscutter.server.packet.send.PacketOpenStateChangeNotify;
 import emu.grasscutter.server.packet.send.PacketOpenStateUpdateNotify;
 import emu.grasscutter.server.packet.send.PacketSceneAreaUnlockNotify;
@@ -36,6 +44,7 @@ public class PlayerProgressManager extends BasePlayerDataManager {
         // Try unlocking open states on player login. This handles accounts where unlock conditions were
         // already met before certain open state unlocks were implemented.
         this.tryUnlockOpenStates(false);
+        this.tryAddingCity();
         player.getSession().send(new PacketOpenStateUpdateNotify(this.player));
     }
 
@@ -182,7 +191,7 @@ public class PlayerProgressManager extends BasePlayerDataManager {
         this.tryUnlockOpenStates(true);
     }
 
-    public boolean unlockTransPoint(int sceneId, int pointId, boolean isStatue) {
+    public boolean unlockTransPoint(int sceneId, int pointId) {
         // Check whether the unlocked point exists and whether it is still locked.
         ScenePointEntry scenePointEntry = GameData.getScenePointEntryById(sceneId, pointId);
 
@@ -193,28 +202,94 @@ public class PlayerProgressManager extends BasePlayerDataManager {
         // Add the point to the list of unlocked points for its scene.
         this.player.getUnlockedScenePoints(sceneId).add(pointId);
 
-        // Give primogems  and Adventure EXP for unlocking.
-        this.player.getInventory().addItem(201, 5, ActionReason.UnlockPointReward);
-        this.player.getInventory().addItem(102, isStatue ? 50 : 10, ActionReason.UnlockPointReward);
+        // Give primogems and Adventure EXP for unlocking.
+        TransPointRewardData reward = GameData.getTransPointRewardDataMap().get((sceneId << 16) + pointId);
+        if (reward != null) {
+            RewardData rewardData = GameData.getRewardDataMap().get(reward.getRewardId());
+            if (rewardData != null) {
+                if (rewardData.getHcoin() > 0) {
+                    this.player.getInventory().addItem(201, rewardData.getHcoin(), ActionReason.UnlockPointReward);
+                }
 
-        // this.player.sendPacket(new PacketPlayerPropChangeReasonNotify(this.player.getProperty(PlayerProperty.PROP_PLAYER_EXP), PlayerProperty.PROP_PLAYER_EXP, PropChangeReason.PROP_CHANGE_REASON_PLAYER_ADD_EXP));
+                if (rewardData.getPlayerExp() > 0) {
+                    this.player.getInventory().addItem(102, rewardData.getPlayerExp(), ActionReason.UnlockPointReward);
+                }
+
+                if (!rewardData.getRewardItemList().isEmpty()) { // there is a event that gives item for unlocking point
+                    this.player.getInventory().addItemParamDatas(rewardData.getRewardItemList(), ActionReason.UnlockPointReward);
+                }
+            }
+        }
 
         // Fire quest and script trigger for trans point unlock.
         this.player.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_UNLOCK_TRANS_POINT, sceneId, pointId);
         this.player.getScene().getScriptManager().callEvent(new ScriptArgs(EVENT_UNLOCK_TRANS_POINT, sceneId, pointId));
 
         // Send packet.
-        this.player.sendPacket(new PacketScenePointUnlockNotify(sceneId, pointId));
+        this.player.sendPacket(new PacketScenePointUnlockNotify(sceneId, pointId, true));
         return true;
     }
 
     public void unlockSceneArea(int sceneId, int areaId) {
         // Add the area to the list of unlocked areas in its scene.
         this.player.getUnlockedSceneAreas(sceneId).add(areaId);
-
+        this.getCityLevel(sceneId, areaId);
         // Send packet.
         this.player.sendPacket(new PacketSceneAreaUnlockNotify(sceneId, areaId));
         this.player.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_UNLOCK_AREA, sceneId, areaId);
+    }
+
+    private void tryAddingCity() {
+        this.player.getUnlockedSceneAreas().entrySet().stream().forEach(e -> 
+            getCityLevel(e.getKey(), e.getValue().stream().findFirst().orElse(-1))
+        );
+    }
+    
+    private int getCityLevel(int sceneId, int areaId) {
+        return getCityLevel(GameData.getCityBySceneArea(sceneId, areaId));
+    }
+
+    private int getCityLevel(int cityId) {
+        if (cityId <= 0) return -1; 
+        return this.player.getCityLevelMap().computeIfAbsent(cityId, s -> CityInfoItem.create()).getLevel();
+    }
+
+    private int getCityExp(int cityId) {
+        if (cityId <= 0) return -1; 
+        return this.player.getCityLevelMap().computeIfAbsent(cityId, s -> CityInfoItem.create()).getExp();
+    }
+
+    private int getCrystalIdByCity(int cityId) {
+        return GameData.getLevelUpDataByCity(cityId).stream()
+            .map(data -> data.getConsumeItem().getId())
+            .findFirst()
+            .orElse(0);
+    }
+
+    public void levelUpCity(int sceneId, int areaId, int itemNum) {
+        int cityId = GameData.getCityBySceneArea(sceneId, areaId);
+
+        if (cityId == 0 || getCityLevel(cityId) >= 10) return;
+
+        // pay all item
+        this.player.getInventory().payItem(this.getCrystalIdByCity(cityId), itemNum); // TODO action reason
+        int[] itemNumCounter = new int[]{itemNum};
+
+        GameData.getLevelUpDataByCity(cityId).stream()
+            .filter(x -> x.getLevel() >= getCityLevel(cityId)+1)
+            .sorted(Comparator.comparingInt(CityLevelUpData::getLevel))
+            .takeWhile(x -> itemNumCounter[0] > 0) 
+            .forEach(data -> {
+                RewardData rewardData = GameData.getRewardDataMap().get(data.getRewardID());
+                if (rewardData == null) return;
+
+                this.player.getInventory().addItemParamDatas(rewardData.getRewardItemList(), ActionReason.CityLevelupReward);
+                this.player.getCityLevelMap().get(cityId).addExp(itemNumCounter[0], data.getConsumeItem().getCount());
+                itemNumCounter[0] -= data.getConsumeItem().getCount();
+                this.player.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_CITY_LEVEL_UP, cityId, getCityLevel(cityId));
+                // TODO, world action
+            });
+        this.player.sendPacket(new PacketLevelUpCityRsp(areaId, sceneId, cityInfoToProto(cityId)));
     }
 
 
@@ -228,5 +303,13 @@ public class PlayerProgressManager extends BasePlayerDataManager {
         val newCount = player.getQuestProgressCountMap().merge(id, count, Integer::sum);
         player.save();
         player.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_ADD_QUEST_PROGRESS, id, newCount);
+    }
+
+    public CityInfo cityInfoToProto(int cityId) {
+        return CityInfo.newBuilder()
+            .setCityId(cityId)
+            .setCrystalNum(getCityExp(cityId))
+            .setLevel(getCityLevel(cityId))
+            .build();
     }
 }

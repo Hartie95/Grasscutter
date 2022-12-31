@@ -127,4 +127,13 @@ public class PlayerCodex {
             .forEach(x -> this.getUnlockedReliquarySuitCodex().add(x.getId()));
         this.player.save();
     }
+
+    public boolean isNewItem(int itemId) {
+        if (getUnlockedWeapon().contains(itemId)
+            || getUnlockedMaterial().contains(itemId)
+            || getUnlockedBook().contains(itemId)
+            || getUnlockedReliquary().contains(itemId)
+            || getUnlockedAnimal().containsKey(itemId)) return false;
+        return true;
+    }
 }
