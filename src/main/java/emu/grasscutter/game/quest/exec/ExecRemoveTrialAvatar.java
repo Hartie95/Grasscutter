@@ -12,6 +12,7 @@ import emu.grasscutter.game.quest.handlers.QuestExecHandler;
 public class ExecRemoveTrialAvatar extends QuestExecHandler {
     @Override
     public boolean execute(GameQuest quest, QuestData.QuestExecParam condition, String... paramStr) {
+        Grasscutter.getLogger().info("remove_trial_avatar");
         if (quest.getOwner().removeTrialAvatar(Integer.parseInt(paramStr[0]))) {
             Grasscutter.getLogger().info("Removed trial avatar from team for quest {}", quest.getSubQuestId());
             return true;

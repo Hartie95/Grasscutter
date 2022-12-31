@@ -7,20 +7,15 @@ import emu.grasscutter.game.quest.enums.QuestExec;
 import emu.grasscutter.game.quest.handlers.QuestExecHandler;
 import emu.grasscutter.server.packet.send.PacketScenePointUnlockNotify;
 
-import java.util.stream.Stream;
-import java.util.List;
-
-@QuestValueExec(QuestExec.QUEST_EXEC_UNLOCK_POINT)
-public class ExecUnlockPoint extends QuestExecHandler {
+@QuestValueExec(QuestExec.QUEST_EXEC_LOCK_POINT)
+public class ExecLockPoint extends QuestExecHandler {
     @Override
     public boolean execute(GameQuest quest, QuestData.QuestExecParam condition, String... paramStr) {
-        // Unlock the trans point for the player.
-        int sceneId = Integer.parseInt(paramStr[0]);
-        List<Integer> pointIds = Stream.of(paramStr[1].split(",")).map(Integer::parseInt).toList();
-
-        pointIds.forEach(pointId -> {
-            quest.getOwner().getProgressManager().unlockTransPoint(sceneId, pointId);
-        });
+        // Send packet.
+        quest.getOwner().sendPacket(new PacketScenePointUnlockNotify(
+            Integer.parseInt(paramStr[0]), 
+            Integer.parseInt(paramStr[1]), 
+            false));
         // Done.
         return true;
     }
