@@ -5,6 +5,8 @@ import emu.grasscutter.GameConstants;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.ConfigLevelEntity;
+import emu.grasscutter.data.binout.SceneWorldArea;
+import emu.grasscutter.data.binout.SceneWorldArea.*;
 import emu.grasscutter.data.excels.AvatarData;
 import emu.grasscutter.data.excels.PlayerLevelData;
 import emu.grasscutter.data.excels.TrialAvatarData;
@@ -53,6 +55,7 @@ import emu.grasscutter.game.world.World;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.proto.AbilityInvokeEntryOuterClass.AbilityInvokeEntry;
 import emu.grasscutter.net.proto.AttackResultOuterClass.AttackResult;
+import emu.grasscutter.net.proto.AvatarDelNotifyOuterClass.AvatarDelNotify;
 import emu.grasscutter.net.proto.CombatInvokeEntryOuterClass.CombatInvokeEntry;
 import emu.grasscutter.net.proto.GadgetInteractReqOuterClass.GadgetInteractReq;
 import emu.grasscutter.net.proto.MpSettingTypeOuterClass.MpSettingType;
@@ -77,7 +80,6 @@ import emu.grasscutter.utils.DateHelper;
 import emu.grasscutter.utils.MessageHandler;
 import emu.grasscutter.utils.Position;
 import emu.grasscutter.utils.Utils;
-import emu.grasscutter.net.proto.AvatarDelNotifyOuterClass.AvatarDelNotify;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.Getter;
@@ -138,6 +140,11 @@ public class Player {
     @Getter private Map<Integer, Integer> openStates;
     @Getter @Setter private Map<Integer, Set<Integer>> unlockedSceneAreas;
     @Getter @Setter private Map<Integer, Set<Integer>> unlockedScenePoints;
+    @Getter @Setter private Map<Integer, CityInfoItem> cityLevelMap;
+    @Getter @Setter private Map<Integer, SceneTagInfoItem> sceneTagMap; // might change overtime as game progress so
+    @Getter @Setter private Map<Integer, MapAreaInfoItem> mapAreaInfoMap; // might change overtime as game progress so
+    @Getter @Setter private Map<Integer, DungeonInfoItem> passedDungeon;
+    @Getter @Setter private Map<Integer, WeatherClimateInfoItem> weatherClimateMap; // first integer is sceneid
     @Getter @Setter private List<Integer> chatEmojiIdList;
 
     @Transient private long nextGuid = 0;
@@ -207,6 +214,9 @@ public class Player {
     // not sure where to put this, this should be saved to DB but not to individual quest, since
     // it will be hard to loop and compare
     @Getter private Map<Integer, Integer> questProgressCountMap;
+    @Getter private transient Map<Integer, Long> sceneBeginTimeMap;
+    @Getter @Setter @Transient private AreaData worldAreaData;
+    @Getter @Transient private boolean weatherClimteUpdated;
 
     @Deprecated
     @SuppressWarnings({"rawtypes", "unchecked"}) // Morphia only!
@@ -250,6 +260,11 @@ public class Player {
         this.openStates = new HashMap<>();
         this.unlockedSceneAreas = new HashMap<>();
         this.unlockedScenePoints = new HashMap<>();
+        this.cityLevelMap = new HashMap<>();
+        this.sceneTagMap = new HashMap<>();
+        this.mapAreaInfoMap = new HashMap<>();
+        this.passedDungeon = new HashMap<>();
+        this.weatherClimateMap = new HashMap<>();
         this.chatEmojiIdList = new ArrayList<>();
 
         this.attackResults = new LinkedBlockingQueue<>();
@@ -277,6 +292,7 @@ public class Player {
         this.cookingManager = new CookingManager(this);
         this.cookingCompoundManager=new CookingCompoundManager(this);
         this.questProgressCountMap = new HashMap<>();
+        this.sceneBeginTimeMap = new HashMap<>();
     }
 
     // On player creation
@@ -357,9 +373,81 @@ public class Player {
         this.scene = scene;
     }
 
+    public boolean hasSceneLocked(int sceneId) {
+        return getUnlockedSceneAreas().get(sceneId).isEmpty();
+    }
+
+    public void initSceneTag() {
+        if (!getSceneTagMap().isEmpty()) return;
+
+        getUnlockedSceneAreas().keySet().forEach(k -> {
+            if (getSceneTagMap().get(k) == null && !GameData.getDefaultSceneTag(k).isEmpty())
+            getSceneTagMap().computeIfAbsent(k, s -> SceneTagInfoItem.create(k, GameData.getDefaultSceneTag(k), hasSceneLocked(k)));
+        });
+    }
+
+    public SceneTagInfoItem getSceneTag() {
+        return getSceneTag(getSceneId());
+    }
+
+    public SceneTagInfoItem getSceneTag(int sceneId) {
+        return getSceneTagMap().computeIfAbsent(sceneId, s -> SceneTagInfoItem.create(sceneId, Set.of(), true));
+    }
+
+    public Long getSceneBeginTime() {
+        return getSceneBeginTimeMap().computeIfAbsent(getSceneId(), s -> System.currentTimeMillis());
+    }
+
+    public DungeonInfoItem recordPlotDungeon(int subQuestId, int dungeonId) {
+        return getPassedDungeon().computeIfAbsent(subQuestId, s -> DungeonInfoItem.create(dungeonId));
+    }
+
+    public DungeonInfoItem getPlotDungeon(int dungeonId, boolean isFinished) {
+        return getPassedDungeon().values().stream()
+            .filter(x -> x.isPassed() == isFinished && x.getDungeonId() == dungeonId)
+            .findFirst()
+            .orElse(null);   
+    }
+
+    public void setWorldArea() {
+        if (GameData.getSceneLevel2AreaMap().get(getSceneId()) == null) {
+            setWorldAreaData(null);
+            return;
+        }
+
+        setWorldAreaData(GameData.getSceneLevel2AreaMap().get(getSceneId()).stream()
+            .filter(x -> getPosition().isWithinArea(x.getPolygonData().getMinArea(), x.getPolygonData().getMaxArea()))
+            .findFirst().orElse(null));
+    }
+
+    public boolean stillInArea() {
+        return getWorldAreaData() != null && getPosition().isWithinArea(
+                getWorldAreaData().getPolygonData().getMinArea(), 
+                getWorldAreaData().getPolygonData().getMaxArea());
+    }
+
+    public void updateSceneWorldArea() {
+        if (stillInArea()) return;
+
+        AreaData prevArea = getWorldAreaData();
+        setWorldArea();
+        if (prevArea != getWorldAreaData()) sendPacket(new PacketSceneAreaWeatherNotify(this));
+    }
+
+    public WeatherClimateInfoItem.WeatherClimate getCurrentWeatherClimate() {
+        // TODO, default weather might have different area id for different scene
+        if (getWorldAreaData() == null) {
+            return WeatherClimateInfoItem.WeatherClimate.create(
+                GameData.getSceneLevel2AreaMap().get(getSceneId()) == null ? 0 : 1, ClimateType.CLIMATE_NONE);
+        }
+        return getWeatherClimateMap().computeIfAbsent(getSceneId(), s -> WeatherClimateInfoItem.create())
+            .getWeatherClimate().computeIfAbsent(getWorldAreaData().getId1() + getWorldAreaData().getId2(), 
+                x -> WeatherClimateInfoItem.WeatherClimate.create(1, ClimateType.CLIMATE_NONE));
+    }
+
     synchronized public void setClimate(ClimateType climate) {
         this.climate = climate;
-        this.session.send(new PacketSceneAreaWeatherNotify(this));
+        this.session.send(new PacketSceneAreaWeatherNotify(this.weatherId, this.climate.getValue()));
     }
 
     synchronized public void setWeather(int weather) {
@@ -376,7 +464,7 @@ public class Player {
         }
         this.weatherId = weatherId;
         this.climate = climate;
-        this.session.send(new PacketSceneAreaWeatherNotify(this));
+        this.session.send(new PacketSceneAreaWeatherNotify(this.weatherId, this.climate.getValue()));
     }
 
     public void setNickname(String nickName) {
@@ -809,7 +897,7 @@ public class Player {
         addAvatar(new Avatar(avatarId), true);
     }
 
-    public boolean addTrialAvatarForQuest(int trialAvatarId, GrantReason reason, int questMainId){
+    public synchronized boolean addTrialAvatarForQuest(int trialAvatarId, GrantReason reason, int questMainId){
         // TODO, other trial avatar like activity and element trial dungeon might have 
         // completely different scenario, this function is currently used for Quest Exec only
         TrialAvatarData trialAvatar = GameData.getTrialAvatarDataMap().get(trialAvatarId);
@@ -837,18 +925,22 @@ public class Player {
         return true;
     }
 
-    public boolean removeTrialAvatar(int trialAvatarId){
-        EntityAvatar trialEntityAvatar = getTeamManager().trialAvatarInTeam(trialAvatarId);
-        if (trialEntityAvatar == null) return false;
+    public synchronized boolean removeTrialAvatar(int trialAvatarId){
+        boolean inTeam = getTeamManager().trialAvatarInTeam(trialAvatarId);
+        if (!inTeam) return false;
 
-        Avatar trialAvatar = trialEntityAvatar.getAvatar();
+        TrialAvatarData trialAvatar = GameData.getTrialAvatarDataMap().get(trialAvatarId);
+        if (trialAvatar == null) return false;
+
+        List<Integer> trialParams = trialAvatar.getTrialAvatarParamList();
+        if (trialParams == null || trialParams.size() < 2 
+            || getTeamManager().getTrialTeamGuid().get(trialParams.get(0)) == null) return false;
+
         // Packet, mimic official server behaviour
-        sendPacket(new PacketAvatarDelNotify(Arrays.asList(trialAvatar.getGuid())));
+        sendPacket(new PacketAvatarDelNotify(List.of(getTeamManager().getTrialTeamGuid().get(trialParams.get(0)))));
         // Reset temporary trial team
-        getTeamManager().removeAvatarFromTrialTeam(trialEntityAvatar);
-
-        trialAvatar.removeTrialItems();
-        trialAvatar.removeOwner();
+        getTeamManager().removeAvatarFromTrialTeam(trialParams.get(0), trialAvatarId);
+        
         // Packet, mimic official server behaviour, necessary to unlock team modifying
         sendPacket(new PacketAvatarTeamUpdateNotify());
         return true;
@@ -1190,6 +1282,10 @@ public class Player {
 
         // Recharge resin.
         this.getResinManager().rechargeResin();
+
+        getQuestManager().queueEvent(QuestCond.QUEST_COND_IS_DAYTIME, (getScene().getTime() / 60) >= 6 && (getScene().getTime() / 60) <= 19 ? 1 : 0);
+        getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_GAME_TIME_TICK, String.valueOf(getScene().getTime() / 60), (getScene().getTime() / 60) >= 6 && (getScene().getTime() / 60) <= 19 ? 1 : 0);
+        updateSceneWorldArea();
     }
 
     private synchronized void doDailyReset() {
@@ -1292,10 +1388,10 @@ public class Player {
         session.send(new PacketAvatarDataNotify(this));
 
         this.getProgressManager().onPlayerLogin();
-
         session.send(new PacketFinishedParentQuestNotify(this));
-        session.send(new PacketBattlePassAllDataNotify(this));
         session.send(new PacketQuestListNotify(this));
+        session.send(new PacketQuestGlobalVarNotify(this));
+        session.send(new PacketBattlePassAllDataNotify(this));
         session.send(new PacketCodexDataFullNotify(this));
         session.send(new PacketAllWidgetDataNotify(this));
         session.send(new PacketWidgetGadgetAllDataNotify());
