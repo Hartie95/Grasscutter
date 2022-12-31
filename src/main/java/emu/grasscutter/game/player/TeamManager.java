@@ -14,12 +14,14 @@ import emu.grasscutter.game.entity.EntityBaseGadget;
 import emu.grasscutter.game.props.ElementType;
 import emu.grasscutter.game.props.EnterReason;
 import emu.grasscutter.game.props.FightProperty;
+import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.game.world.World;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.packet.PacketOpcodes;
 import emu.grasscutter.net.proto.EnterTypeOuterClass.EnterType;
 import emu.grasscutter.net.proto.MotionStateOuterClass.MotionState;
 import emu.grasscutter.net.proto.PlayerDieTypeOuterClass.PlayerDieType;
+import emu.grasscutter.net.proto.VisionTypeOuterClass.VisionType;
 import emu.grasscutter.net.proto.RetcodeOuterClass.Retcode;
 import emu.grasscutter.server.event.player.PlayerTeamDeathEvent;
 import emu.grasscutter.server.packet.send.PacketAddCustomTeamRsp;
@@ -419,53 +421,65 @@ public class TeamManager extends BasePlayerDataManager {
     }
 
     public void addAvatarToTrialTeam(Avatar avatar){
-        // add to trial team
+        // add to guid map / keep track of added
         getTrialTeamGuid().put(avatar.getAvatarId(), avatar.getGuid());
-        setPreviousIndex(getCurrentCharacterIndex());
-        EntityAvatar newEntity = new EntityAvatar(getPlayer().getScene(), avatar);
-        boolean inTeam = false;
-        int index;
-        // replace avatar with trial avatar if in team already
-        // Note: index increments to the size of active team before exiting loop
-        for (index = 0; index < getActiveTeam().size(); index++){
-            EntityAvatar activeEntity = getActiveTeam().get(index);
-            if (activeEntity.getAvatar().getAvatarId() == avatar.getAvatarId()){
-                inTeam = true;
-                getActiveTeam().set(index, newEntity);
-                break;
+        setPreviousIndex(getCurrentCharacterIndex()); // record selected character before adding trial avatar
+
+        EntityAvatar oldEntity = getCurrentAvatarEntity();
+        // remove avatar that has the same id with trial avatar from team
+        getActiveTeam().removeIf(x -> x.getAvatar().getAvatarId() == avatar.getAvatarId());
+
+        // put trial avatar to the end of team
+        getActiveTeam().add(new EntityAvatar(getPlayer().getScene(), avatar));
+
+        // remove all avatar entity from scene
+        getActiveTeam().forEach(e -> getPlayer().getScene().removeEntity(e, VisionType.VISION_TYPE_REMOVE));
+
+        // select trial avatar as the entity to show
+        setCurrentCharacterIndex(getActiveTeam().size()-1);
+        updateTeamProperties();
+
+        // put entity to scne 
+        getPlayer().getScene().replaceEntity(oldEntity, getCurrentAvatarEntity());
+    }
+
+    public boolean trialAvatarInTeam(int trialAvatarId) {
+        return getActiveTeam().stream().anyMatch(e -> e.getAvatar().getTrialAvatarId() == trialAvatarId);
+    }
+
+    public void removeAvatarFromTrialTeam(int avatarId, int trialAvatarId) {
+        // remove trial avatar
+        getTrialTeamGuid().remove(avatarId);
+
+        EntityAvatar oldEntity = getCurrentAvatarEntity(); // get the selected entity
+        getActiveTeam().removeIf(x -> x.getAvatar().getTrialAvatarId() == trialAvatarId); // remove trial avatar
+
+        // keep track of other entity in team that is not trial avatar
+        Int2ObjectMap<EntityAvatar> existingAvatars = new Int2ObjectOpenHashMap<>(); 
+        getActiveTeam().forEach(e -> existingAvatars.put(e.getAvatar().getAvatarId(), e));
+
+        getActiveTeam().clear();
+        
+        // rebuild the original team that the player has
+        getCurrentTeamInfo().getAvatars().forEach(e -> {
+            if (existingAvatars.containsKey(e)) {
+                getActiveTeam().add(existingAvatars.get(e));
+                return;
             }
-            
-        }
-        if (!inTeam) getActiveTeam().add(newEntity);
+            getActiveTeam().add(new EntityAvatar(getPlayer().getScene(), getPlayer().getAvatars().getAvatarById(e)));
+        });
 
-        // select the newly added trial avatar
-        // Limit character index in case it's out of bounds
-        setCurrentCharacterIndex(index >= getActiveTeam().size() ? index-1 : index);
-        updateTeamProperties(); // is necessary to update team at scene
-    }
-
-    public EntityAvatar trialAvatarInTeam(int trialAvatarId) {
-        return getActiveTeam().stream()
-            .filter(entityAvatar -> entityAvatar.getAvatar().getTrialAvatarId() == trialAvatarId)
-            .findFirst()
-            .orElse(null);
-    }
-
-    public void removeAvatarFromTrialTeam(EntityAvatar trialAvatar) {
-        getTrialTeamGuid().remove(trialAvatar.getAvatar().getAvatarId());
-        getActiveTeam().remove(trialAvatar);
+        // remove all entity from scene
+        getActiveTeam().forEach(e -> getPlayer().getScene().removeEntity(e, VisionType.VISION_TYPE_REMOVE));
 
         if (getPreviousIndex() > -1) { // restore character selection before adding trial avatar
             setCurrentCharacterIndex(getPreviousIndex());
             setPreviousIndex(-1);
         }
+        updateTeamProperties();
 
-        // Limit character index in case its out of bounds
-        if (getCurrentCharacterIndex() >= getActiveTeam().size() || getCurrentCharacterIndex() < 0) {
-            setCurrentCharacterIndex(getCurrentCharacterIndex() - 1);
-        }
-
-        updateTeamProperties();        
+        // put selected character to scene
+        getPlayer().getScene().replaceEntity(oldEntity, getCurrentAvatarEntity());      
     }
 
     public void setupTemporaryTeam(List<List<Long>> guidList) {
@@ -608,12 +622,14 @@ public class TeamManager extends BasePlayerDataManager {
                 PlayerTeamDeathEvent event = new PlayerTeamDeathEvent(this.getPlayer(),
                     this.getActiveTeam().get(this.getCurrentCharacterIndex()));
                 event.call();
+                this.getPlayer().getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_TEAM_DEAD);
             } else {
                 // Set index and spawn replacement member
                 this.setCurrentCharacterIndex(replaceIndex);
                 this.getPlayer().getScene().addEntity(replacement);
             }
         }
+
 
         // Response packet
         this.getPlayer().sendPacket(new PacketAvatarDieAnimationEndRsp(deadAvatar.getId(), 0));
