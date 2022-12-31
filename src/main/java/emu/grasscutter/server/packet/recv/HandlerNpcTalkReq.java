@@ -45,7 +45,7 @@ public class HandlerNpcTalkReq extends PacketHandler {
             // Fire quest triggers.
             session.getPlayer().getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_COMPLETE_ANY_TALK,req.getTalkId());
             session.getPlayer().getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_COMPLETE_TALK, req.getTalkId());
-            session.getPlayer().getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_FINISH_PLOT, req.getTalkId());
+            // session.getPlayer().getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_FINISH_PLOT, req.getTalkId());
             session.getPlayer().getQuestManager().queueEvent(QuestCond.QUEST_COND_COMPLETE_TALK, req.getTalkId());
         }
 

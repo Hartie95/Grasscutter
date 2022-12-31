@@ -55,7 +55,9 @@ public class HandlerTryEnterHomeReq extends PacketHandler {
 
         boolean result = session.getPlayer().getWorld().transferPlayerToScene(
             session.getPlayer(), realmId,
-            TeleportType.WAYPOINT, pos
+            TeleportType.WAYPOINT,
+            scene.getScriptManager().getConfig().born_pos,
+            scene.getScriptManager().getConfig().born_rot
         );
         if (result) session.send(new PacketTryEnterHomeRsp(req.getTargetUid()));
     }

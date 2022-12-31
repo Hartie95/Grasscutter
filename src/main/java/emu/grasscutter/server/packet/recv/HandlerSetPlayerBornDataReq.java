@@ -66,11 +66,13 @@ public class HandlerSetPlayerBornDataReq extends PacketHandler {
             return;
         }
 
-        // Login done
-        session.getPlayer().onLogin();
 
         // Created done
         session.getPlayer().onPlayerBorn();
+        
+        // Login done
+        session.getPlayer().onLogin();
+
 
         // Born resp packet
         session.send(new BasePacket(PacketOpcodes.SetPlayerBornDataRsp));

@@ -21,7 +21,7 @@ public class HandlerSceneTransToPointReq extends PacketHandler {
         ScenePointEntry scenePointEntry = GameData.getScenePointEntryById(req.getSceneId(), req.getPointId());
 
         if (scenePointEntry != null) {
-            if (player.getWorld().transferPlayerToScene(player, req.getSceneId(), TeleportType.WAYPOINT, scenePointEntry.getPointData().getTranPos().clone())) {
+            if (player.getWorld().transferPlayerToScene(player, req.getSceneId(), TeleportType.WAYPOINT, scenePointEntry.getPointData().getTranPos(), scenePointEntry.getPointData().getTranRot())) {
                 session.send(new PacketSceneTransToPointRsp(player, req.getPointId(), req.getSceneId()));
                 return;
             }

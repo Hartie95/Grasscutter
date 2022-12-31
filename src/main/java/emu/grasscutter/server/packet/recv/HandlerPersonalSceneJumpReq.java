@@ -23,10 +23,11 @@ public class HandlerPersonalSceneJumpReq extends PacketHandler {
         ScenePointEntry scenePointEntry = GameData.getScenePointEntryById(player.getSceneId(), req.getPointId());
 
         if (scenePointEntry != null) {
-            Position pos = scenePointEntry.getPointData().getTranPos().clone();  // This might not need cloning
+            Position pos = scenePointEntry.getPointData().getTranPos(); 
+            Position rot = scenePointEntry.getPointData().getTranRot();
             int sceneId = scenePointEntry.getPointData().getTranSceneId();
 
-            player.getWorld().transferPlayerToScene(player, sceneId, pos);
+            player.getWorld().transferPlayerToScene(player, sceneId, pos, rot);
             session.send(new PacketPersonalSceneJumpRsp(sceneId, pos));
         }
 

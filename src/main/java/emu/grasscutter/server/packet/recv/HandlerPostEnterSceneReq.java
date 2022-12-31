@@ -20,7 +20,16 @@ public class HandlerPostEnterSceneReq extends PacketHandler {
                 questManager.queueEvent(QuestContent.QUEST_CONTENT_ENTER_MY_WORLD, sceneId);
                 questManager.queueEvent(QuestContent.QUEST_CONTENT_ENTER_MY_WORLD_SCENE, sceneId);
             }
+            case SCENE_DUNGEON -> {
+                if (session.getPlayer().getScene().getDungeonManager() != null) {
+                    session.getPlayer().getScene().getDungeonManager().startDungeon();
+                }
+            }
+            case SCENE_HOME_WORLD -> {
+                questManager.queueEvent(QuestContent.QUEST_CONTENT_ENTER_MY_HOME_WORLD, sceneId);
+            }
         }
+        questManager.queueEvent(QuestContent.QUEST_CONTENT_LEAVE_SCENE);
 
 
         session.send(new PacketPostEnterSceneRsp(session.getPlayer()));

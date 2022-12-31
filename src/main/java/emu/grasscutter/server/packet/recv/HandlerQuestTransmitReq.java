@@ -25,7 +25,7 @@ public class HandlerQuestTransmitReq extends PacketHandler {
 		boolean result = false;
 		if(mainQuest.hasTeleportPostion(req.getQuestId(), posAndRot)){
 			int sceneId = GameData.getTeleportDataMap().get(req.getQuestId()).getTransmit_points().get(0).getScene_id();
-			result = session.getPlayer().getWorld().transferPlayerToScene(session.getPlayer(), sceneId, posAndRot.get(0));
+			result = session.getPlayer().getWorld().transferPlayerToScene(session.getPlayer(), sceneId, posAndRot.get(0), posAndRot.get(1));
 		}
 		session.send(new PacketQuestTransmitRsp(result, req));
 	}
