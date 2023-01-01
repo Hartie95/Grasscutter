@@ -11,7 +11,7 @@ import static emu.grasscutter.game.quest.enums.QuestCond.QUEST_COND_LUA_NOTIFY;
 public class ConditionLuaNotify extends BaseCondition {
     @Override
     public boolean execute(Player owner, QuestData questData, QuestData.QuestAcceptCondition condition, String paramStr, int... params) {
-        return !paramStr.isEmpty() && condition.getParam()[0] == Integer.parseInt(paramStr);
+        return condition.getParam()[0] == Integer.parseInt(paramStr);
     }
 
 }
