@@ -42,10 +42,6 @@ public class GameMainQuest {
     @Getter private ParentQuestState state;
     @Getter private boolean isFinished;
     @Getter List<QuestGroupSuite> questGroupSuites;
-    // used to track already added group suites, so that it
-    // doesnt keep incrementing on every rewind,
-    // TODO probably change group suites to hash map for better organisation
-    @Getter Set<Integer> groupSuitesTracker;
 
     @Getter int[] suggestTrackMainQuestList;
     @Getter private Map<Integer,TalkData> talks;
@@ -64,7 +60,6 @@ public class GameMainQuest {
         this.questVars = new int[] {0,0,0,0,0};
         this.state = ParentQuestState.PARENT_QUEST_STATE_NONE;
         this.questGroupSuites = new ArrayList<>();
-        this.groupSuitesTracker = new TreeSet<>();
         addAllChildQuests();
     }
 
@@ -74,6 +69,24 @@ public class GameMainQuest {
             QuestData questConfig = GameData.getQuestDataMap().get(subQuestId);
             this.childQuests.put(subQuestId, new GameQuest(this, questConfig));
         }
+    }
+
+    public boolean groupSuitePresent(int sceneId, int groupId, int suiteId) {
+        return getQuestGroupSuites().stream().anyMatch(s -> 
+            s.getScene() == sceneId
+            && s.getGroup() == groupId
+            && s.getSuite() == suiteId
+        );
+    }
+
+    public void addGroupSuite(int sceneId, int groupId, int suiteId) {
+        if (groupSuitePresent(sceneId, groupId, suiteId)) return;
+
+        getQuestGroupSuites().add(QuestGroupSuite.of()
+            .scene(sceneId)
+            .group(groupId)
+            .suite(suiteId)
+            .build());
     }
 
     public Collection<GameQuest> getActiveQuests(){
@@ -275,11 +288,11 @@ public class GameMainQuest {
         TeleportData questTransmit = GameData.getTeleportDataMap().get(subId);
         if (questTransmit == null) return false;
 
-        TeleportData.TransmitPoint transmitPoint = questTransmit.getTransmit_points().size() > 0 ? questTransmit.getTransmit_points().get(0) : null;
-        if (transmitPoint == null) return false;
+        List<TeleportData.TransmitPoint> transmitPoint = questTransmit.getTransmit_points();
+        if (transmitPoint == null || transmitPoint.isEmpty()) return false;
 
-        String transmitPos = transmitPoint.getPos();
-        int sceneId = transmitPoint.getScene_id();
+        String transmitPos = transmitPoint.get(0).getPos();
+        int sceneId = transmitPoint.get(0).getScene_id();
         ScriptSceneData fullGlobals = GameData.getScriptSceneDataMap().get("flat.luas.scenes.full_globals.lua.json");
         if (fullGlobals == null) return false;
 
@@ -315,7 +328,7 @@ public class GameMainQuest {
                 .map(GameQuest::getQuestData)
                 .toList();
 
-            owner.getQuestManager().tryAcceptingSubQuests(subQuestsWithCond, "", 0);
+            owner.getQuestManager().tryAcceptingSubQuests(true, subQuestsWithCond, "", 0);
             this.save();
         } catch (Exception e) {
             Grasscutter.getLogger().error("An error occurred while trying to accept quest.", e);

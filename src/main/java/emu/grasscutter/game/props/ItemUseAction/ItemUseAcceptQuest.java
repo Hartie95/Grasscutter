@@ -14,6 +14,6 @@ public class ItemUseAcceptQuest extends ItemUseInt {
 
     @Override
     public boolean useItem(UseItemParams params) {
-        return (params.player.getQuestManager().addQuest(this.i) != null);
+        return (params.player.getQuestManager().addQuest(this.i, true) != null);
     }
 }

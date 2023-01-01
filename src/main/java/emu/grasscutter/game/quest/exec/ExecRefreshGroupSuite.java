@@ -23,17 +23,7 @@ public class ExecRefreshGroupSuite extends QuestExecHandler {
 
             var scriptManager = quest.getOwner().getScene().getScriptManager();
 
-            // mainly trying to avoid unlimited incrementation group suites that get saved to DB
-            // but the following implementation sometimes throws error, and cause rewind to fail
-            // in game and require login and out to work
-            if (!quest.getMainQuest().getGroupSuitesTracker().contains(quest.getSubQuestId())) {
-                quest.getMainQuest().getGroupSuitesTracker().add(quest.getSubQuestId());
-                quest.getMainQuest().getQuestGroupSuites().add(QuestGroupSuite.of()
-                .scene(sceneId)
-                .group(groupId)
-                .suite(suiteId)
-                .build());
-            }
+            quest.getMainQuest().addGroupSuite(sceneId, groupId, suiteId);
 
             // refresh immediately if player is in this scene
             if (quest.getOwner().getScene().getId() == sceneId) {
