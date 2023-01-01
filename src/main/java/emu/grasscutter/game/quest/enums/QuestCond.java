@@ -29,7 +29,7 @@ public enum QuestCond implements QuestTrigger {
     QUEST_COND_SCENE_AREA_UNLOCKED (18), // missing, only NPC groups/talks
     QUEST_COND_ITEM_GIVING_ACTIVED (19), // missing
     QUEST_COND_ITEM_GIVING_FINISHED (20), // missing
-    QUEST_COND_IS_DAYTIME (21),
+    QUEST_COND_IS_DAYTIME (21), // missing, only NPC groups
     QUEST_COND_CURRENT_AVATAR (22), // missing
     QUEST_COND_CURRENT_AREA (23), // missing
     QUEST_COND_QUEST_VAR_EQUAL (24),
@@ -77,7 +77,7 @@ public enum QuestCond implements QuestTrigger {
     QUEST_COND_TIME_VAR_PASS_DAY (66), // missing
     QUEST_COND_HOMEWORLD_NPC_NEW_TALK (67), // missing, only NPC groups
     QUEST_COND_PLAYER_CHOOSE_MALE (68), // missing, only talks
-    QUEST_COND_HISTORY_GOT_ANY_ITEM (69),
+    QUEST_COND_HISTORY_GOT_ANY_ITEM (69), // missing
     QUEST_COND_LEARNED_RECIPE (70), // missing, currently unused
     QUEST_COND_LUNARITE_REGION_UNLOCKED (71), // missing, only NPC groups
     QUEST_COND_LUNARITE_HAS_REGION_HINT_COUNT (72), // missing, only NPC groups
