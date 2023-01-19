@@ -21,6 +21,7 @@ import emu.grasscutter.net.proto.ParentQuestOuterClass.ParentQuest;
 import emu.grasscutter.server.packet.send.PacketCodexDataUpdateNotify;
 import emu.grasscutter.server.packet.send.PacketFinishedParentQuestUpdateNotify;
 import emu.grasscutter.server.packet.send.PacketQuestProgressUpdateNotify;
+import emu.grasscutter.server.packet.send.PacketQuestUpdateQuestVarNotify;
 import emu.grasscutter.utils.Position;
 import lombok.Getter;
 import lombok.val;
@@ -37,8 +38,6 @@ public class GameMainQuest {
     @Getter private Map<Integer, GameQuest> childQuests;
     @Getter private int parentQuestId;
     @Getter private int[] questVars;
-    //QuestUpdateQuestVarReq is sent in two stages...
-    @Getter private List<Integer> questVarsUpdate;
     @Getter private ParentQuestState state;
     @Getter private boolean isFinished;
     @Getter List<QuestGroupSuite> questGroupSuites;
@@ -89,18 +88,31 @@ public class GameMainQuest {
         int previousValue = this.questVars[i];
         this.questVars[i] = value;
         Grasscutter.getLogger().debug("questVar {} value changed from {} to {}", i, previousValue, value);
+        triggerQuestVarAction(i, this.questVars[i]);
     }
 
     public void incQuestVar(int i, int inc) {
         int previousValue = this.questVars[i];
         this.questVars[i] += inc;
         Grasscutter.getLogger().debug("questVar {} value incremented from {} to {}", i, previousValue, previousValue + inc);
+        triggerQuestVarAction(i, this.questVars[i]);
     }
 
     public void decQuestVar(int i, int dec) {
         int previousValue = this.questVars[i];
         this.questVars[i] -= dec;
         Grasscutter.getLogger().debug("questVar {} value decremented from {} to {}", i, previousValue, previousValue - dec);
+        triggerQuestVarAction(i, this.questVars[i]);
+    }
+
+    public void triggerQuestVarAction(int index, int value) {
+        this.questManager.queueEvent(QuestCond.QUEST_COND_QUEST_VAR_EQUAL, index, value);
+        this.questManager.queueEvent(QuestCond.QUEST_COND_QUEST_VAR_GREATER, index, value);
+        this.questManager.queueEvent(QuestCond.QUEST_COND_QUEST_VAR_LESS, index, value);
+        this.questManager.queueEvent(QuestContent.QUEST_CONTENT_QUEST_VAR_EQUAL, index, value);
+        this.questManager.queueEvent(QuestContent.QUEST_CONTENT_QUEST_VAR_GREATER, index, value);
+        this.questManager.queueEvent(QuestContent.QUEST_CONTENT_QUEST_VAR_LESS, index, value);
+        this.getOwner().sendPacket(new PacketQuestUpdateQuestVarNotify(this.getParentQuestId(), this.questVars));
     }
 
 

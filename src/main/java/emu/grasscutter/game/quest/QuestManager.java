@@ -10,6 +10,7 @@ import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.MainQuestData;
 import emu.grasscutter.data.excels.QuestData;
+import emu.grasscutter.data.excels.QuestGlobalVarData;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.player.BasePlayerManager;
 import emu.grasscutter.game.player.Player;
@@ -127,26 +128,41 @@ public class QuestManager extends BasePlayerManager {
     /*
         Looking through mainQuests 72201-72208 and 72174, we can infer that a questGlobalVar's default value is 0
     */
-    public Integer getQuestGlobalVarValue(Integer variable) {
-        return getPlayer().getQuestGlobalVariables().getOrDefault(variable,0);
+    public int getQuestGlobalVarValue(int variable) {
+        QuestGlobalVarData questGlobalVarData = GameData.getQuestGlobalVarDataMap().get(variable);
+        return getPlayer().getQuestGlobalVariables().getOrDefault(
+            variable, 
+            questGlobalVarData == null ? 0 : questGlobalVarData.getDefaultValue());
     }
 
-    public void setQuestGlobalVarValue(Integer variable, Integer value) {
-        Integer previousValue = getPlayer().getQuestGlobalVariables().put(variable,value);
-        Grasscutter.getLogger().debug("Changed questGlobalVar {} value from {} to {}", variable, previousValue==null ? 0: previousValue, value);
+    public void setQuestGlobalVarValue(int variable, int setVal) {
+        int prevVal = getQuestGlobalVarValue(variable);
+        getPlayer().getQuestGlobalVariables().put(variable, setVal);
+        int newVal = getQuestGlobalVarValue(variable);
+        Grasscutter.getLogger().debug("Changed questGlobalVar {} value from {} to {}", variable, prevVal, newVal);
+        triggerQuestGlobalVarAction(variable, newVal);
     }
-    public void incQuestGlobalVarValue(Integer variable, Integer inc) {
-        //
-        Integer previousValue = getPlayer().getQuestGlobalVariables().getOrDefault(variable,0);
-        getPlayer().getQuestGlobalVariables().put(variable,previousValue + inc);
-        Grasscutter.getLogger().debug("Incremented questGlobalVar {} value from {} to {}", variable, previousValue, previousValue + inc);
+    public void incQuestGlobalVarValue(int variable, int inc) {
+        int prevVal = getQuestGlobalVarValue(variable);
+        getPlayer().getQuestGlobalVariables().put(variable, prevVal + inc);
+        int newVal = getQuestGlobalVarValue(variable);
+        Grasscutter.getLogger().debug("Incremented questGlobalVar {} value from {} to {}", variable, prevVal, newVal);
+        triggerQuestGlobalVarAction(variable, newVal);
     }
-    //In MainQuest 998, dec is passed as a positive integer
-    public void decQuestGlobalVarValue(Integer variable, Integer dec) {
-        //
-        Integer previousValue = getPlayer().getQuestGlobalVariables().getOrDefault(variable,0);
-        getPlayer().getQuestGlobalVariables().put(variable,previousValue - dec);
-        Grasscutter.getLogger().debug("Decremented questGlobalVar {} value from {} to {}", variable, previousValue, previousValue - dec);
+
+    public void decQuestGlobalVarValue(int variable, int dec) {
+        int prevVal = getQuestGlobalVarValue(variable);
+        getPlayer().getQuestGlobalVariables().put(variable, prevVal - dec);
+        int newVal = getQuestGlobalVarValue(variable);
+        Grasscutter.getLogger().debug("Decremented questGlobalVar {} value from {} to {}", variable, prevVal, newVal);
+        triggerQuestGlobalVarAction(variable, newVal);
+    }
+
+    public void triggerQuestGlobalVarAction(int variable, int value) {
+        queueEvent(QuestCond.QUEST_COND_QUEST_GLOBAL_VAR_EQUAL, variable, value);
+        queueEvent(QuestCond.QUEST_COND_QUEST_GLOBAL_VAR_GREATER, variable, value);
+        queueEvent(QuestCond.QUEST_COND_QUEST_GLOBAL_VAR_LESS, variable, value);
+        getPlayer().sendPacket(new PacketQuestGlobalVarNotify(getPlayer()));
     }
 
     public GameMainQuest getMainQuestById(int mainQuestId) {

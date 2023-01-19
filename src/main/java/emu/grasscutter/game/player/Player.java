@@ -43,6 +43,7 @@ import emu.grasscutter.game.quest.QuestManager;
 import emu.grasscutter.game.quest.enums.QuestCond;
 import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.game.shop.ShopLimit;
+import emu.grasscutter.game.talk.TalkManager;
 import emu.grasscutter.game.tower.TowerData;
 import emu.grasscutter.game.tower.TowerManager;
 import emu.grasscutter.game.world.Scene;
@@ -167,6 +168,7 @@ public class Player {
     @Getter private transient ActivityManager activityManager;
     @Getter private transient PlayerBuffManager buffManager;
     @Getter private transient PlayerProgressManager progressManager;
+    @Getter private transient TalkManager talkManager;
 
     // Manager data (Save-able to the database)
     private PlayerProfile playerProfile;  // Getter has null-check
@@ -273,6 +275,7 @@ public class Player {
         this.furnitureManager = new FurnitureManager(this);
         this.cookingManager = new CookingManager(this);
         this.cookingCompoundManager=new CookingCompoundManager(this);
+        this.talkManager = new TalkManager(this);
     }
 
     // On player creation
@@ -1312,6 +1315,7 @@ public class Player {
         session.send(new PacketFinishedParentQuestNotify(this));
         session.send(new PacketBattlePassAllDataNotify(this));
         session.send(new PacketQuestListNotify(this));
+        session.send(new PacketQuestGlobalVarNotify(this));
         session.send(new PacketCodexDataFullNotify(this));
         session.send(new PacketAllWidgetDataNotify(this));
         session.send(new PacketWidgetGadgetAllDataNotify());
