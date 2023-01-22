@@ -82,9 +82,9 @@ public class DungeonManager {
         return LogicType.calculate(passConfigData.getLogicType(), finishedConditions);
     }
 
-    public int getLevelForMonster(int id) {
+    public int getLevelForMonster(int id, int monsterLevel) {
         //TODO should use levelConfigMap? and how?
-        return dungeonData.getShowLevel();
+        return Math.max(dungeonData.getShowLevel(), monsterLevel);
     }
 
     public boolean activateRespawnPoint(int pointId) {

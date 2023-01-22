@@ -24,6 +24,7 @@ import emu.grasscutter.net.proto.SceneEntityInfoOuterClass.SceneEntityInfo;
 import emu.grasscutter.net.proto.SceneMonsterInfoOuterClass.SceneMonsterInfo;
 import emu.grasscutter.net.proto.SceneWeaponInfoOuterClass.SceneWeaponInfo;
 import emu.grasscutter.scripts.constants.EventType;
+import emu.grasscutter.scripts.data.SceneMonster;
 import emu.grasscutter.scripts.data.ScriptArgs;
 import emu.grasscutter.server.event.entity.EntityDamageEvent;
 import emu.grasscutter.utils.Position;
@@ -50,7 +51,7 @@ public class EntityMonster extends GameEntity {
     @Getter private int weaponEntityId;
     @Getter @Setter private int poseId;
     @Getter @Setter private int aiId = -1;
-
+    @Getter @Setter private SceneMonster metaMonster;
     public EntityMonster(Scene scene, MonsterData monsterData, Position pos, int level) {
         super(scene);
         this.id = getWorld().getNextEntityId(EntityIdType.MONSTER);

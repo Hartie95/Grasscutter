@@ -13,12 +13,14 @@ import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.enums.DungeonPassConditionType;
 import emu.grasscutter.game.entity.*;
 import emu.grasscutter.game.entity.gadget.GadgetWorktop;
+import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.managers.blossom.BlossomManager;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.player.TeamInfo;
 import emu.grasscutter.game.props.*;
 import emu.grasscutter.game.quest.QuestGroupSuite;
 import emu.grasscutter.game.world.data.TeleportProperties;
+import emu.grasscutter.game.world.SpawnDataEntry.GridBlockId;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.proto.AttackResultOuterClass.AttackResult;
 import emu.grasscutter.net.proto.EnterTypeOuterClass;
@@ -63,6 +65,8 @@ public class Scene {
     private Set<SpawnDataEntry.GridBlockId> loadedGridBlocks;
     @Getter @Setter private boolean dontDestroyWhenEmpty;
     @Getter private final SceneScriptManager scriptManager;
+
+    @Getter @Setter private int autoCloseTime;
     @Getter @Setter private WorldChallenge challenge;
     @Getter private List<DungeonSettleListener> dungeonSettleListeners;
     @Getter @Setter private int prevScene; // Id of the previous scene
@@ -367,7 +371,10 @@ public class Scene {
 
         // Reward drop
         if (target instanceof EntityMonster && this.getSceneType() != SceneType.SCENE_DUNGEON) {
-            getWorld().getServer().getDropSystem().callDrop((EntityMonster) target);
+            if (!getWorld().getServer().getDropSystem().handleMonsterDrop((EntityMonster) target)) {
+                Grasscutter.getLogger().warn("Can not solve monster drop: drop_id = {} , drop_tag = {}.Fallback to legacy drop system.", ((EntityMonster) target).getMetaMonster().drop_id, ((EntityMonster) target).getMetaMonster().drop_tag);
+                getWorld().getServer().getDropSystemLegacy().callDrop((EntityMonster) target);
+            }
         }
 
         // Remove entity from world
@@ -511,8 +518,7 @@ public class Scene {
     public synchronized void checkSpawns() {
         Set<SpawnDataEntry.GridBlockId> loadedGridBlocks = new HashSet<>();
         for (Player player : this.getPlayers()) {
-            for (SpawnDataEntry.GridBlockId block : SpawnDataEntry.GridBlockId.getAdjacentGridBlockIds(player.getSceneId(), player.getPosition()))
-                loadedGridBlocks.add(block);
+            Collections.addAll(loadedGridBlocks, GridBlockId.getAdjacentGridBlockIds(player.getSceneId(), player.getPosition()));
         }
         if (this.loadedGridBlocks.containsAll(loadedGridBlocks)) {  // Don't recalculate static spawns if nothing has changed
             return;
@@ -822,14 +828,32 @@ public class Scene {
         if (itemData.isEquip()) {
             float range = (1.5f + (.05f * amount));
             for (int i = 0; i < amount; i++) {
-                Position pos = bornForm.getPosition().nearby2d(range).addZ(.9f);  // Why Z?
+                Position pos = bornForm.getPosition().nearby2d(range).addY(1.5f);
                 EntityItem entity = new EntityItem(this, null, itemData, pos, 1);
                 addEntity(entity);
             }
         } else {
-            EntityItem entity = new EntityItem(this, null, itemData, bornForm.getPosition().clone().addZ(.9f), amount);  // Why Z?
+            EntityItem entity = new EntityItem(this, null, itemData, bornForm.getPosition().clone().addY(1.5f), amount);
             addEntity(entity);
         }
+    }
+
+    public void addDropEntity(GameItem item, GameEntity bornForm, Player player, boolean share) {
+        //TODO:optimize EntityItem.java. Maybe we should make other players can't see the ItemEntity.
+        ItemData itemData = GameData.getItemDataMap().get(item.getItemId());
+        if (itemData == null) return;
+        if (itemData.isEquip()) {
+            float range = (1.5f + (.05f * item.getCount()));
+            for (int j = 0; j < item.getCount(); j++) {
+                Position pos = bornForm.getPosition().nearby2d(range).addY(1.5f);
+                EntityItem entity = new EntityItem(this, player, itemData, pos, item.getCount(), share);
+                addEntity(entity);
+            }
+        } else {
+            EntityItem entity = new EntityItem(this, player, itemData, bornForm.getPosition().clone().addY(1.5f), item.getCount(), share);
+            addEntity(entity);
+        }
+
     }
 
     public void loadNpcForPlayerEnter(Player player) {

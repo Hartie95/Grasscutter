@@ -546,12 +546,12 @@ public class SceneScriptManager {
         int level = monster.level;
 
         if (getScene().getDungeonManager() != null) {
-            level = getScene().getDungeonManager().getLevelForMonster(monster.config_id);
-        } else if (getScene().getWorld().getWorldLevel() > 0) {
+            level = getScene().getDungeonManager().getLevelForMonster(monster.config_id, level);
+        } else {
             WorldLevelData worldLevelData = GameData.getWorldLevelDataMap().get(getScene().getWorld().getWorldLevel());
 
             if (worldLevelData != null) {
-                level = worldLevelData.getMonsterLevel();
+                level = Math.max(level, worldLevelData.getMonsterLevel());
             }
         }
 
@@ -562,6 +562,7 @@ public class SceneScriptManager {
         entity.setBlockId(blockId);
         entity.setConfigId(monster.config_id);
         entity.setPoseId(monster.pose_id);
+        entity.setMetaMonster(monster);
 
         this.getScriptMonsterSpawnService()
                 .onMonsterCreatedListener.forEach(action -> action.onNotify(entity));

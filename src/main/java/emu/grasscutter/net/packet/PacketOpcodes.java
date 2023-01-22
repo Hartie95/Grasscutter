@@ -1800,7 +1800,7 @@ public class PacketOpcodes {
     public static final int Unk3000_FIPHHGCJIMO = 23678;
     public static final int Unk3000_FPDBJJJLKEP = 6103;
     public static final int Unk3000_GCBMILHPIKA = 4659;
-    public static final int Unk3000_GDMEIKLAMIB = 3295;
+    public static final int WorldChestOpenNotify = 3295;
     public static final int Unk3000_GMLAHHCDKOI = 841;
     public static final int Unk3000_GNLFOLGMEPN = 21208;
     public static final int Unk3000_HBIPKOBMGGD = 5995;
