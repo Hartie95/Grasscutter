@@ -20,6 +20,7 @@ import emu.grasscutter.server.event.entity.EntityMoveEvent;
 import emu.grasscutter.server.game.GameSession;
 import emu.grasscutter.server.packet.send.PacketEntityFightPropUpdateNotify;
 import emu.grasscutter.utils.Position;
+import lombok.val;
 
 @Opcodes(PacketOpcodes.CombatInvocationsNotify)
 public class HandlerCombatInvocationsNotify extends PacketHandler {
@@ -52,7 +53,8 @@ public class HandlerCombatInvocationsNotify extends PacketHandler {
                 case COMBAT_TYPE_ARGUMENT_ENTITY_MOVE -> {
                     // Handle movement
                     EntityMoveInfo moveInfo = EntityMoveInfo.parseFrom(entry.getCombatData());
-                    GameEntity entity = session.getPlayer().getScene().getEntityById(moveInfo.getEntityId());
+                    val scene = session.getPlayer().getScene();
+                    GameEntity entity = scene != null ? scene.getEntityById(moveInfo.getEntityId()) : null;
                     if (entity != null) {
                         // Move player
                         MotionInfo motionInfo = moveInfo.getMotionInfo();

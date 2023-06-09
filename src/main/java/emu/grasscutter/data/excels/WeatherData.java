@@ -18,7 +18,7 @@ public class WeatherData extends GameResource {
     @Getter private ClimateType defaultClimate;
     @Getter private boolean isUseDefault;
     @Getter private int sceneID;
-    
+
     @Override
     public int getId() {
         return this.areaID;

@@ -18,13 +18,12 @@ public class PacketAvatarTeamUpdateNotify extends BasePacket {
         super(PacketOpcodes.AvatarTeamUpdateNotify);
 
         AvatarTeamUpdateNotify.Builder proto = AvatarTeamUpdateNotify.newBuilder();
-        if (player.getTeamManager().getTrialTeamGuid() != null && player.getTeamManager().getTrialTeamGuid().size() > 0){
-            proto.addAllTempAvatarGuidList(player.getTeamManager().getTrialTeamGuid().values().stream().toList());
-        } else{
-            for (Entry<Integer, TeamInfo> entry : player.getTeamManager().getTeams().entrySet()) {
-                TeamInfo teamInfo = entry.getValue();
-                proto.putAvatarTeamMap(entry.getKey(), teamInfo.toProto(player));
-            }
+        if (player.getTeamManager().isUseTrialTeam()) {
+            proto.addAllTempAvatarGuidList(player.getTeamManager().getActiveTeam().stream()
+                .map(x -> x.getAvatar().getGuid()).toList());
+        } else {
+            player.getTeamManager().getTeams().entrySet().stream()
+                .forEach(e -> proto.putAvatarTeamMap(e.getKey(), e.getValue().toProto(player)));
         }
         this.setData(proto);
     }

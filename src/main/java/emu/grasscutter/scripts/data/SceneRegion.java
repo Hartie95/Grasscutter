@@ -32,4 +32,8 @@ public class SceneRegion {
         return false;
     }
 
+    public int getGroupId() {
+        return group.id;
+    }
+
 }

@@ -1,6 +1,7 @@
 package emu.grasscutter.game.dungeons;
 
 import emu.grasscutter.game.dungeons.dungeon_results.BaseDungeonResult.DungeonEndReason;
+import emu.grasscutter.game.world.SceneGroupInstance;
 import emu.grasscutter.game.dungeons.dungeon_results.TowerResult;
 import emu.grasscutter.server.packet.send.PacketDungeonSettleNotify;
 import emu.grasscutter.server.packet.send.PacketTowerFloorRecordChangeNotify;
@@ -11,8 +12,10 @@ public class TowerDungeonSettleListener implements DungeonSettleListener {
     public void onDungeonSettle(DungeonManager dungeonManager, DungeonEndReason endReason) {
         var scene = dungeonManager.getScene();
         var dungeonData = dungeonManager.getDungeonData();
-        if(scene.getScriptManager().getVariables().containsKey("stage")
-                && scene.getScriptManager().getVariables().get("stage") == 1){
+        if(scene.getLoadedGroups().stream().filter(g -> {
+            var variables = scene.getScriptManager().getVariables(g.id);
+            return variables != null && variables.containsKey("stage") && variables.get("stage") == 1;
+        }).count() != 0) {
             return;
         }
 

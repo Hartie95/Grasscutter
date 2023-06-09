@@ -1,15 +1,15 @@
 package emu.grasscutter.game.quest.exec;
 
-import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.game.quest.GameQuest;
 import emu.grasscutter.game.quest.QuestValueExec;
 import emu.grasscutter.game.quest.enums.QuestExec;
 import emu.grasscutter.game.quest.handlers.QuestExecHandler;
+import emu.grasscutter.data.common.quest.SubQuestData.QuestExecParam;
 
 @QuestValueExec(QuestExec.QUEST_EXEC_DEL_PACK_ITEM_BATCH)
 public class ExecDelPackItemBatch extends QuestExecHandler {
     @Override
-    public boolean execute(GameQuest quest, QuestData.QuestExecParam condition, String... paramStr) {
+    public boolean execute(GameQuest quest, QuestExecParam condition, String... paramStr) {
         // input is like this: "100497:999,100498:999,100499:999"
         var items = paramStr[0].split(",");
         boolean success = true;

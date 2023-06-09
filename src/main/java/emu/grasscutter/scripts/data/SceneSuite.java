@@ -9,12 +9,14 @@ import lombok.ToString;
 @ToString
 @Setter
 public class SceneSuite {
-    // make it refer the default empty list to avoid NPE caused by some group 
+    // make it refer the default empty list to avoid NPE caused by some group
 	public List<Integer> monsters = List.of();
 	public List<Integer> gadgets = List.of();
 	public List<String> triggers = List.of();
     public List<Integer> regions = List.of();
     public int rand_weight;
+
+    public boolean ban_refresh = false;
 
 	public transient List<SceneMonster> sceneMonsters = List.of();
 	public transient List<SceneGadget> sceneGadgets = List.of();

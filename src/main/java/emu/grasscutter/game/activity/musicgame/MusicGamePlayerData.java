@@ -2,12 +2,14 @@ package emu.grasscutter.game.activity.musicgame;
 
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.MusicGameBasicData;
-import emu.grasscutter.net.proto.MusicBriefInfoOuterClass;
+import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.net.proto.MusicGameRecordOuterClass;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import emu.grasscutter.net.proto.UgcMusicBriefInfoOuterClass.UgcMusicBriefInfo;
+import lombok.val;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -61,26 +63,38 @@ public class MusicGamePlayerData {
         int score;
         boolean settle;
 
-        public MusicBriefInfoOuterClass.MusicBriefInfo.Builder toPersonalBriefProto() {
+        public UgcMusicBriefInfo.Builder toPersonalBriefProto() {
             var musicGameBeatmap = MusicGameBeatmap.getByShareId(musicShareId);
+            if(musicGameBeatmap == null){
+                return null;
+            }
 
-            return MusicBriefInfoOuterClass.MusicBriefInfo.newBuilder()
-                .setCanShare(true)
-                .setCreateTime(musicGameBeatmap.getCreateTime())
+            val player = DatabaseHelper.getPlayerByUid(musicGameBeatmap.getAuthorUid());
+            val nickname = player!=null ? player.getNickname() : "UNKNOWN";
+            return UgcMusicBriefInfo.newBuilder()
+                .setIsPublished(true)
+                .setSaveTime(musicGameBeatmap.getCreateTime())
                 .setMusicId(musicGameBeatmap.getMusicId())
                 .setMaxScore(musicGameBeatmap.getMaxScore())
-                .setPosition(musicGameBeatmap.getSavePosition())
-                .setMusicNoteCount(musicGameBeatmap.getMusicNoteCount())
-                .setMusicShareId(musicShareId);
+                .setSaveIdx(musicGameBeatmap.getSavePosition())
+                .setSavePageType(musicGameBeatmap.getSavePageType())
+                .setVersion(musicGameBeatmap.getVersion())
+                .addAllAfterNoteList(musicGameBeatmap.getAfterNoteList())
+                .addAllBeforeNoteList(musicGameBeatmap.getBeforeNoteList())
+                .setTimeLineEditTime(musicGameBeatmap.getTimeLineEditTime())
+                .setPublishTime(musicGameBeatmap.getPublishTime())
+                .setRealTimeEditTime(musicGameBeatmap.getRealTimeEditTime())
+                .setNoteCount(musicGameBeatmap.getMusicNoteCount())
+                .setUgcGuid(musicGameBeatmap.getMusicShareId())
+                .setCreatorNickname(nickname);
         }
 
-        public MusicBriefInfoOuterClass.MusicBriefInfo.Builder toOthersBriefProto() {
+        public UgcMusicBriefInfo.Builder toOthersBriefProto() {
             var musicGameBeatmap = MusicGameBeatmap.getByShareId(musicShareId);
 
             return musicGameBeatmap.toBriefProto()
-                .setScore(score)
-                .setSettle(settle)
-                ;
+                .setSelfMaxScore(score)
+                .setIsPlayed(settle);
         }
 
     }

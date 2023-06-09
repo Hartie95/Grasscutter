@@ -5,9 +5,9 @@ import emu.grasscutter.game.activity.GameActivity;
 import emu.grasscutter.game.activity.PlayerActivityData;
 import emu.grasscutter.game.props.ActivityType;
 import emu.grasscutter.net.proto.ActivityInfoOuterClass;
-import emu.grasscutter.net.proto.MusicBriefInfoOuterClass;
-import emu.grasscutter.net.proto.MusicGameActivityDetailInfoOuterClass;
+import emu.grasscutter.net.proto.MusicGameActivityDetailInfoOuterClass.MusicGameActivityDetailInfo;
 import emu.grasscutter.utils.JsonUtils;
+import emu.grasscutter.net.proto.UgcMusicBriefInfoOuterClass.UgcMusicBriefInfo;
 
 import java.util.stream.Collectors;
 
@@ -25,18 +25,17 @@ public class MusicGameActivityHandler extends ActivityHandler {
     public void onProtoBuild(PlayerActivityData playerActivityData, ActivityInfoOuterClass.ActivityInfo.Builder activityInfo) {
         MusicGamePlayerData musicGamePlayerData = getMusicGamePlayerData(playerActivityData);
 
-        activityInfo.setMusicGameInfo(MusicGameActivityDetailInfoOuterClass.MusicGameActivityDetailInfo.newBuilder()
+        activityInfo.setMusicGameInfo(MusicGameActivityDetailInfo.newBuilder()
             .putAllMusicGameRecordMap(
                 musicGamePlayerData.getMusicGameRecord().values().stream()
                     .collect(Collectors.toMap(MusicGamePlayerData.MusicGameRecord::getMusicId, MusicGamePlayerData.MusicGameRecord::toProto)))
-            .addAllPersonCustomBeatmap(musicGamePlayerData.getPersonalCustomBeatmapRecord().values().stream()
+            .addAllUgcSearchList(musicGamePlayerData.getPersonalCustomBeatmapRecord().values().stream()
                 .map(MusicGamePlayerData.CustomBeatmapRecord::toPersonalBriefProto)
-                .map(MusicBriefInfoOuterClass.MusicBriefInfo.Builder::build)
+                .map(UgcMusicBriefInfo.Builder::build)
                 .toList())
-
-            .addAllOthersCustomBeatmap(musicGamePlayerData.getOthersCustomBeatmapRecord().values().stream()
+            .addAllUgcRecordList(musicGamePlayerData.getOthersCustomBeatmapRecord().values().stream()
                 .map(MusicGamePlayerData.CustomBeatmapRecord::toOthersBriefProto)
-                .map(MusicBriefInfoOuterClass.MusicBriefInfo.Builder::build)
+                .map(UgcMusicBriefInfo.Builder::build)
                 .toList())
             .build());
     }

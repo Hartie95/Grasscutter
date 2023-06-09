@@ -15,7 +15,7 @@ public enum QuestContent implements QuestTrigger {
     QUEST_CONTENT_FINISH_PLOT (4),
     QUEST_CONTENT_OBTAIN_ITEM (5),
     QUEST_CONTENT_TRIGGER_FIRE (6),
-    QUEST_CONTENT_CLEAR_GROUP_MONSTER (7), // missing, finish
+    QUEST_CONTENT_CLEAR_GROUP_MONSTER (7),
     QUEST_CONTENT_NOT_FINISH_PLOT (8), // missing triggers, fail
     QUEST_CONTENT_ENTER_DUNGEON (9),
     QUEST_CONTENT_ENTER_MY_WORLD (10),
@@ -62,8 +62,8 @@ public enum QuestContent implements QuestTrigger {
     QUEST_CONTENT_MAIN_COOP_ENTER_ANY_SAVE_POINT (131),// missing, finish and fail
     QUEST_CONTENT_ENTER_MY_HOME_WORLD (132),// missing, finish and fail
     QUEST_CONTENT_ENTER_MY_WORLD_SCENE (133),// missing, finish
-    QUEST_CONTENT_TIME_VAR_GT_EQ (134),// missing, finish
-    QUEST_CONTENT_TIME_VAR_PASS_DAY (135),// missing, finish
+    QUEST_CONTENT_TIME_VAR_GT_EQ (134),
+    QUEST_CONTENT_TIME_VAR_PASS_DAY (135),
     QUEST_CONTENT_QUEST_STATE_EQUAL (136),
     QUEST_CONTENT_QUEST_STATE_NOT_EQUAL (137),
     QUEST_CONTENT_UNLOCKED_RECIPE (138),// missing, finish

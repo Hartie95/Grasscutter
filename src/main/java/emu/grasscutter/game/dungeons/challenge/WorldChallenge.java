@@ -5,14 +5,17 @@ import emu.grasscutter.game.dungeons.challenge.trigger.ChallengeTrigger;
 import emu.grasscutter.game.dungeons.enums.DungeonPassConditionType;
 import emu.grasscutter.game.entity.EntityGadget;
 import emu.grasscutter.game.entity.EntityMonster;
+import emu.grasscutter.game.props.WatcherTriggerType;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.scripts.constants.EventType;
 import emu.grasscutter.scripts.data.SceneGroup;
+import emu.grasscutter.scripts.data.SceneTrigger;
 import emu.grasscutter.scripts.data.ScriptArgs;
 import emu.grasscutter.server.packet.send.PacketDungeonChallengeBeginNotify;
 import emu.grasscutter.server.packet.send.PacketDungeonChallengeFinishNotify;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.val;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -76,9 +79,21 @@ public class WorldChallenge {
             return;
         }
         finish(true);
+        if (getScene().getDungeonManager() != null && getScene().getDungeonManager().getDungeonData() != null) {
+            getScene().getPlayers().forEach(p -> p.getActivityManager().triggerWatcher(
+                WatcherTriggerType.TRIGGER_FINISH_CHALLENGE,
+                String.valueOf(getScene().getDungeonManager().getDungeonData().getId()),
+                String.valueOf(getGroup().id),
+                String.valueOf(getChallengeId())
+            ));
+        }
+
         this.getScene().getScriptManager().callEvent(
                 // TODO record the time in PARAM2 and used in action
-                new ScriptArgs(EventType.EVENT_CHALLENGE_SUCCESS).setParam2(finishedTime));
+                new ScriptArgs(getGroupId(), EventType.EVENT_CHALLENGE_SUCCESS)
+                    .setParam2(finishedTime)
+                    .setEventSource(Integer.toString(getChallengeIndex())
+                    ));
         this.getScene().triggerDungeonEvent(DungeonPassConditionType.DUNGEON_COND_FINISH_CHALLENGE, getChallengeId(), getChallengeIndex());
 
         challengeTriggers.forEach(t -> t.onFinish(this));
@@ -89,7 +104,8 @@ public class WorldChallenge {
             return;
         }
         finish(false);
-        this.getScene().getScriptManager().callEvent(new ScriptArgs(EventType.EVENT_CHALLENGE_FAIL));
+        this.getScene().getScriptManager().callEvent(new ScriptArgs(getGroupId(), EventType.EVENT_CHALLENGE_FAIL)
+            .setEventSource(Integer.toString(getChallengeIndex())));
         challengeTriggers.forEach(t -> t.onFinish(this));
     }
 
@@ -121,6 +137,16 @@ public class WorldChallenge {
         }
         this.challengeTriggers.forEach(t -> t.onGadgetDeath(this, gadget));
     }
+    public void onGroupTriggerDeath(SceneTrigger trigger){
+        if(!inProgress()){
+            return;
+        }
+        val triggerGroup = trigger.getCurrentGroup();
+        if(triggerGroup==null || triggerGroup.id != getGroup().id){
+            return;
+        }
+        this.challengeTriggers.forEach(t -> t.onGroupTrigger(this, trigger));
+    }
 
     public void onGadgetDamage(EntityGadget gadget){
         if(!inProgress()){
@@ -130,5 +156,9 @@ public class WorldChallenge {
             return;
         }
         this.challengeTriggers.forEach(t -> t.onGadgetDamage(this, gadget));
+    }
+
+    public int getGroupId(){
+        return group.id;
     }
 }

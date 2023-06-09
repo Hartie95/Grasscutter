@@ -19,6 +19,7 @@ import emu.grasscutter.server.packet.send.PacketPlayerEnterDungeonRsp;
 import emu.grasscutter.utils.Position;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import lombok.val;
 import org.reflections.Reflections;
 
 import java.util.List;
@@ -98,12 +99,10 @@ public class DungeonSystem extends BaseGameSystem {
         if (player.getWorld().transferPlayerToScene(player, sceneId, data)) {
             scene = player.getScene();
             var dungeonManager = new DungeonManager(scene, data);
-            dungeonManager.startDungeon();
             scene.addDungeonSettleObserver(basicDungeonSettleObserver);
         }
 
         scene.setPrevScenePoint(pointId);
-        player.sendPacket(new PacketPlayerEnterDungeonRsp(pointId, dungeonId));
         return true;
     }
 
@@ -135,7 +134,7 @@ public class DungeonSystem extends BaseGameSystem {
         int prevScene = scene.getPrevScene() > 0 ? scene.getPrevScene() : 3;
 
         // Get previous position
-        var dungeonManager = scene.getDungeonManager();
+        val dungeonManager = scene.getDungeonManager();
         DungeonData dungeonData =  dungeonManager != null ? dungeonManager.getDungeonData() : null;
         Position prevPos = new Position(GameConstants.START_POSITION);
 
@@ -148,14 +147,16 @@ public class DungeonSystem extends BaseGameSystem {
             if(!dungeonManager.isFinishedSuccessfully()){
                 dungeonManager.quitDungeon();
             }
+
+            dungeonManager.unsetTrialTeam(player);
         }
         // clean temp team if it has
         player.getTeamManager().cleanTemporaryTeam();
         player.getTowerManager().clearEntry();
 
+
         // Transfer player back to world
         player.getWorld().transferPlayerToScene(player, prevScene, prevPos);
-        player.sendPacket(new BasePacket(PacketOpcodes.PlayerQuitDungeonRsp));
     }
 
     public void updateDailyDungeons() {

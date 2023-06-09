@@ -223,6 +223,19 @@
       "description": "Добавляет (add) или завершает (finish) квесты",
       "enabled": "Questing enabled."
     },
+    "group": {
+      "invalid_groupid": "Invalid group ID.",
+      "invalid_suiteid": "Invalid suite ID.",
+      "group_not_found": "Group not found.",
+      "description": "Alter group loading",
+      "refreshed": "Group %s refreshed."
+    },
+    "cutscene": {
+      "description": "Odtwarza przerywnik filmowy"
+    },
+    "sound": {
+      "description": "Plays a sound"
+    },
     "reload": {
       "reload_start": "Перезагружаем файл конфигурации.",
       "reload_done": "Перезагрузка завершена.",
@@ -312,7 +325,7 @@
     "team": {
       "invalid_usage": "Некорректное применение.",
       "invalid_index": "Некорректный индекс.",
-      "add_too_much": "Сервер позволяет вам иметь максимум %d персонаж(а) в команде.",
+      "add_too_much": "Сервер позволяет вам иметь максимум %s персонаж(а) в команде.",
       "failed_to_add_avatar": "Не удалось добавить персонажа с ID %s.",
       "failed_to_parse_index": "Не удалось обработать индекс: %s",
       "remove_too_much": "Вы не можете удалить всех своих персонажей.",
@@ -320,7 +333,7 @@
       "index_out_of_range": "Указанный индекс находится вне границ.",
       "failed_parse_avatar_id": "Не удалось распознать ID персонажа: %s",
       "avatar_already_in_team": "Персонаж уже находится в команде.",
-      "avatar_not_found": "Персонаж %d не был найден.",
+      "avatar_not_found": "Персонаж %s не был найден.",
       "description": "Позволяет вручную настроить свою команду."
     },
     "teleportAll": {
@@ -333,6 +346,17 @@
       "exists_error": "Указанная сцена не существует.",
       "success": "Игрок %s был телепортирован по координатам %s, %s, %s в сцене %s.",
       "description": "Изменяет местоположение игрока"
+    },
+    "trialAvatarActivity": {
+      "description": "Управление функциями пробного аватара. Это включает в себя переключение состояний подземелий и наград.",
+      "not_found": "Данные об активности пробного аватара игрока не найдены. Возможно, активность не включена.",
+      "invalid_param": "Неверный параметр.",
+      "schedule_not_found": "Расписание %s не найдено.",
+      "success_schedule": "Идентификатор расписания изменен на %s.",
+      "success_dungeon": "Переключен статус подземелья аватара %s.",
+      "success_dungeon_all": "Переключен статус подземелий всех аватаров.",
+      "success_reward": "Переключен статус награды аватара %s.",
+      "success_reward_all": "Переключен статус вознаграждения всех аватаров."
     },
     "weather": {
       "success": "Установлен ID погоды %s, тип климата: %s.",

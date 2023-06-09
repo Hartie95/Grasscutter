@@ -4,14 +4,23 @@ import com.google.gson.annotations.SerializedName;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.binout.*;
 import emu.grasscutter.data.binout.AbilityModifier.AbilityModifierAction;
+import emu.grasscutter.data.binout.config.*;
+import emu.grasscutter.data.binout.config.fields.ConfigAbilityData;
+import emu.grasscutter.data.common.quest.MainQuestData;
+import emu.grasscutter.data.common.quest.SubQuestData;
 import emu.grasscutter.data.binout.routes.SceneRoutes;
 import emu.grasscutter.data.common.PointData;
+import emu.grasscutter.data.custom.*;
+import emu.grasscutter.data.excels.TrialAvatarActivityDataData;
+import emu.grasscutter.data.server.ActivityCondGroup;
 import emu.grasscutter.data.server.GadgetMapping;
 import emu.grasscutter.game.dungeons.DungeonDrop;
 import emu.grasscutter.game.managers.blossom.BlossomConfig;
 import emu.grasscutter.game.quest.QuestEncryptionKey;
 import emu.grasscutter.game.quest.RewindData;
 import emu.grasscutter.game.quest.TeleportData;
+import emu.grasscutter.game.quest.enums.QuestCond;
+import emu.grasscutter.game.world.GroupReplacementData;
 import emu.grasscutter.game.world.SpawnDataEntry;
 import emu.grasscutter.game.world.SpawnDataEntry.GridBlockId;
 import emu.grasscutter.game.world.SpawnDataEntry.SpawnGroupEntry;
@@ -73,7 +82,7 @@ public class ResourceLoader {
         val reflections = new Reflections(ResourceLoader.class.getPackage().getName());
         val classes = reflections.getSubTypesOf(GameResource.class);
         val priorities = ResourceType.LoadPriority.getInOrder();
-        Grasscutter.getLogger().debug("Priorities are "+priorities);
+        Grasscutter.getLogger().debug("Priorities are {}", priorities);
         val map = new LinkedHashMap<ResourceType.LoadPriority, Set<Class<?>>>(priorities.size());
         priorities.forEach(p -> map.put(p, new HashSet<>()));
 
@@ -92,6 +101,7 @@ public class ResourceLoader {
         if (loadedAll) return;
         Grasscutter.getLogger().info(translate("messages.status.resources.loading"));
 
+        loadConfigData();
         // Load ability lists
         loadAbilityEmbryos();
         loadOpenConfig();
@@ -101,7 +111,6 @@ public class ResourceLoader {
         // Process into depots
         GameDepot.load();
         // Load spawn data and quests
-        loadGadgetConfigData();
         loadSceneRoutes();
         loadSpawnData();
         loadQuests();
@@ -118,6 +127,9 @@ public class ResourceLoader {
         loadConfigLevelEntityData();
         loadQuestShareConfig();
         loadGadgetMappings();
+        loadActivityCondGroups();
+        loadGroupReplacements();
+        loadTrialAvatarCustomData();
         EntityControllerScriptManager.load();
         Grasscutter.getLogger().info(translate("messages.status.resources.finish"));
         loadedAll = true;
@@ -151,7 +163,7 @@ public class ResourceLoader {
         errors.forEach(pair -> Grasscutter.getLogger().error("Error loading resource file: " + pair.left(), pair.right()));
         long endTime = System.nanoTime();
         long ns = (endTime - startTime);  //divide by 1000000 to get milliseconds.
-        Grasscutter.getLogger().debug("Loading resources took "+ns+"ns == "+ns/1000000+"ms");
+        Grasscutter.getLogger().debug("Loading resources took {}ns == {}ms", ns, ns/1000000);
     }
 
     @SuppressWarnings("rawtypes")
@@ -195,8 +207,8 @@ public class ResourceLoader {
     }
     private static void loadScenePoints() {
         val pattern = Pattern.compile("scene([0-9]+)_point\\.json");
-        try {
-            Files.newDirectoryStream(getResourcePath("BinOutput/Scene/Point"), "scene*_point.json").forEach(path -> {
+        try (val stream = Files.newDirectoryStream(getResourcePath("BinOutput/Scene/Point"), "scene*_point.json")){
+            stream.forEach(path -> {
                 val matcher = pattern.matcher(path.getFileName().toString());
                 if (!matcher.find()) return;
                 int sceneId = Integer.parseInt(matcher.group(1));
@@ -227,7 +239,6 @@ public class ResourceLoader {
             });
         } catch (IOException e) {
             Grasscutter.getLogger().error("Scene point files cannot be found, you cannot use teleport waypoints!");
-            return;
         }
     }
 
@@ -245,6 +256,7 @@ public class ResourceLoader {
             GameData.proudSkillGroupMaxLevels.put((int) id, set.intStream().max().getAsInt()));
     }
 
+
     private static void loadAbilityEmbryos() {
         List<AbilityEmbryoEntry> embryoList = null;
 
@@ -254,45 +266,31 @@ public class ResourceLoader {
         } catch (Exception ignored) {}
 
         if (embryoList == null) {
-            // Load from BinOutput
-            val pattern = Pattern.compile("ConfigAvatar_(.+?)\\.json");
-
+            val pattern = Pattern.compile("ConfigAvatar_(.+)");
             val l = new ArrayList<AbilityEmbryoEntry>();
-            try {
-                Files.newDirectoryStream(getResourcePath("BinOutput/Avatar/"), "ConfigAvatar_*.json").forEach(path -> {
-                    val matcher = pattern.matcher(path.getFileName().toString());
-                    if (!matcher.find()) return;
-                    String avatarName = matcher.group(1);
-                    AvatarConfig config;
-
-                    try {
-                        config = JsonUtils.loadToClass(path, AvatarConfig.class);
-                    } catch (Exception e) {
-                        Grasscutter.getLogger().error("Error loading player ability embryos:", e);
-                        return;
-                    }
-
-                    if (config.abilities == null) return;
-
-                    int s = config.abilities.size();
-                    AbilityEmbryoEntry al = new AbilityEmbryoEntry(avatarName, config.abilities.stream().map(Object::toString).toArray(size -> new String[s]));
-                    l.add(al);
-                });
-            } catch (IOException e) {
-                Grasscutter.getLogger().error("Error loading ability embryos: no files found");
-                return;
-            }
+            // Load from BinOutput
+            GameData.getAvatarConfigData().forEach((key, config) -> {
+                val abilities = config.getAbilities();
+                val matcher = pattern.matcher(key);
+                if (abilities == null || !matcher.find()) {
+                    return;
+                }
+                String avatarName = matcher.group(1);
+                int s = abilities.size();
+                AbilityEmbryoEntry al = new AbilityEmbryoEntry(avatarName, abilities.stream().map(ConfigAbilityData::getAbilityName).toArray(size -> new String[s]));
+                l.add(al);
+            });
 
             embryoList = l;
 
             try {
-                GameDepot.setPlayerAbilities(JsonUtils.loadToMap(getResourcePath("BinOutput/AbilityGroup/AbilityGroup_Other_PlayerElementAbility.json"), String.class, AvatarConfig.class));
+                GameDepot.setPlayerAbilities(JsonUtils.loadToMap(getResourcePath("BinOutput/AbilityGroup/AbilityGroup_Other_PlayerElementAbility.json"), String.class, AbilityGroup.class));
             } catch (IOException e) {
                 Grasscutter.getLogger().error("Error loading player abilities:", e);
             }
         }
 
-        if (embryoList == null || embryoList.isEmpty()) {
+        if (embryoList.isEmpty()) {
             Grasscutter.getLogger().error("No embryos loaded!");
             return;
         }
@@ -312,7 +310,6 @@ public class ResourceLoader {
             paths.filter(Files::isRegularFile).filter(path -> path.toString().endsWith(".json")).forEach(ResourceLoader::loadAbilityModifiers);
         } catch (IOException e) {
             Grasscutter.getLogger().error("Error loading ability modifiers: ", e);
-            return;
         }
         // System.out.println("Loaded modifiers, found types:");
         // modifierActionTypes.stream().sorted().forEach(s -> System.out.printf("%s, ", s));
@@ -323,7 +320,6 @@ public class ResourceLoader {
             JsonUtils.loadToList(path, AbilityConfigData.class).forEach(data -> loadAbilityData(data.Default));
         } catch (IOException e) {
             Grasscutter.getLogger().error("Error loading ability modifiers from path " + path.toString() + ": ", e);
-            return;
         }
     }
     private static void loadAbilityData(AbilityData data) {
@@ -411,8 +407,8 @@ public class ResourceLoader {
             String[] folderNames = {"BinOutput/Talent/EquipTalents/", "BinOutput/Talent/AvatarTalents/"};
 
             for (String folderName : folderNames) {
-                try {
-                    Files.newDirectoryStream(getResourcePath(folderName), "*.json").forEach(path -> {
+                try (val stream = Files.newDirectoryStream(getResourcePath(folderName), "*.json")){
+                    stream.forEach(path -> {
                         try {
                             JsonUtils.loadToMap(path, String.class, OpenConfigData[].class)
                                 .forEach((name, data) -> map.put(name, new OpenConfigEntry(name, data)));
@@ -430,7 +426,7 @@ public class ResourceLoader {
             list = new ArrayList<>(map.values());
         }
 
-        if (list == null || list.isEmpty()) {
+        if (list.isEmpty()) {
             Grasscutter.getLogger().error("No openconfig entries loaded!");
             return;
         }
@@ -441,13 +437,16 @@ public class ResourceLoader {
     }
 
     private static void loadQuests() {
-        try {
-            Files.list(getResourcePath("BinOutput/Quest/")).forEach(path -> {
+        try (val stream = Files.list(getResourcePath("Generated/Quest/"))) {
+            stream.forEach(path -> {
                 try {
                     val mainQuest = JsonUtils.loadToClass(path, MainQuestData.class);
                     GameData.getMainQuestDataMap().put(mainQuest.getId(), mainQuest);
                     if(mainQuest.getTalks() != null) {
                         mainQuest.getTalks().forEach(talkData -> GameData.getQuestTalkMap().put(talkData.getId(), mainQuest.getId()));
+                    }
+                    for(SubQuestData quest : mainQuest.getSubQuests()){
+                        addToCache(quest);
                     }
                 } catch (IOException e) {
 
@@ -475,9 +474,32 @@ public class ResourceLoader {
         Grasscutter.getLogger().debug("Loaded " + GameData.getMainQuestDataMap().size() + " MainQuestDatas.");
     }
 
+    private static void addToCache(SubQuestData questData) {
+        GameData.getQuestDataMap().put(questData.getSubId(), questData);
+        if (questData.getAcceptCond() == null) {
+            Grasscutter.getLogger().warn("missing AcceptConditions for quest {}", questData.getSubId());
+            return;
+        }
+        val cacheMap = GameData.getBeginCondQuestMap();
+        if (questData.getAcceptCond().isEmpty()) {
+            val list = cacheMap.computeIfAbsent(SubQuestData.questConditionKey(QuestCond.QUEST_COND_NONE, 0, null), e -> new ArrayList<>());
+            list.add(questData);
+        } else {
+            questData.getAcceptCond().forEach(questCondition -> {
+                if (questCondition.getType() == null) {
+                    Grasscutter.getLogger().warn("null accept type for quest {}", questData.getSubId());
+                    return;
+                }
+                val key = questCondition.asKey();
+                val list = cacheMap.computeIfAbsent(key, e -> new ArrayList<>());
+                list.add(questData);
+            });
+        }
+    }
+
     public static void loadScriptSceneData() {
-        try {
-            Files.list(getResourcePath("ScriptSceneData/")).forEach(path -> {
+        try (val stream = Files.list(getResourcePath("ScriptSceneData/"))) {
+            stream.forEach(path -> {
                 try {
                     GameData.getScriptSceneDataMap().put(path.getFileName().toString(), JsonUtils.loadToClass(path, ScriptSceneData.class));
                 } catch (IOException e) {
@@ -485,7 +507,7 @@ public class ResourceLoader {
                     return;
                 }
             });
-            Grasscutter.getLogger().debug("Loaded " + GameData.getScriptSceneDataMap().size() + " ScriptSceneDatas.");
+            Grasscutter.getLogger().debug("Loaded {} ScriptSceneDatas.", GameData.getScriptSceneDataMap().size());
         } catch (IOException e) {
             Grasscutter.getLogger().debug("ScriptSceneData folder missing or empty.");
             return;
@@ -494,8 +516,8 @@ public class ResourceLoader {
 
     private static void loadHomeworldDefaultSaveData() {
         val pattern = Pattern.compile("scene([0-9]+)_home_config\\.json");
-        try {
-            Files.newDirectoryStream(getResourcePath("BinOutput/HomeworldDefaultSave"), "scene*_home_config.json").forEach(path -> {
+        try( val stream =  Files.newDirectoryStream(getResourcePath("BinOutput/HomeworldDefaultSave"), "scene*_home_config.json")) {
+           stream.forEach(path -> {
                 val matcher = pattern.matcher(path.getFileName().toString());
                 if (!matcher.find()) return;
 
@@ -505,15 +527,15 @@ public class ResourceLoader {
                     GameData.getHomeworldDefaultSaveData().put(sceneId, data);
                 } catch (Exception ignored) {}
             });
-            Grasscutter.getLogger().debug("Loaded " + GameData.getHomeworldDefaultSaveData().size() + " HomeworldDefaultSaveDatas.");
+            Grasscutter.getLogger().debug("Loaded {} HomeworldDefaultSaveDatas.", GameData.getHomeworldDefaultSaveData().size());
         } catch (IOException e) {
             Grasscutter.getLogger().error("Failed to load HomeworldDefaultSave folder.");
         }
     }
 
     private static void loadNpcBornData() {
-        try {
-            Files.newDirectoryStream(getResourcePath("BinOutput/Scene/SceneNpcBorn/"), "*.json").forEach(path -> {
+        try (val stream = Files.newDirectoryStream(getResourcePath("BinOutput/Scene/SceneNpcBorn/"), "*.json")){
+            stream.forEach(path -> {
                 try {
                     val data = JsonUtils.loadToClass(path, SceneNpcBornData.class);
                     if (data.getBornPosList() == null || data.getBornPosList().size() == 0) {
@@ -524,31 +546,54 @@ public class ResourceLoader {
                     GameData.getSceneNpcBornData().put(data.getSceneId(), data);
                 } catch (IOException ignored) {}
             });
-            Grasscutter.getLogger().debug("Loaded " + GameData.getSceneNpcBornData().size() + " SceneNpcBornDatas.");
+            Grasscutter.getLogger().debug("Loaded {} SceneNpcBornDatas.", GameData.getSceneNpcBornData().size());
         } catch (IOException e) {
             Grasscutter.getLogger().error("Failed to load SceneNpcBorn folder.");
         }
     }
+    private static void loadConfigData(){
+        loadConfigData(GameData.getAvatarConfigData(), "BinOutput/Avatar/", ConfigEntityAvatar.class);
+        loadConfigData(GameData.getMonsterConfigData(), "BinOutput/Monster/", ConfigEntityMonster.class);
+        loadConfigDataMap(GameData.getGadgetConfigData(), "BinOutput/Gadget/", ConfigEntityGadget.class);
+    }
 
-    private static void loadGadgetConfigData() {
-        try {
-            Files.newDirectoryStream(getResourcePath("BinOutput/Gadget/"), "*.json").forEach(path -> {
+    private static <T extends ConfigEntityBase> void loadConfigDataMap(Map<String,T> targetMap, String folderPath, Class<T> configClass) {
+        val className = configClass.getName();
+        try(val stream = Files.newDirectoryStream(getResourcePath(folderPath), "*.json")) {
+            stream.forEach(path -> {
                 try {
-                    GameData.getGadgetConfigData().putAll(JsonUtils.loadToMap(path, String.class, ConfigGadget.class));
+                    targetMap.putAll(JsonUtils.loadToMap(path, String.class, configClass));
                 } catch (Exception e) {
-                    Grasscutter.getLogger().error("failed to load ConfigGadget entries for " + path.toString(), e);
+                    Grasscutter.getLogger().error("failed to load {} entries for {}", className, path.toString(), e);
                 }
             });
 
-            Grasscutter.getLogger().debug("Loaded {} ConfigGadget entries.", GameData.getGadgetConfigData().size());
+            Grasscutter.getLogger().debug("Loaded {} {} entries.", GameData.getMonsterConfigData().size(), className);
         } catch (IOException e) {
-            Grasscutter.getLogger().error("Failed to load ConfigGadget folder.");
+            Grasscutter.getLogger().error("Failed to load {} folder.", className);
+        }
+    }
+    private static <T extends ConfigEntityBase> void loadConfigData(Map<String,T> targetMap, String folderPath, Class<T> configClass) {
+        val className = configClass.getName();
+        try(val stream = Files.newDirectoryStream(getResourcePath(folderPath), "*.json")) {
+            stream.forEach(path -> {
+                try {
+                    val name = path.getFileName().toString().replace(".json", "");
+                    targetMap.put(name, JsonUtils.loadToClass(path, configClass));
+                } catch (Exception e) {
+                    Grasscutter.getLogger().error("failed to load {} entries for {}", className, path.toString(), e);
+                }
+            });
+
+            Grasscutter.getLogger().debug("Loaded {} {} entries.", GameData.getMonsterConfigData().size(), className);
+        } catch (IOException e) {
+            Grasscutter.getLogger().error("Failed to load {} folder.", className);
         }
     }
 
     private static void loadSceneRoutes() {
-        try {
-            Files.newDirectoryStream(getResourcePath("BinOutput/LevelDesign/Routes/"), "*.json").forEach(path -> {
+        try(val stream = Files.newDirectoryStream(getResourcePath("BinOutput/LevelDesign/Routes/"), "*.json")) {
+            stream.forEach(path -> {
                 try {
                     val sceneRoutes = JsonUtils.loadToClass(path, SceneRoutes.class);
                     val sceneRoutesMap = GameData.getSceneRoutes(sceneRoutes.getSceneId());
@@ -581,11 +626,11 @@ public class ResourceLoader {
         // Load from BinOutput
         val pattern = Pattern.compile("ConfigLevelEntity_(.+?)\\.json");
 
-        try {
-            Files.newDirectoryStream(getResourcePath("BinOutput/LevelEntity/"), "ConfigLevelEntity_*.json").forEach(path -> {
+        try(val stream = Files.newDirectoryStream(getResourcePath("BinOutput/LevelEntity/"), "ConfigLevelEntity_*.json")) {
+            stream.forEach(path -> {
                 val matcher = pattern.matcher(path.getFileName().toString());
                 if (!matcher.find()) return;
-                Map<String,ConfigLevelEntity> config;
+                Map<String, ConfigLevelEntity> config;
 
                 try {
                     config = JsonUtils.loadToMap(path, String.class, ConfigLevelEntity.class);
@@ -602,7 +647,6 @@ public class ResourceLoader {
 
         if (GameData.getConfigLevelEntityDataMap() == null || GameData.getConfigLevelEntityDataMap().isEmpty()) {
             Grasscutter.getLogger().error("No config level entity loaded!");
-            return;
         }
     }
 
@@ -610,9 +654,9 @@ public class ResourceLoader {
         // Load from BinOutput
         val pattern = Pattern.compile("Q(.+?)\\ShareConfig.lua");
 
-        try {
-            Bindings bindings = ScriptLoader.getEngine().createBindings();
-            Files.newDirectoryStream(getResourcePath("Scripts/Quest/Share/"), "Q*ShareConfig.lua").forEach(path -> {
+        Bindings bindings = ScriptLoader.getEngine().createBindings();
+        try(val stream = Files.newDirectoryStream(getResourcePath("Scripts/Quest/Share/"), "Q*ShareConfig.lua")) {
+            stream.forEach(path -> {
                 val matcher = pattern.matcher(path.getFileName().toString());
                 if (!matcher.find()) return;
 
@@ -639,7 +683,6 @@ public class ResourceLoader {
         if (GameData.getTeleportDataMap() == null || GameData.getTeleportDataMap().isEmpty()
             || GameData.getRewindDataMap() == null || GameData.getRewindDataMap().isEmpty()) {
             Grasscutter.getLogger().error("No Quest Share Config loaded!");
-            return;
         }
     }
 
@@ -655,11 +698,95 @@ public class ResourceLoader {
         }
     }
 
+    private static void loadActivityCondGroups() {
+        try {
+            val gadgetMap = GameData.getActivityCondGroupMap();
+            try {
+                JsonUtils.loadToList(getResourcePath("Server/ActivityCondGroups.json"), ActivityCondGroup.class).forEach(entry -> gadgetMap.put(entry.getCondGroupId(), entry));
+            } catch (IOException | NullPointerException ignored) {}
+            Grasscutter.getLogger().debug("Loaded {} ActivityCondGroups.", gadgetMap.size());
+        } catch (Exception e) {
+            Grasscutter.getLogger().error("Unable to load ActivityCondGroups.", e);
+        }
+    }
+
+    private static void loadTrialAvatarCustomData() {
+        try {
+            String pathName = "CustomResources/TrialAvatarExcels/";
+            try {
+                JsonUtils.loadToList(
+                    getResourcePath(pathName + "TrialAvatarActivityDataExcelConfigData.json"),
+                    TrialAvatarActivityDataData.class).forEach(instance -> {
+                        instance.onLoad();
+                        GameData.getTrialAvatarActivityDataCustomData()
+                            .put(instance.getTrialAvatarIndexId(), instance);
+                    });
+            } catch (IOException | NullPointerException ignored) {}
+            Grasscutter.getLogger().debug("Loaded trial activity custom data.");
+            try {
+                JsonUtils.loadToList(
+                    getResourcePath(pathName + "TrialAvatarActivityExcelConfigData.json"),
+                    TrialAvatarActivityCustomData.class).forEach(instance -> {
+                        instance.onLoad();
+                        GameData.getTrialAvatarActivityCustomData()
+                            .put(instance.getScheduleId(), instance);
+                    });
+            } catch (IOException | NullPointerException ignored) {}
+            Grasscutter.getLogger().debug("Loaded trial activity schedule custom data.");
+            try {
+                JsonUtils.loadToList(
+                    getResourcePath(pathName + "TrialAvatarData.json"),
+                    TrialAvatarCustomData.class).forEach(instance -> {
+                        instance.onLoad();
+                        GameData.getTrialAvatarCustomData()
+                            .put(instance.getTrialAvatarId(), instance);
+                    });
+            } catch (IOException | NullPointerException ignored) {}
+            Grasscutter.getLogger().debug("Loaded trial avatar custom data.");
+        } catch (Exception e) {
+            Grasscutter.getLogger().error("Unable to load trial avatar custom data.", e);
+        }
+    }
+
+    private static void loadGroupReplacements(){
+        Bindings bindings = ScriptLoader.getEngine().createBindings();
+
+        CompiledScript cs = ScriptLoader.getScript("Scene/groups_replacement.lua");
+        if (cs == null) {
+            Grasscutter.getLogger().error("Error while loading Group Replacements: file not found");
+            return;
+        }
+
+        try{
+            cs.eval(bindings);
+            // these are Map<String, class>
+            var replacementsMap = ScriptLoader.getSerializer().toMap(GroupReplacementData.class, bindings.get("replacements"));
+            // convert them to Map<Integer, class> and cache
+            GameData.getGroupReplacements().putAll(replacementsMap.entrySet().stream().collect(Collectors.toMap(entry -> Integer.valueOf(entry.getValue().getId()), Entry::getValue)));
+
+        } catch (Throwable e){
+            Grasscutter.getLogger().error("Error while loading Group Replacements");
+        }
+
+        if (GameData.getGroupReplacements() == null || GameData.getGroupReplacements().isEmpty()) {
+            Grasscutter.getLogger().error("No Group Replacements loaded!");
+            return;
+        } else {
+            Grasscutter.getLogger().debug("Loaded {} group replacements.", GameData.getGroupReplacements().size());
+            GameData.getGroupReplacements().forEach((group, groups) -> {
+                Grasscutter.getLogger().debug("{} -> {}", group, groups.getReplace_groups().stream().map(String::valueOf).collect(Collectors.joining(",")));
+            });
+        }
+    }
+
     // BinOutput configs
 
-    public static class AvatarConfig {
+    public static class AbilityGroup {
+        String abilityGroupSourceType; // todo probably enum?
+        String abilityGroupTargetType; // todo probably enum?
+
         @SerializedName(value="abilities", alternate={"targetAbilities"})
-        public ArrayList<AvatarConfigAbility> abilities;
+        public List<AvatarConfigAbility> targetAbilities;
     }
 
     public static class AvatarConfigAbility {
@@ -667,10 +794,6 @@ public class ResourceLoader {
         public String toString() {
             return abilityName;
         }
-    }
-
-    private static class OpenConfig {
-        public OpenConfigData[] data;
     }
 
     public static class OpenConfigData {

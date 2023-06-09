@@ -41,7 +41,7 @@ public class Position implements Serializable {
             case 2:
                 this.y = xyz.get(1);  // Fall-through
             case 1:
-                this.y = xyz.get(0);  // pointless fall-through
+                this.x = xyz.get(0);  // pointless fall-through
             case 0:
                 break;
         }

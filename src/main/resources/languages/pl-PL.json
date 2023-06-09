@@ -223,6 +223,19 @@
       "description": "Dodaj lub wykonaj wskazane zadanie.",
       "enabled": "Questing enabled."
     },
+    "group": {
+      "invalid_groupid": "Invalid group ID.",
+      "invalid_suiteid": "Invalid suite ID.",
+      "group_not_found": "Group not found.",
+      "description": "Alter group loading",
+      "refreshed": "Group %s refreshed."
+    },
+    "cutscene": {
+      "description": "Odtwarza przerywnik filmowy"
+    },
+    "sound": {
+      "description": "Plays a sound"
+    },
     "reload": {
       "reload_start": "Ponowne ładowanie konfiguracji...",
       "reload_done": "Ponowne ładowanie konfiguracji zakończone.",
@@ -333,6 +346,17 @@
       "exists_error": "Ta scena nie istenieje.",
       "success": "Gracz %s został przeniesiony do pozycji (%s, %s, %s) w scenie o ID %s.",
       "description": "Przemieść wybranego gracza do podanej pozycji w podanej scenie."
+    },
+    "trialAvatarActivity": {
+      "description": "Manipuluj funkcjami Trial Avatar Activity. Obejmuje to przełączanie stanów lochów i nagród.",
+      "not_found": "Nie znaleziono danych gracza o aktywności awatara w wersji próbnej. Być może aktywność nie jest włączona.",
+      "invalid_param": "Niewłaściwy parametr.",
+      "schedule_not_found": "Nie znaleziono harmonogramu %s.",
+      "success_schedule": "Zmieniono identyfikator harmonogramu na %s.",
+      "success_dungeon": "Przełączono stan lochów awatara %s.",
+      "success_dungeon_all": "Zmieniono stan lochów wszystkich awatarów.",
+      "success_reward": "Zmieniono status nagrody awatara %s.",
+      "success_reward_all": "Zmieniono status nagrody dla wszystkich awatarów."
     },
     "weather": {
       "success": "ID pogody został ustawiony na %s, a typ klimatu na %s.",

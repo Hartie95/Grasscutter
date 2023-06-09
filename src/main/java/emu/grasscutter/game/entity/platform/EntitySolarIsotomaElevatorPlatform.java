@@ -1,18 +1,12 @@
 package emu.grasscutter.game.entity.platform;
 
 import emu.grasscutter.Grasscutter;
-import emu.grasscutter.data.binout.ConfigGadget;
+import emu.grasscutter.data.binout.config.ConfigEntityGadget;
 import emu.grasscutter.game.entity.*;
 import emu.grasscutter.game.entity.gadget.GadgetAbility;
 import emu.grasscutter.game.entity.gadget.platform.AbilityRoute;
-import emu.grasscutter.game.player.Player;
-import emu.grasscutter.game.props.PlayerProperty;
 import emu.grasscutter.game.world.Scene;
-import emu.grasscutter.net.proto.*;
-import emu.grasscutter.server.packet.send.PacketSceneTimeNotify;
 import emu.grasscutter.utils.Position;
-import emu.grasscutter.utils.ProtoHelper;
-import lombok.Getter;
 
 public class EntitySolarIsotomaElevatorPlatform extends EntityGadget {
     public EntitySolarIsotomaElevatorPlatform(EntitySolarIsotomaClientGadget isotoma, Scene scene, int gadgetId, Position pos, Position rot) {
@@ -23,7 +17,7 @@ public class EntitySolarIsotomaElevatorPlatform extends EntityGadget {
     }
 
     @Override
-    protected void fillFightProps(ConfigGadget configGadget) {
+    protected void fillFightProps(ConfigEntityGadget configGadget) {
         if (configGadget == null || configGadget.getCombat() == null) {
             return;
         }

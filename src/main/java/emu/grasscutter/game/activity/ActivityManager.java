@@ -16,10 +16,14 @@ import emu.grasscutter.net.proto.ActivityInfoOuterClass;
 import emu.grasscutter.server.packet.send.PacketActivityScheduleInfoNotify;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import lombok.Getter;
+import lombok.val;
 import org.reflections.Reflections;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
@@ -54,6 +58,7 @@ public class ActivityManager extends BasePlayerManager {
 
         try {
             DataLoader.loadList("ActivityConfig.json", ActivityConfigItem.class).forEach(item -> {
+                item.onLoad();
                 var activityData = GameData.getActivityDataMap().get(item.getActivityId());
                 if (activityData == null) {
                     Grasscutter.getLogger().warn("activity {} not exist.", item.getActivityId());
@@ -141,8 +146,40 @@ public class ActivityManager extends BasePlayerManager {
         return new Date().after(activityConfig.getEndTime());
     }
 
+    public boolean isActivityOpen(int activityId) {
+        var activityConfig = activityConfigItemMap.get(activityId);
+        if (activityConfig == null) {
+            return false;
+        }
+        var now = new Date();
+        return now.after(activityConfig.getOpenTime()) && now.before(activityConfig.getCloseTime());
+    }
+    public int getOpenDay(int activityId) {
+        val activityConfig = activityConfigItemMap.get(activityId);
+        if (activityConfig == null) {
+            return 0;
+        }
+        val now = new Date();
+        return (int) TimeUnit.DAYS.convert(now.getTime()-activityConfig.getOpenTime().getTime(), TimeUnit.MILLISECONDS) +1;
+    }
+
+    public boolean isActivityClosed(int activityId) {
+        var activityConfig = activityConfigItemMap.get(activityId);
+        if (activityConfig == null) {
+            return false;
+        }
+        var now = new Date();
+        return now.after(activityConfig.getCloseTime());
+    }
+
     public boolean meetsCondition(int activityCondId) {
         return conditionExecutor.meetsCondition(activityCondId);
+    }
+
+    public void triggerActivityConditions(){
+        activityConfigItemMap.forEach((k,v)->{
+            v.getActivityHandler().triggerCondEvents(player);
+        });
     }
 
     public ActivityInfoOuterClass.ActivityInfo getInfoProtoByActivityId(int activityId) {

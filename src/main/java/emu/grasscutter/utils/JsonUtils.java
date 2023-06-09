@@ -31,6 +31,7 @@ public final class JsonUtils {
         .registerTypeAdapter(DynamicFloat.class, new DynamicFloatAdapter())
         .registerTypeAdapter(IntList.class, new IntListAdapter())
         .registerTypeAdapter(Position.class, new PositionAdapter())
+        .registerTypeAdapter(GridPosition.class, new GridPositionAdapter())
         .registerTypeAdapterFactory(new EnumTypeAdapterFactory())
         .registerTypeAdapter(QuestCond.class, new QuestAcceptConditionAdapter())
         .registerTypeAdapter(QuestContent.class, new QuestContentAdapter())

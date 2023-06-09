@@ -66,6 +66,7 @@ public final class SetPropCommand implements CommandHandler {
             String name = prop.toString().substring(5);  // PROP_EXP -> EXP
             String key = name.toLowerCase();  // EXP -> exp
             this.props.put(key, new Prop(name, prop));
+            this.props.put(prop.name().toLowerCase(), new Prop(prop.name(), prop));
         }
         // Add special props
         Prop worldlevel = new Prop("World Level", PlayerProperty.PROP_PLAYER_WORLD_LEVEL, PseudoProp.WORLD_LEVEL);

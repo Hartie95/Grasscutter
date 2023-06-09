@@ -6,6 +6,7 @@ import emu.grasscutter.data.GameDepot;
 import emu.grasscutter.data.binout.SceneNpcBornEntry;
 import emu.grasscutter.data.binout.routes.Route;
 import emu.grasscutter.data.excels.*;
+import emu.grasscutter.data.server.Grid;
 import emu.grasscutter.game.avatar.Avatar;
 import emu.grasscutter.game.dungeons.DungeonManager;
 import emu.grasscutter.game.dungeons.DungeonSettleListener;
@@ -33,6 +34,7 @@ import emu.grasscutter.scripts.data.SceneGroup;
 import emu.grasscutter.scripts.data.ScriptArgs;
 import emu.grasscutter.server.event.player.PlayerTeleportEvent;
 import emu.grasscutter.server.packet.send.*;
+import emu.grasscutter.utils.KahnsSort;
 import emu.grasscutter.utils.Position;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import lombok.Getter;
@@ -40,6 +42,7 @@ import lombok.Setter;
 import lombok.val;
 
 import javax.annotation.Nullable;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -54,6 +57,7 @@ public class Scene {
     @Getter private final Set<SpawnDataEntry> spawnedEntities;
     @Getter private final Set<SpawnDataEntry> deadSpawnedEntities;
     @Getter private final Set<SceneBlock> loadedBlocks;
+    @Getter private final Set<SceneGroup> loadedGroups;
     @Getter private final BlossomManager blossomManager;
     private final HashSet<Integer> unlockedForces;
     private final List<Runnable> afterLoadedCallbacks = new ArrayList<>();
@@ -87,6 +91,7 @@ public class Scene {
         this.spawnedEntities = ConcurrentHashMap.newKeySet();
         this.deadSpawnedEntities = ConcurrentHashMap.newKeySet();
         this.loadedBlocks = ConcurrentHashMap.newKeySet();
+        this.loadedGroups = ConcurrentHashMap.newKeySet();
         this.loadedGridBlocks = new HashSet<>();
         this.npcBornEntrySet = ConcurrentHashMap.newKeySet();
         this.scriptManager = new SceneScriptManager(this);
@@ -201,8 +206,10 @@ public class Scene {
 
         // Deregister scene if not in use
         if (this.getPlayerCount() <= 0 && !this.dontDestroyWhenEmpty) {
+            this.getScriptManager().onDestroy();
             this.getWorld().deregisterScene(this);
         }
+        this.saveGroups();
     }
 
     private void setupPlayerAvatars(Player player) {
@@ -212,8 +219,14 @@ public class Scene {
         // Add new entities for player
         TeamInfo teamInfo = player.getTeamManager().getCurrentTeamInfo();
         for (int avatarId : teamInfo.getAvatars()) {
-            EntityAvatar entity = new EntityAvatar(player.getScene(), player.getAvatars().getAvatarById(avatarId));
-            player.getTeamManager().getActiveTeam().add(entity);
+            Avatar avatar = player.getAvatars().getAvatarById(avatarId);
+            if (avatar == null) {
+                if (player.getTeamManager().isUseTrialTeam()) {
+                    avatar = player.getTeamManager().getTrialAvatars().get(avatarId);
+                }
+                if (avatar == null) continue;
+            }
+            player.getTeamManager().getActiveTeam().add(new EntityAvatar(player.getScene(), avatar));
         }
 
         // Limit character index in case its out of bounds
@@ -265,6 +278,17 @@ public class Scene {
         addEntities(entities, VisionType.VISION_TYPE_BORN);
     }
 
+    private static <T> List<List<T>> chopped(List<T> list, final int L) {
+        List<List<T>> parts = new ArrayList<List<T>>();
+        final int N = list.size();
+        for (int i = 0; i < N; i += L) {
+            parts.add(new ArrayList<T>(
+                list.subList(i, Math.min(N, i + L)))
+            );
+        }
+        return parts;
+    }
+
     public synchronized void addEntities(Collection<? extends GameEntity> entities, VisionType visionType) {
         if (entities == null || entities.isEmpty()) {
             return;
@@ -273,7 +297,9 @@ public class Scene {
             this.addEntityDirectly(entity);
         }
 
-        this.broadcastPacket(new PacketSceneEntityAppearNotify(entities, visionType));
+        for(val l : chopped(new ArrayList<>(entities), 100)) {
+            this.broadcastPacket(new PacketSceneEntityAppearNotify(l, visionType));
+        }
     }
 
     private GameEntity removeEntityDirectly(GameEntity entity) {
@@ -297,6 +323,7 @@ public class Scene {
 
     public synchronized void removeEntities(List<GameEntity> entity, VisionType visionType) {
         var toRemove = entity.stream()
+            .filter(e -> e != null)
             .map(this::removeEntityDirectly)
             .filter(Objects::nonNull)
             .toList();
@@ -385,7 +412,10 @@ public class Scene {
             return;
         }
         if (this.getScriptManager().isInit()) {
-            this.checkBlocks();
+            //this.checkBlocks();
+            if (tickCount % 2 == 0) {
+                checkGroups();
+            }
         } else {
             // TEMPORARY
             this.checkSpawns();
@@ -412,13 +442,20 @@ public class Scene {
     }
 
     private void checkPlayerRespawn() {
+        if(getScriptManager().getConfig() == null){
+            return;
+        }
+        val diePos = getScriptManager().getConfig().die_y;
         players.forEach(player -> {
             //Check if we need a respawn
-            if (getScriptManager().getConfig() != null) {
-                if (getScriptManager().getConfig().die_y >= player.getPosition().getY()) {
-                    //Respawn the player
-                    respawnPlayer(player);
-                }
+            if (diePos >= player.getPosition().getY()) {
+                //Respawn the player
+                respawnPlayer(player);
+            }
+        });
+        getEntities().forEach((eid, e) -> {
+            if(diePos >= e.getPosition().getY()){
+                killEntity(e);
             }
         });
     }
@@ -612,68 +649,135 @@ public class Scene {
             player.getPosition().toXZDoubleArray(), Grasscutter.getConfig().server.game.loadEntitiesForPlayerRange);
     }
 
-    private boolean unloadBlockIfNotVisible(Collection<SceneBlock> visible, SceneBlock block) {
-        if (visible.contains(block)) return false;
-        this.onUnloadBlock(block);
-        return true;
+    public Set<Integer> getPlayerActiveGroups(Player player) {
+        // consider the borders' entities of blocks, so we check if contains by index
+        Position playerPosition = player.getPosition();
+        Set<Integer> activeGroups = new HashSet<>();
+        for(int i = 0; i < 4; i++) {
+            Grid grid = getScriptManager().getGroupGrids().get(i);
+
+            activeGroups.addAll(grid.getNearbyGroups(i, playerPosition));
+        }
+
+        return activeGroups;
     }
 
-    private synchronized boolean loadBlock(SceneBlock block) {
+    public synchronized boolean loadBlock(SceneBlock block) {
         if (this.loadedBlocks.contains(block)) return false;
         this.onLoadBlock(block, this.players);
         this.loadedBlocks.add(block);
         return true;
     }
 
-    public synchronized void checkBlocks() {
-        Set<SceneBlock> visible = this.players.stream()
-            .map(player -> this.getPlayerActiveBlocks(player))
+    public synchronized void checkGroups() {
+        var playerMoved = this.players.stream().filter(p -> p.getLastCheckedPosition() == null || !p.getLastCheckedPosition().equal2d(p.getPosition())).toList();
+        if(playerMoved.isEmpty()) return;
+
+        playerMoved.forEach(p -> p.setLastCheckedPosition(p.getPosition().clone()));
+
+        Set<Integer> visible = this.players.stream()
+            .map(player -> this.getPlayerActiveGroups(player))
             .flatMap(Collection::stream)
             .collect(Collectors.toSet());
 
-        this.loadedBlocks.removeIf(block -> unloadBlockIfNotVisible(visible, block));
-        visible.stream()
-            .filter(block -> !this.loadBlock(block))
-            .forEach(block -> {
-                // dynamic load the groups for players in a loaded block
-                var toLoad = this.players.stream()
-                    .filter(p -> block.contains(p.getPosition()))
-                    .map(p -> this.playerMeetGroups(p, block))
-                    .flatMap(Collection::stream)
-                    .toList();
-                this.onLoadGroup(toLoad);
-            });
-    }
-
-    public List<SceneGroup> playerMeetGroups(Player player, SceneBlock block) {
-        List<SceneGroup> sceneGroups = SceneIndexManager.queryNeighbors(block.sceneGroupIndex, player.getPosition().toDoubleArray(),
-            Grasscutter.getConfig().server.game.loadEntitiesForPlayerRange);
-
-        List<SceneGroup> groups = sceneGroups.stream()
-            .filter(group -> !scriptManager.getLoadedGroupSetPerBlock().get(block.id).contains(group))
-            .peek(group -> scriptManager.getLoadedGroupSetPerBlock().get(block.id).add(group))
-            .toList();
-
-        if (groups.size() == 0) {
-            return List.of();
+        Iterator<SceneGroup> it = this.loadedGroups.iterator();
+        while(it.hasNext()) {
+            SceneGroup group = it.next();
+            if(!visible.contains(group.id) && !group.dynamic_load) unloadGroup(scriptManager.getBlocks().get(group.block_id), group.id);
         }
 
-        return groups;
+        List<SceneGroup> toLoad = visible.stream().filter(g -> this.loadedGroups.stream().filter(gr -> gr.id == g).count() == 0).map(g -> {
+            for(var b : scriptManager.getBlocks().values()) {
+                loadBlock(b);
+                SceneGroup group = b.groups.getOrDefault(g, null);
+                if(group != null && !group.dynamic_load) return group;
+            }
+
+            return null;
+        }).filter(g -> g != null).toList();
+
+        this.onLoadGroup(toLoad);
+        if(!toLoad.isEmpty()) this.onRegisterGroups();
     }
 
     public void onLoadBlock(SceneBlock block, List<Player> players) {
         this.getScriptManager().loadBlockFromScript(block);
         scriptManager.getLoadedGroupSetPerBlock().put(block.id, new HashSet<>());
 
-        // the groups form here is not added in current scene
-        var groups = players.stream()
-            .filter(player -> block.contains(player.getPosition()))
-            .map(p -> playerMeetGroups(p, block))
-            .flatMap(Collection::stream)
-            .toList();
-
-        onLoadGroup(groups);
         Grasscutter.getLogger().info("Scene {} Block {} loaded.", this.getId(), block.id);
+    }
+
+    public int loadDynamicGroup(int group_id) {
+        SceneGroup group = getScriptManager().getGroupById(group_id);
+        if(group == null || getScriptManager().getGroupInstanceById(group_id) != null) return -1; //Group not found or already instanced
+
+        onLoadGroup(new ArrayList<>(Arrays.asList(group)));
+
+        if(GameData.getGroupReplacements().containsKey(group_id)) onRegisterGroups();
+
+        if (group.init_config == null) return -1;
+        return group.init_config.suite;
+    }
+
+    public boolean unregisterDynamicGroup(int groupId){
+        SceneGroup group = getScriptManager().getGroupById(groupId);
+        if(group == null) return false;
+
+        SceneBlock block = getScriptManager().getBlocks().get(group.block_id);
+        unloadGroup(block, groupId);
+        return true;
+    }
+
+    public void onRegisterGroups() {
+        Set<SceneGroup> sceneGroups = this.loadedGroups;
+        Map<Integer, SceneGroup> sceneGroupMap = sceneGroups.stream().collect(Collectors.toMap(item -> item.id, item -> item));
+        List<Integer> sceneGroupsIds = sceneGroups.stream()
+            .map(group -> group.id)
+            .toList();
+        List<Integer> dynamicGroups = sceneGroups.stream()
+                .filter(group -> group.dynamic_load)
+                .map(group -> group.id)
+                .toList();
+
+        //Create the graph
+        List<KahnsSort.Node> nodes = new ArrayList<>();
+        List<Integer> groupList = new ArrayList<>();
+        GameData.getGroupReplacements().values().stream().filter(replacement -> dynamicGroups.contains(replacement.id)).forEach(replacement -> {
+            Grasscutter.getLogger().info("Graph ordering replacement {}", replacement);
+            replacement.replace_groups.forEach(group -> {
+                nodes.add(new KahnsSort.Node(replacement.id, group));
+                if(!groupList.contains(group)) groupList.add(group);
+            });
+            if(!groupList.contains(replacement.id)) groupList.add(replacement.id);
+        });
+
+        KahnsSort.Graph graph = new KahnsSort.Graph(nodes, groupList);
+        List<Integer> dynamicGroupsOrdered = KahnsSort.doSort(graph);
+
+        //Now we can start unloading and loading groups :D
+        dynamicGroupsOrdered.forEach(group -> {
+            if(GameData.getGroupReplacements().containsKey((int)group)) { //isGroupJoinReplacement
+                GroupReplacementData data = GameData.getGroupReplacements().get((int)group);
+                SceneGroup sceneGroupReplacement = this.loadedGroups.stream().filter(g -> g.id == group).findFirst().get();
+                if(sceneGroupReplacement != null && sceneGroupReplacement.is_replaceable != null) {
+                    Iterator<Integer> it = data.replace_groups.iterator();
+                    while(it.hasNext()) {
+                        int replace_group = it.next();
+                        if(sceneGroupsIds.contains(replace_group)) {
+                            //Check if we can replace this group
+                            SceneGroup sceneGroup = sceneGroupMap.get(replace_group);
+                            if(sceneGroup != null && sceneGroup.is_replaceable != null &&
+                                ((sceneGroup.is_replaceable.value &&
+                                sceneGroup.is_replaceable.version <= sceneGroupReplacement.is_replaceable.version) || sceneGroup.is_replaceable.new_bin_only)) {
+                                unloadGroup(scriptManager.getBlocks().get(sceneGroup.block_id), replace_group);
+                                it.remove();
+                                Grasscutter.getLogger().info("Graph ordering: unloaded {}", replace_group);
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 
     public void loadTriggerFromGroup(SceneGroup group, String triggerName) {
@@ -688,69 +792,84 @@ public class Scene {
             return;
         }
         for (SceneGroup group : groups) {
+            if(this.loadedGroups.contains(group)) continue;
+
             // We load the script files for the groups here
             this.getScriptManager().loadGroupFromScript(group);
+            if(!scriptManager.getLoadedGroupSetPerBlock().containsKey(group.block_id)) onLoadBlock(scriptManager.getBlocks().get(group.block_id), players);
+            scriptManager.getLoadedGroupSetPerBlock().get(group.block_id).add(group);
         }
 
         // Spawn gadgets AFTER triggers are added
         // TODO
         var entities = new ArrayList<GameEntity>();
+        var entitiesBorn = new ArrayList<GameEntity>();
         for (SceneGroup group : groups) {
+            if(this.loadedGroups.contains(group)) continue;
+
             if (group.init_config == null) {
                 continue;
             }
 
+            SceneGroupInstance groupInstance = this.getScriptManager().getGroupInstanceById(group.id);
+            var cachedInstance = this.getScriptManager().getCachedGroupInstanceById(group.id);
+            if(cachedInstance != null) {
+                cachedInstance.setLuaGroup(group);
+                groupInstance = cachedInstance;
+            }
+
             // Load garbages
-            List<SceneGadget> garbageGadgets = group.getGarbageGadgets();
+            /*List<SceneGadget> garbageGadgets = group.getGarbageGadgets();
 
             if (garbageGadgets != null) {
                 entities.addAll(garbageGadgets.stream().map(g -> scriptManager.createGadget(group.id, group.block_id, g))
                     .filter(Objects::nonNull)
                     .toList());
-            }
+            }*/
 
             // Load suites
-            int suite = group.init_config.suite;
+            //int suite = group.findInitSuiteIndex(0);
+            this.getScriptManager().refreshGroup(groupInstance, 0, false, entitiesBorn); //This is what the official server does
 
-            if (suite == 0 || group.suites == null || group.suites.size() == 0) {
-                continue;
-            }
-
-            // just load the 'init' suite, avoid spawn the suite added by AddExtraGroupSuite etc.
-            var suiteData = group.getSuiteByIndex(suite);
-            suiteData.sceneTriggers.forEach(getScriptManager()::registerTrigger);
-
-            entities.addAll(scriptManager.getGadgetsInGroupSuite(group, suiteData));
-            entities.addAll(scriptManager.getMonstersInGroupSuite(group, suiteData));
-
-            scriptManager.registerRegionInGroupSuite(group, suiteData);
+            this.loadedGroups.add(group);
         }
 
         scriptManager.meetEntities(entities);
-        groups.forEach(g -> scriptManager.callEvent(new ScriptArgs(EventType.EVENT_GROUP_LOAD, g.id)));
+        scriptManager.addEntities(entitiesBorn);
+        groups.forEach(g -> scriptManager.callEvent(new ScriptArgs(g.id, EventType.EVENT_GROUP_LOAD, g.id)));
         Grasscutter.getLogger().info("Scene {} loaded {} group(s)", this.getId(), groups.size());
     }
 
-    public void onUnloadBlock(SceneBlock block) {
+    public void unloadGroup(SceneBlock block, int group_id) {
         List<GameEntity> toRemove = this.getEntities().values().stream()
-            .filter(e -> e.getBlockId() == block.id).toList();
+                .filter(e -> e != null && (e.getBlockId() == block.id && e.getGroupId() == group_id)).toList();
 
         if (toRemove.size() > 0) {
             toRemove.forEach(this::removeEntityDirectly);
             this.broadcastPacket(new PacketSceneEntityDisappearNotify(toRemove, VisionType.VISION_TYPE_REMOVE));
         }
 
-        for (SceneGroup group : block.groups.values()) {
-            if (group.triggers != null) {
-                group.triggers.values().forEach(getScriptManager()::deregisterTrigger);
-            }
-            if (group.regions != null) {
-                group.regions.values().forEach(getScriptManager()::deregisterRegion);
-            }
+        SceneGroup group = block.groups.get(group_id);
+        if (group.triggers != null) {
+            group.triggers.values().forEach(getScriptManager()::deregisterTrigger);
         }
-        scriptManager.getLoadedGroupSetPerBlock().remove(block.id);
-        Grasscutter.getLogger().info("Scene {} Block {} is unloaded.", this.getId(), block.id);
+        if (group.regions != null) {
+            group.regions.values().forEach(getScriptManager()::deregisterRegion);
+        }
+
+        if(scriptManager.getLoadedGroupSetPerBlock().containsKey(block.id))
+            scriptManager.getLoadedGroupSetPerBlock().get(block.id).remove(group);
+        this.loadedGroups.remove(group);
+
+        if(scriptManager.getLoadedGroupSetPerBlock().get(block.id).isEmpty()) {
+            scriptManager.getLoadedGroupSetPerBlock().remove(block.id);
+            Grasscutter.getLogger().info("Scene {} Block {} is unloaded.", this.getId(), block.id);
+        }
+
+        broadcastPacket(new PacketGroupUnloadNotify(Arrays.asList(group_id)));
+        scriptManager.unregisterGroup(group);
     }
+
     // Gadgets
 
     public void onPlayerCreateGadget(EntityClientGadget gadget) {
@@ -867,11 +986,12 @@ public class Scene {
             if (group == null) {
                 return;
             }
+            var groupInstance = scriptManager.getGroupInstanceById(i.getGroup());
             var suite = group.getSuiteByIndex(i.getSuite());
-            if (suite == null) {
+            if (suite == null || groupInstance == null) {
                 return;
             }
-            scriptManager.addGroupSuite(group, suite);
+            scriptManager.refreshGroup(groupInstance, i.getSuite(), false);
         });
     }
 
@@ -899,5 +1019,9 @@ public class Scene {
                 }
             }
         }
+    }
+
+    public void saveGroups() {
+        this.getScriptManager().getCachedGroupInstances().values().forEach(SceneGroupInstance::save);
     }
 }

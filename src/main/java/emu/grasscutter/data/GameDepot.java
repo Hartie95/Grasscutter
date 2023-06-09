@@ -7,7 +7,6 @@ import java.util.Map;
 
 
 import emu.grasscutter.Grasscutter;
-import emu.grasscutter.data.ResourceLoader.AvatarConfig;
 import emu.grasscutter.data.excels.ReliquaryAffixData;
 import emu.grasscutter.data.excels.ReliquaryMainPropData;
 import emu.grasscutter.game.managers.blossom.BlossomConfig;
@@ -25,7 +24,7 @@ public class GameDepot {
     private static Int2ObjectMap<List<ReliquaryMainPropData>> relicMainPropDepot = new Int2ObjectOpenHashMap<>();
     private static Int2ObjectMap<List<ReliquaryAffixData>> relicAffixDepot = new Int2ObjectOpenHashMap<>();
 
-    @Getter @Setter private static Map<String, AvatarConfig> playerAbilities = new HashMap<>();
+    @Getter @Setter private static Map<String, ResourceLoader.AbilityGroup> playerAbilities = new HashMap<>();
     @Getter private static HashMap<SpawnDataEntry.GridBlockId, ArrayList<SpawnDataEntry>> spawnLists = new HashMap<>();
     @Getter @Setter private static BlossomConfig blossomConfig;
 

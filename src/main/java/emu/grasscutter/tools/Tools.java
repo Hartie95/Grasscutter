@@ -62,8 +62,11 @@ public final class Tools {
             void newTranslatedLine(String template, TextStrings... textstrings) {
                 for (int i = 0; i < TextStrings.NUM_LANGUAGES; i++) {
                     String s = template;
-                    for (int j = 0; j < textstrings.length; j++)
-                        s = s.replace("{"+j+"}", textstrings[j].strings[i]);
+                    for (int j = 0; j < textstrings.length; j++) {
+                        if(textstrings[j] == null)
+                            continue;
+                        s = s.replace("{" + j + "}", textstrings[j].strings[i]);
+                    }
                     handbookBuilders.get(i).append(s + "\n");
                 }
             }

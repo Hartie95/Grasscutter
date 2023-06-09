@@ -19,50 +19,50 @@ public final class MusicGameSettleReqOuterClass {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>repeated uint32 Unk2700_GDPKOANEDEB = 384;</code>
-     * @return A list containing the unk2700GDPKOANEDEB.
+     * <code>repeated uint32 button_list = 384;</code>
+     * @return A list containing the buttonList.
      */
-    java.util.List<java.lang.Integer> getUnk2700GDPKOANEDEBList();
+    java.util.List<java.lang.Integer> getButtonListList();
     /**
-     * <code>repeated uint32 Unk2700_GDPKOANEDEB = 384;</code>
-     * @return The count of unk2700GDPKOANEDEB.
+     * <code>repeated uint32 button_list = 384;</code>
+     * @return The count of buttonList.
      */
-    int getUnk2700GDPKOANEDEBCount();
+    int getButtonListCount();
     /**
-     * <code>repeated uint32 Unk2700_GDPKOANEDEB = 384;</code>
+     * <code>repeated uint32 button_list = 384;</code>
      * @param index The index of the element to return.
-     * @return The unk2700GDPKOANEDEB at the given index.
+     * @return The buttonList at the given index.
      */
-    int getUnk2700GDPKOANEDEB(int index);
+    int getButtonList(int index);
 
     /**
-     * <code>uint32 Unk2700_NMHGADLANMM = 795;</code>
-     * @return The unk2700NMHGADLANMM.
+     * <code>uint32 delay = 795;</code>
+     * @return The delay.
      */
-    int getUnk2700NMHGADLANMM();
+    int getDelay();
 
     /**
-     * <code>repeated uint32 Unk2700_NNHGOCJLKFH = 4;</code>
-     * @return A list containing the unk2700NNHGOCJLKFH.
+     * <code>repeated uint32 note_list = 4;</code>
+     * @return A list containing the noteList.
      */
-    java.util.List<java.lang.Integer> getUnk2700NNHGOCJLKFHList();
+    java.util.List<java.lang.Integer> getNoteListList();
     /**
-     * <code>repeated uint32 Unk2700_NNHGOCJLKFH = 4;</code>
-     * @return The count of unk2700NNHGOCJLKFH.
+     * <code>repeated uint32 note_list = 4;</code>
+     * @return The count of noteList.
      */
-    int getUnk2700NNHGOCJLKFHCount();
+    int getNoteListCount();
     /**
-     * <code>repeated uint32 Unk2700_NNHGOCJLKFH = 4;</code>
+     * <code>repeated uint32 note_list = 4;</code>
      * @param index The index of the element to return.
-     * @return The unk2700NNHGOCJLKFH at the given index.
+     * @return The noteList at the given index.
      */
-    int getUnk2700NNHGOCJLKFH(int index);
+    int getNoteList(int index);
 
     /**
-     * <code>uint32 Unk2700_NCHHEJNFECG = 15;</code>
-     * @return The unk2700NCHHEJNFECG.
+     * <code>uint32 score_rating = 15;</code>
+     * @return The scoreRating.
      */
-    int getUnk2700NCHHEJNFECG();
+    int getScoreRating();
 
     /**
      * <code>uint32 score = 9;</code>
@@ -71,22 +71,22 @@ public final class MusicGameSettleReqOuterClass {
     int getScore();
 
     /**
-     * <code>uint64 Unk2700_CEPGMKAHHCD = 6;</code>
-     * @return The unk2700CEPGMKAHHCD.
+     * <code>uint64 ugc_guid = 6;</code>
+     * @return The ugcGuid.
      */
-    long getUnk2700CEPGMKAHHCD();
+    long getUgcGuid();
 
     /**
-     * <code>uint32 Unk2700_MMHHGALFHGA = 13;</code>
-     * @return The unk2700MMHHGALFHGA.
+     * <code>uint32 restart_times = 13;</code>
+     * @return The restartTimes.
      */
-    int getUnk2700MMHHGALFHGA();
+    int getRestartTimes();
 
     /**
-     * <code>bool Unk2700_CBLIJHDFKHA = 422;</code>
-     * @return The unk2700CBLIJHDFKHA.
+     * <code>bool is_custom_delay = 422;</code>
+     * @return The isCustomDelay.
      */
-    boolean getUnk2700CBLIJHDFKHA();
+    boolean getIsCustomDelay();
 
     /**
      * <code>uint32 max_combo = 5;</code>
@@ -95,10 +95,10 @@ public final class MusicGameSettleReqOuterClass {
     int getMaxCombo();
 
     /**
-     * <code>uint32 Unk2700_FBLBGPHMLAL = 1058;</code>
-     * @return The unk2700FBLBGPHMLAL.
+     * <code>uint32 is_full_combo = 1058;</code>
+     * @return The isFullCombo.
      */
-    int getUnk2700FBLBGPHMLAL();
+    int getIsFullCombo();
 
     /**
      * <code>float speed = 409;</code>
@@ -107,10 +107,10 @@ public final class MusicGameSettleReqOuterClass {
     float getSpeed();
 
     /**
-     * <code>bool Unk2700_IOKPIKJDEHG = 3;</code>
-     * @return The unk2700IOKPIKJDEHG.
+     * <code>bool is_save_score = 3;</code>
+     * @return The isSaveScore.
      */
-    boolean getUnk2700IOKPIKJDEHG();
+    boolean getIsSaveScore();
 
     /**
      * <code>uint32 combo = 1;</code>
@@ -125,16 +125,16 @@ public final class MusicGameSettleReqOuterClass {
     int getMusicBasicId();
 
     /**
-     * <code>uint32 Unk2700_DIMBABOGNEM = 2;</code>
-     * @return The unk2700DIMBABOGNEM.
+     * <code>uint32 star_rating = 2;</code>
+     * @return The starRating.
      */
-    int getUnk2700DIMBABOGNEM();
+    int getStarRating();
 
     /**
-     * <code>uint32 Unk2700_IOMOHEKJJLJ = 1953;</code>
-     * @return The unk2700IOMOHEKJJLJ.
+     * <code>uint32 volume = 1953;</code>
+     * @return The volume.
      */
-    int getUnk2700IOMOHEKJJLJ();
+    int getVolume();
 
     /**
      * <code>uint32 correct_hit = 14;</code>
@@ -143,16 +143,16 @@ public final class MusicGameSettleReqOuterClass {
     int getCorrectHit();
 
     /**
-     * <code>bool Unk2700_LKJNLDJAGGL = 1285;</code>
-     * @return The unk2700LKJNLDJAGGL.
+     * <code>bool is_custom_speed = 1285;</code>
+     * @return The isCustomSpeed.
      */
-    boolean getUnk2700LKJNLDJAGGL();
+    boolean getIsCustomSpeed();
   }
   /**
    * <pre>
    * CmdId: 8892
    * EnetChannelId: 0
-   * EnetIsReliable: false
+   * EnetIsReliable: true
    * IsAllowClient: true
    * </pre>
    *
@@ -168,8 +168,8 @@ public final class MusicGameSettleReqOuterClass {
       super(builder);
     }
     private MusicGameSettleReq() {
-      unk2700GDPKOANEDEB_ = emptyIntList();
-      unk2700NNHGOCJLKFH_ = emptyIntList();
+      buttonList_ = emptyIntList();
+      noteList_ = emptyIntList();
     }
 
     @java.lang.Override
@@ -210,31 +210,31 @@ public final class MusicGameSettleReqOuterClass {
             }
             case 16: {
 
-              unk2700DIMBABOGNEM_ = input.readUInt32();
+              starRating_ = input.readUInt32();
               break;
             }
             case 24: {
 
-              unk2700IOKPIKJDEHG_ = input.readBool();
+              isSaveScore_ = input.readBool();
               break;
             }
             case 32: {
               if (!((mutable_bitField0_ & 0x00000002) != 0)) {
-                unk2700NNHGOCJLKFH_ = newIntList();
+                noteList_ = newIntList();
                 mutable_bitField0_ |= 0x00000002;
               }
-              unk2700NNHGOCJLKFH_.addInt(input.readUInt32());
+              noteList_.addInt(input.readUInt32());
               break;
             }
             case 34: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
               if (!((mutable_bitField0_ & 0x00000002) != 0) && input.getBytesUntilLimit() > 0) {
-                unk2700NNHGOCJLKFH_ = newIntList();
+                noteList_ = newIntList();
                 mutable_bitField0_ |= 0x00000002;
               }
               while (input.getBytesUntilLimit() > 0) {
-                unk2700NNHGOCJLKFH_.addInt(input.readUInt32());
+                noteList_.addInt(input.readUInt32());
               }
               input.popLimit(limit);
               break;
@@ -246,7 +246,7 @@ public final class MusicGameSettleReqOuterClass {
             }
             case 48: {
 
-              unk2700CEPGMKAHHCD_ = input.readUInt64();
+              ugcGuid_ = input.readUInt64();
               break;
             }
             case 56: {
@@ -261,7 +261,7 @@ public final class MusicGameSettleReqOuterClass {
             }
             case 104: {
 
-              unk2700MMHHGALFHGA_ = input.readUInt32();
+              restartTimes_ = input.readUInt32();
               break;
             }
             case 112: {
@@ -271,26 +271,26 @@ public final class MusicGameSettleReqOuterClass {
             }
             case 120: {
 
-              unk2700NCHHEJNFECG_ = input.readUInt32();
+              scoreRating_ = input.readUInt32();
               break;
             }
             case 3072: {
               if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                unk2700GDPKOANEDEB_ = newIntList();
+                buttonList_ = newIntList();
                 mutable_bitField0_ |= 0x00000001;
               }
-              unk2700GDPKOANEDEB_.addInt(input.readUInt32());
+              buttonList_.addInt(input.readUInt32());
               break;
             }
             case 3074: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
               if (!((mutable_bitField0_ & 0x00000001) != 0) && input.getBytesUntilLimit() > 0) {
-                unk2700GDPKOANEDEB_ = newIntList();
+                buttonList_ = newIntList();
                 mutable_bitField0_ |= 0x00000001;
               }
               while (input.getBytesUntilLimit() > 0) {
-                unk2700GDPKOANEDEB_.addInt(input.readUInt32());
+                buttonList_.addInt(input.readUInt32());
               }
               input.popLimit(limit);
               break;
@@ -302,27 +302,27 @@ public final class MusicGameSettleReqOuterClass {
             }
             case 3376: {
 
-              unk2700CBLIJHDFKHA_ = input.readBool();
+              isCustomDelay_ = input.readBool();
               break;
             }
             case 6360: {
 
-              unk2700NMHGADLANMM_ = input.readUInt32();
+              delay_ = input.readUInt32();
               break;
             }
             case 8464: {
 
-              unk2700FBLBGPHMLAL_ = input.readUInt32();
+              isFullCombo_ = input.readUInt32();
               break;
             }
             case 10280: {
 
-              unk2700LKJNLDJAGGL_ = input.readBool();
+              isCustomSpeed_ = input.readBool();
               break;
             }
             case 15624: {
 
-              unk2700IOMOHEKJJLJ_ = input.readUInt32();
+              volume_ = input.readUInt32();
               break;
             }
             default: {
@@ -341,10 +341,10 @@ public final class MusicGameSettleReqOuterClass {
             e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000002) != 0)) {
-          unk2700NNHGOCJLKFH_.makeImmutable(); // C
+          noteList_.makeImmutable(); // C
         }
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
-          unk2700GDPKOANEDEB_.makeImmutable(); // C
+          buttonList_.makeImmutable(); // C
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -363,82 +363,82 @@ public final class MusicGameSettleReqOuterClass {
               emu.grasscutter.net.proto.MusicGameSettleReqOuterClass.MusicGameSettleReq.class, emu.grasscutter.net.proto.MusicGameSettleReqOuterClass.MusicGameSettleReq.Builder.class);
     }
 
-    public static final int UNK2700_GDPKOANEDEB_FIELD_NUMBER = 384;
-    private com.google.protobuf.Internal.IntList unk2700GDPKOANEDEB_;
+    public static final int BUTTON_LIST_FIELD_NUMBER = 384;
+    private com.google.protobuf.Internal.IntList buttonList_;
     /**
-     * <code>repeated uint32 Unk2700_GDPKOANEDEB = 384;</code>
-     * @return A list containing the unk2700GDPKOANEDEB.
+     * <code>repeated uint32 button_list = 384;</code>
+     * @return A list containing the buttonList.
      */
     @java.lang.Override
     public java.util.List<java.lang.Integer>
-        getUnk2700GDPKOANEDEBList() {
-      return unk2700GDPKOANEDEB_;
+        getButtonListList() {
+      return buttonList_;
     }
     /**
-     * <code>repeated uint32 Unk2700_GDPKOANEDEB = 384;</code>
-     * @return The count of unk2700GDPKOANEDEB.
+     * <code>repeated uint32 button_list = 384;</code>
+     * @return The count of buttonList.
      */
-    public int getUnk2700GDPKOANEDEBCount() {
-      return unk2700GDPKOANEDEB_.size();
+    public int getButtonListCount() {
+      return buttonList_.size();
     }
     /**
-     * <code>repeated uint32 Unk2700_GDPKOANEDEB = 384;</code>
+     * <code>repeated uint32 button_list = 384;</code>
      * @param index The index of the element to return.
-     * @return The unk2700GDPKOANEDEB at the given index.
+     * @return The buttonList at the given index.
      */
-    public int getUnk2700GDPKOANEDEB(int index) {
-      return unk2700GDPKOANEDEB_.getInt(index);
+    public int getButtonList(int index) {
+      return buttonList_.getInt(index);
     }
-    private int unk2700GDPKOANEDEBMemoizedSerializedSize = -1;
+    private int buttonListMemoizedSerializedSize = -1;
 
-    public static final int UNK2700_NMHGADLANMM_FIELD_NUMBER = 795;
-    private int unk2700NMHGADLANMM_;
+    public static final int DELAY_FIELD_NUMBER = 795;
+    private int delay_;
     /**
-     * <code>uint32 Unk2700_NMHGADLANMM = 795;</code>
-     * @return The unk2700NMHGADLANMM.
+     * <code>uint32 delay = 795;</code>
+     * @return The delay.
      */
     @java.lang.Override
-    public int getUnk2700NMHGADLANMM() {
-      return unk2700NMHGADLANMM_;
+    public int getDelay() {
+      return delay_;
     }
 
-    public static final int UNK2700_NNHGOCJLKFH_FIELD_NUMBER = 4;
-    private com.google.protobuf.Internal.IntList unk2700NNHGOCJLKFH_;
+    public static final int NOTE_LIST_FIELD_NUMBER = 4;
+    private com.google.protobuf.Internal.IntList noteList_;
     /**
-     * <code>repeated uint32 Unk2700_NNHGOCJLKFH = 4;</code>
-     * @return A list containing the unk2700NNHGOCJLKFH.
+     * <code>repeated uint32 note_list = 4;</code>
+     * @return A list containing the noteList.
      */
     @java.lang.Override
     public java.util.List<java.lang.Integer>
-        getUnk2700NNHGOCJLKFHList() {
-      return unk2700NNHGOCJLKFH_;
+        getNoteListList() {
+      return noteList_;
     }
     /**
-     * <code>repeated uint32 Unk2700_NNHGOCJLKFH = 4;</code>
-     * @return The count of unk2700NNHGOCJLKFH.
+     * <code>repeated uint32 note_list = 4;</code>
+     * @return The count of noteList.
      */
-    public int getUnk2700NNHGOCJLKFHCount() {
-      return unk2700NNHGOCJLKFH_.size();
+    public int getNoteListCount() {
+      return noteList_.size();
     }
     /**
-     * <code>repeated uint32 Unk2700_NNHGOCJLKFH = 4;</code>
+     * <code>repeated uint32 note_list = 4;</code>
      * @param index The index of the element to return.
-     * @return The unk2700NNHGOCJLKFH at the given index.
+     * @return The noteList at the given index.
      */
-    public int getUnk2700NNHGOCJLKFH(int index) {
-      return unk2700NNHGOCJLKFH_.getInt(index);
+    public int getNoteList(int index) {
+      return noteList_.getInt(index);
     }
-    private int unk2700NNHGOCJLKFHMemoizedSerializedSize = -1;
+    private int noteListMemoizedSerializedSize = -1;
 
-    public static final int UNK2700_NCHHEJNFECG_FIELD_NUMBER = 15;
-    private int unk2700NCHHEJNFECG_;
+    public static final int SCORE_RATING_FIELD_NUMBER = 15;
+    private int scoreRating_;
     /**
-     * <code>uint32 Unk2700_NCHHEJNFECG = 15;</code>
-     * @return The unk2700NCHHEJNFECG.
+     * <code>uint32 score_rating = 15;</code>
+     * @return The scoreRating.
      */
     @java.lang.Override
-    public int getUnk2700NCHHEJNFECG() {
-      return unk2700NCHHEJNFECG_;
+    public int getScoreRating() {
+      return scoreRating_;
     }
 
     public static final int SCORE_FIELD_NUMBER = 9;
@@ -452,37 +452,37 @@ public final class MusicGameSettleReqOuterClass {
       return score_;
     }
 
-    public static final int UNK2700_CEPGMKAHHCD_FIELD_NUMBER = 6;
-    private long unk2700CEPGMKAHHCD_;
+    public static final int UGC_GUID_FIELD_NUMBER = 6;
+    private long ugcGuid_;
     /**
-     * <code>uint64 Unk2700_CEPGMKAHHCD = 6;</code>
-     * @return The unk2700CEPGMKAHHCD.
+     * <code>uint64 ugc_guid = 6;</code>
+     * @return The ugcGuid.
      */
     @java.lang.Override
-    public long getUnk2700CEPGMKAHHCD() {
-      return unk2700CEPGMKAHHCD_;
+    public long getUgcGuid() {
+      return ugcGuid_;
     }
 
-    public static final int UNK2700_MMHHGALFHGA_FIELD_NUMBER = 13;
-    private int unk2700MMHHGALFHGA_;
+    public static final int RESTART_TIMES_FIELD_NUMBER = 13;
+    private int restartTimes_;
     /**
-     * <code>uint32 Unk2700_MMHHGALFHGA = 13;</code>
-     * @return The unk2700MMHHGALFHGA.
+     * <code>uint32 restart_times = 13;</code>
+     * @return The restartTimes.
      */
     @java.lang.Override
-    public int getUnk2700MMHHGALFHGA() {
-      return unk2700MMHHGALFHGA_;
+    public int getRestartTimes() {
+      return restartTimes_;
     }
 
-    public static final int UNK2700_CBLIJHDFKHA_FIELD_NUMBER = 422;
-    private boolean unk2700CBLIJHDFKHA_;
+    public static final int IS_CUSTOM_DELAY_FIELD_NUMBER = 422;
+    private boolean isCustomDelay_;
     /**
-     * <code>bool Unk2700_CBLIJHDFKHA = 422;</code>
-     * @return The unk2700CBLIJHDFKHA.
+     * <code>bool is_custom_delay = 422;</code>
+     * @return The isCustomDelay.
      */
     @java.lang.Override
-    public boolean getUnk2700CBLIJHDFKHA() {
-      return unk2700CBLIJHDFKHA_;
+    public boolean getIsCustomDelay() {
+      return isCustomDelay_;
     }
 
     public static final int MAX_COMBO_FIELD_NUMBER = 5;
@@ -496,15 +496,15 @@ public final class MusicGameSettleReqOuterClass {
       return maxCombo_;
     }
 
-    public static final int UNK2700_FBLBGPHMLAL_FIELD_NUMBER = 1058;
-    private int unk2700FBLBGPHMLAL_;
+    public static final int IS_FULL_COMBO_FIELD_NUMBER = 1058;
+    private int isFullCombo_;
     /**
-     * <code>uint32 Unk2700_FBLBGPHMLAL = 1058;</code>
-     * @return The unk2700FBLBGPHMLAL.
+     * <code>uint32 is_full_combo = 1058;</code>
+     * @return The isFullCombo.
      */
     @java.lang.Override
-    public int getUnk2700FBLBGPHMLAL() {
-      return unk2700FBLBGPHMLAL_;
+    public int getIsFullCombo() {
+      return isFullCombo_;
     }
 
     public static final int SPEED_FIELD_NUMBER = 409;
@@ -518,15 +518,15 @@ public final class MusicGameSettleReqOuterClass {
       return speed_;
     }
 
-    public static final int UNK2700_IOKPIKJDEHG_FIELD_NUMBER = 3;
-    private boolean unk2700IOKPIKJDEHG_;
+    public static final int IS_SAVE_SCORE_FIELD_NUMBER = 3;
+    private boolean isSaveScore_;
     /**
-     * <code>bool Unk2700_IOKPIKJDEHG = 3;</code>
-     * @return The unk2700IOKPIKJDEHG.
+     * <code>bool is_save_score = 3;</code>
+     * @return The isSaveScore.
      */
     @java.lang.Override
-    public boolean getUnk2700IOKPIKJDEHG() {
-      return unk2700IOKPIKJDEHG_;
+    public boolean getIsSaveScore() {
+      return isSaveScore_;
     }
 
     public static final int COMBO_FIELD_NUMBER = 1;
@@ -551,26 +551,26 @@ public final class MusicGameSettleReqOuterClass {
       return musicBasicId_;
     }
 
-    public static final int UNK2700_DIMBABOGNEM_FIELD_NUMBER = 2;
-    private int unk2700DIMBABOGNEM_;
+    public static final int STAR_RATING_FIELD_NUMBER = 2;
+    private int starRating_;
     /**
-     * <code>uint32 Unk2700_DIMBABOGNEM = 2;</code>
-     * @return The unk2700DIMBABOGNEM.
+     * <code>uint32 star_rating = 2;</code>
+     * @return The starRating.
      */
     @java.lang.Override
-    public int getUnk2700DIMBABOGNEM() {
-      return unk2700DIMBABOGNEM_;
+    public int getStarRating() {
+      return starRating_;
     }
 
-    public static final int UNK2700_IOMOHEKJJLJ_FIELD_NUMBER = 1953;
-    private int unk2700IOMOHEKJJLJ_;
+    public static final int VOLUME_FIELD_NUMBER = 1953;
+    private int volume_;
     /**
-     * <code>uint32 Unk2700_IOMOHEKJJLJ = 1953;</code>
-     * @return The unk2700IOMOHEKJJLJ.
+     * <code>uint32 volume = 1953;</code>
+     * @return The volume.
      */
     @java.lang.Override
-    public int getUnk2700IOMOHEKJJLJ() {
-      return unk2700IOMOHEKJJLJ_;
+    public int getVolume() {
+      return volume_;
     }
 
     public static final int CORRECT_HIT_FIELD_NUMBER = 14;
@@ -584,15 +584,15 @@ public final class MusicGameSettleReqOuterClass {
       return correctHit_;
     }
 
-    public static final int UNK2700_LKJNLDJAGGL_FIELD_NUMBER = 1285;
-    private boolean unk2700LKJNLDJAGGL_;
+    public static final int IS_CUSTOM_SPEED_FIELD_NUMBER = 1285;
+    private boolean isCustomSpeed_;
     /**
-     * <code>bool Unk2700_LKJNLDJAGGL = 1285;</code>
-     * @return The unk2700LKJNLDJAGGL.
+     * <code>bool is_custom_speed = 1285;</code>
+     * @return The isCustomSpeed.
      */
     @java.lang.Override
-    public boolean getUnk2700LKJNLDJAGGL() {
-      return unk2700LKJNLDJAGGL_;
+    public boolean getIsCustomSpeed() {
+      return isCustomSpeed_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -613,24 +613,24 @@ public final class MusicGameSettleReqOuterClass {
       if (combo_ != 0) {
         output.writeUInt32(1, combo_);
       }
-      if (unk2700DIMBABOGNEM_ != 0) {
-        output.writeUInt32(2, unk2700DIMBABOGNEM_);
+      if (starRating_ != 0) {
+        output.writeUInt32(2, starRating_);
       }
-      if (unk2700IOKPIKJDEHG_ != false) {
-        output.writeBool(3, unk2700IOKPIKJDEHG_);
+      if (isSaveScore_ != false) {
+        output.writeBool(3, isSaveScore_);
       }
-      if (getUnk2700NNHGOCJLKFHList().size() > 0) {
+      if (getNoteListList().size() > 0) {
         output.writeUInt32NoTag(34);
-        output.writeUInt32NoTag(unk2700NNHGOCJLKFHMemoizedSerializedSize);
+        output.writeUInt32NoTag(noteListMemoizedSerializedSize);
       }
-      for (int i = 0; i < unk2700NNHGOCJLKFH_.size(); i++) {
-        output.writeUInt32NoTag(unk2700NNHGOCJLKFH_.getInt(i));
+      for (int i = 0; i < noteList_.size(); i++) {
+        output.writeUInt32NoTag(noteList_.getInt(i));
       }
       if (maxCombo_ != 0) {
         output.writeUInt32(5, maxCombo_);
       }
-      if (unk2700CEPGMKAHHCD_ != 0L) {
-        output.writeUInt64(6, unk2700CEPGMKAHHCD_);
+      if (ugcGuid_ != 0L) {
+        output.writeUInt64(6, ugcGuid_);
       }
       if (musicBasicId_ != 0) {
         output.writeUInt32(7, musicBasicId_);
@@ -638,39 +638,39 @@ public final class MusicGameSettleReqOuterClass {
       if (score_ != 0) {
         output.writeUInt32(9, score_);
       }
-      if (unk2700MMHHGALFHGA_ != 0) {
-        output.writeUInt32(13, unk2700MMHHGALFHGA_);
+      if (restartTimes_ != 0) {
+        output.writeUInt32(13, restartTimes_);
       }
       if (correctHit_ != 0) {
         output.writeUInt32(14, correctHit_);
       }
-      if (unk2700NCHHEJNFECG_ != 0) {
-        output.writeUInt32(15, unk2700NCHHEJNFECG_);
+      if (scoreRating_ != 0) {
+        output.writeUInt32(15, scoreRating_);
       }
-      if (getUnk2700GDPKOANEDEBList().size() > 0) {
+      if (getButtonListList().size() > 0) {
         output.writeUInt32NoTag(3074);
-        output.writeUInt32NoTag(unk2700GDPKOANEDEBMemoizedSerializedSize);
+        output.writeUInt32NoTag(buttonListMemoizedSerializedSize);
       }
-      for (int i = 0; i < unk2700GDPKOANEDEB_.size(); i++) {
-        output.writeUInt32NoTag(unk2700GDPKOANEDEB_.getInt(i));
+      for (int i = 0; i < buttonList_.size(); i++) {
+        output.writeUInt32NoTag(buttonList_.getInt(i));
       }
       if (speed_ != 0F) {
         output.writeFloat(409, speed_);
       }
-      if (unk2700CBLIJHDFKHA_ != false) {
-        output.writeBool(422, unk2700CBLIJHDFKHA_);
+      if (isCustomDelay_ != false) {
+        output.writeBool(422, isCustomDelay_);
       }
-      if (unk2700NMHGADLANMM_ != 0) {
-        output.writeUInt32(795, unk2700NMHGADLANMM_);
+      if (delay_ != 0) {
+        output.writeUInt32(795, delay_);
       }
-      if (unk2700FBLBGPHMLAL_ != 0) {
-        output.writeUInt32(1058, unk2700FBLBGPHMLAL_);
+      if (isFullCombo_ != 0) {
+        output.writeUInt32(1058, isFullCombo_);
       }
-      if (unk2700LKJNLDJAGGL_ != false) {
-        output.writeBool(1285, unk2700LKJNLDJAGGL_);
+      if (isCustomSpeed_ != false) {
+        output.writeBool(1285, isCustomSpeed_);
       }
-      if (unk2700IOMOHEKJJLJ_ != 0) {
-        output.writeUInt32(1953, unk2700IOMOHEKJJLJ_);
+      if (volume_ != 0) {
+        output.writeUInt32(1953, volume_);
       }
       unknownFields.writeTo(output);
     }
@@ -685,35 +685,35 @@ public final class MusicGameSettleReqOuterClass {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(1, combo_);
       }
-      if (unk2700DIMBABOGNEM_ != 0) {
+      if (starRating_ != 0) {
         size += com.google.protobuf.CodedOutputStream
-          .computeUInt32Size(2, unk2700DIMBABOGNEM_);
+          .computeUInt32Size(2, starRating_);
       }
-      if (unk2700IOKPIKJDEHG_ != false) {
+      if (isSaveScore_ != false) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBoolSize(3, unk2700IOKPIKJDEHG_);
+          .computeBoolSize(3, isSaveScore_);
       }
       {
         int dataSize = 0;
-        for (int i = 0; i < unk2700NNHGOCJLKFH_.size(); i++) {
+        for (int i = 0; i < noteList_.size(); i++) {
           dataSize += com.google.protobuf.CodedOutputStream
-            .computeUInt32SizeNoTag(unk2700NNHGOCJLKFH_.getInt(i));
+            .computeUInt32SizeNoTag(noteList_.getInt(i));
         }
         size += dataSize;
-        if (!getUnk2700NNHGOCJLKFHList().isEmpty()) {
+        if (!getNoteListList().isEmpty()) {
           size += 1;
           size += com.google.protobuf.CodedOutputStream
               .computeInt32SizeNoTag(dataSize);
         }
-        unk2700NNHGOCJLKFHMemoizedSerializedSize = dataSize;
+        noteListMemoizedSerializedSize = dataSize;
       }
       if (maxCombo_ != 0) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(5, maxCombo_);
       }
-      if (unk2700CEPGMKAHHCD_ != 0L) {
+      if (ugcGuid_ != 0L) {
         size += com.google.protobuf.CodedOutputStream
-          .computeUInt64Size(6, unk2700CEPGMKAHHCD_);
+          .computeUInt64Size(6, ugcGuid_);
       }
       if (musicBasicId_ != 0) {
         size += com.google.protobuf.CodedOutputStream
@@ -723,55 +723,55 @@ public final class MusicGameSettleReqOuterClass {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(9, score_);
       }
-      if (unk2700MMHHGALFHGA_ != 0) {
+      if (restartTimes_ != 0) {
         size += com.google.protobuf.CodedOutputStream
-          .computeUInt32Size(13, unk2700MMHHGALFHGA_);
+          .computeUInt32Size(13, restartTimes_);
       }
       if (correctHit_ != 0) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(14, correctHit_);
       }
-      if (unk2700NCHHEJNFECG_ != 0) {
+      if (scoreRating_ != 0) {
         size += com.google.protobuf.CodedOutputStream
-          .computeUInt32Size(15, unk2700NCHHEJNFECG_);
+          .computeUInt32Size(15, scoreRating_);
       }
       {
         int dataSize = 0;
-        for (int i = 0; i < unk2700GDPKOANEDEB_.size(); i++) {
+        for (int i = 0; i < buttonList_.size(); i++) {
           dataSize += com.google.protobuf.CodedOutputStream
-            .computeUInt32SizeNoTag(unk2700GDPKOANEDEB_.getInt(i));
+            .computeUInt32SizeNoTag(buttonList_.getInt(i));
         }
         size += dataSize;
-        if (!getUnk2700GDPKOANEDEBList().isEmpty()) {
+        if (!getButtonListList().isEmpty()) {
           size += 2;
           size += com.google.protobuf.CodedOutputStream
               .computeInt32SizeNoTag(dataSize);
         }
-        unk2700GDPKOANEDEBMemoizedSerializedSize = dataSize;
+        buttonListMemoizedSerializedSize = dataSize;
       }
       if (speed_ != 0F) {
         size += com.google.protobuf.CodedOutputStream
           .computeFloatSize(409, speed_);
       }
-      if (unk2700CBLIJHDFKHA_ != false) {
+      if (isCustomDelay_ != false) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBoolSize(422, unk2700CBLIJHDFKHA_);
+          .computeBoolSize(422, isCustomDelay_);
       }
-      if (unk2700NMHGADLANMM_ != 0) {
+      if (delay_ != 0) {
         size += com.google.protobuf.CodedOutputStream
-          .computeUInt32Size(795, unk2700NMHGADLANMM_);
+          .computeUInt32Size(795, delay_);
       }
-      if (unk2700FBLBGPHMLAL_ != 0) {
+      if (isFullCombo_ != 0) {
         size += com.google.protobuf.CodedOutputStream
-          .computeUInt32Size(1058, unk2700FBLBGPHMLAL_);
+          .computeUInt32Size(1058, isFullCombo_);
       }
-      if (unk2700LKJNLDJAGGL_ != false) {
+      if (isCustomSpeed_ != false) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBoolSize(1285, unk2700LKJNLDJAGGL_);
+          .computeBoolSize(1285, isCustomSpeed_);
       }
-      if (unk2700IOMOHEKJJLJ_ != 0) {
+      if (volume_ != 0) {
         size += com.google.protobuf.CodedOutputStream
-          .computeUInt32Size(1953, unk2700IOMOHEKJJLJ_);
+          .computeUInt32Size(1953, volume_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -788,43 +788,43 @@ public final class MusicGameSettleReqOuterClass {
       }
       emu.grasscutter.net.proto.MusicGameSettleReqOuterClass.MusicGameSettleReq other = (emu.grasscutter.net.proto.MusicGameSettleReqOuterClass.MusicGameSettleReq) obj;
 
-      if (!getUnk2700GDPKOANEDEBList()
-          .equals(other.getUnk2700GDPKOANEDEBList())) return false;
-      if (getUnk2700NMHGADLANMM()
-          != other.getUnk2700NMHGADLANMM()) return false;
-      if (!getUnk2700NNHGOCJLKFHList()
-          .equals(other.getUnk2700NNHGOCJLKFHList())) return false;
-      if (getUnk2700NCHHEJNFECG()
-          != other.getUnk2700NCHHEJNFECG()) return false;
+      if (!getButtonListList()
+          .equals(other.getButtonListList())) return false;
+      if (getDelay()
+          != other.getDelay()) return false;
+      if (!getNoteListList()
+          .equals(other.getNoteListList())) return false;
+      if (getScoreRating()
+          != other.getScoreRating()) return false;
       if (getScore()
           != other.getScore()) return false;
-      if (getUnk2700CEPGMKAHHCD()
-          != other.getUnk2700CEPGMKAHHCD()) return false;
-      if (getUnk2700MMHHGALFHGA()
-          != other.getUnk2700MMHHGALFHGA()) return false;
-      if (getUnk2700CBLIJHDFKHA()
-          != other.getUnk2700CBLIJHDFKHA()) return false;
+      if (getUgcGuid()
+          != other.getUgcGuid()) return false;
+      if (getRestartTimes()
+          != other.getRestartTimes()) return false;
+      if (getIsCustomDelay()
+          != other.getIsCustomDelay()) return false;
       if (getMaxCombo()
           != other.getMaxCombo()) return false;
-      if (getUnk2700FBLBGPHMLAL()
-          != other.getUnk2700FBLBGPHMLAL()) return false;
+      if (getIsFullCombo()
+          != other.getIsFullCombo()) return false;
       if (java.lang.Float.floatToIntBits(getSpeed())
           != java.lang.Float.floatToIntBits(
               other.getSpeed())) return false;
-      if (getUnk2700IOKPIKJDEHG()
-          != other.getUnk2700IOKPIKJDEHG()) return false;
+      if (getIsSaveScore()
+          != other.getIsSaveScore()) return false;
       if (getCombo()
           != other.getCombo()) return false;
       if (getMusicBasicId()
           != other.getMusicBasicId()) return false;
-      if (getUnk2700DIMBABOGNEM()
-          != other.getUnk2700DIMBABOGNEM()) return false;
-      if (getUnk2700IOMOHEKJJLJ()
-          != other.getUnk2700IOMOHEKJJLJ()) return false;
+      if (getStarRating()
+          != other.getStarRating()) return false;
+      if (getVolume()
+          != other.getVolume()) return false;
       if (getCorrectHit()
           != other.getCorrectHit()) return false;
-      if (getUnk2700LKJNLDJAGGL()
-          != other.getUnk2700LKJNLDJAGGL()) return false;
+      if (getIsCustomSpeed()
+          != other.getIsCustomSpeed()) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -836,51 +836,51 @@ public final class MusicGameSettleReqOuterClass {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (getUnk2700GDPKOANEDEBCount() > 0) {
-        hash = (37 * hash) + UNK2700_GDPKOANEDEB_FIELD_NUMBER;
-        hash = (53 * hash) + getUnk2700GDPKOANEDEBList().hashCode();
+      if (getButtonListCount() > 0) {
+        hash = (37 * hash) + BUTTON_LIST_FIELD_NUMBER;
+        hash = (53 * hash) + getButtonListList().hashCode();
       }
-      hash = (37 * hash) + UNK2700_NMHGADLANMM_FIELD_NUMBER;
-      hash = (53 * hash) + getUnk2700NMHGADLANMM();
-      if (getUnk2700NNHGOCJLKFHCount() > 0) {
-        hash = (37 * hash) + UNK2700_NNHGOCJLKFH_FIELD_NUMBER;
-        hash = (53 * hash) + getUnk2700NNHGOCJLKFHList().hashCode();
+      hash = (37 * hash) + DELAY_FIELD_NUMBER;
+      hash = (53 * hash) + getDelay();
+      if (getNoteListCount() > 0) {
+        hash = (37 * hash) + NOTE_LIST_FIELD_NUMBER;
+        hash = (53 * hash) + getNoteListList().hashCode();
       }
-      hash = (37 * hash) + UNK2700_NCHHEJNFECG_FIELD_NUMBER;
-      hash = (53 * hash) + getUnk2700NCHHEJNFECG();
+      hash = (37 * hash) + SCORE_RATING_FIELD_NUMBER;
+      hash = (53 * hash) + getScoreRating();
       hash = (37 * hash) + SCORE_FIELD_NUMBER;
       hash = (53 * hash) + getScore();
-      hash = (37 * hash) + UNK2700_CEPGMKAHHCD_FIELD_NUMBER;
+      hash = (37 * hash) + UGC_GUID_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-          getUnk2700CEPGMKAHHCD());
-      hash = (37 * hash) + UNK2700_MMHHGALFHGA_FIELD_NUMBER;
-      hash = (53 * hash) + getUnk2700MMHHGALFHGA();
-      hash = (37 * hash) + UNK2700_CBLIJHDFKHA_FIELD_NUMBER;
+          getUgcGuid());
+      hash = (37 * hash) + RESTART_TIMES_FIELD_NUMBER;
+      hash = (53 * hash) + getRestartTimes();
+      hash = (37 * hash) + IS_CUSTOM_DELAY_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-          getUnk2700CBLIJHDFKHA());
+          getIsCustomDelay());
       hash = (37 * hash) + MAX_COMBO_FIELD_NUMBER;
       hash = (53 * hash) + getMaxCombo();
-      hash = (37 * hash) + UNK2700_FBLBGPHMLAL_FIELD_NUMBER;
-      hash = (53 * hash) + getUnk2700FBLBGPHMLAL();
+      hash = (37 * hash) + IS_FULL_COMBO_FIELD_NUMBER;
+      hash = (53 * hash) + getIsFullCombo();
       hash = (37 * hash) + SPEED_FIELD_NUMBER;
       hash = (53 * hash) + java.lang.Float.floatToIntBits(
           getSpeed());
-      hash = (37 * hash) + UNK2700_IOKPIKJDEHG_FIELD_NUMBER;
+      hash = (37 * hash) + IS_SAVE_SCORE_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-          getUnk2700IOKPIKJDEHG());
+          getIsSaveScore());
       hash = (37 * hash) + COMBO_FIELD_NUMBER;
       hash = (53 * hash) + getCombo();
       hash = (37 * hash) + MUSIC_BASIC_ID_FIELD_NUMBER;
       hash = (53 * hash) + getMusicBasicId();
-      hash = (37 * hash) + UNK2700_DIMBABOGNEM_FIELD_NUMBER;
-      hash = (53 * hash) + getUnk2700DIMBABOGNEM();
-      hash = (37 * hash) + UNK2700_IOMOHEKJJLJ_FIELD_NUMBER;
-      hash = (53 * hash) + getUnk2700IOMOHEKJJLJ();
+      hash = (37 * hash) + STAR_RATING_FIELD_NUMBER;
+      hash = (53 * hash) + getStarRating();
+      hash = (37 * hash) + VOLUME_FIELD_NUMBER;
+      hash = (53 * hash) + getVolume();
       hash = (37 * hash) + CORRECT_HIT_FIELD_NUMBER;
       hash = (53 * hash) + getCorrectHit();
-      hash = (37 * hash) + UNK2700_LKJNLDJAGGL_FIELD_NUMBER;
+      hash = (37 * hash) + IS_CUSTOM_SPEED_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-          getUnk2700LKJNLDJAGGL());
+          getIsCustomSpeed());
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -980,7 +980,7 @@ public final class MusicGameSettleReqOuterClass {
      * <pre>
      * CmdId: 8892
      * EnetChannelId: 0
-     * EnetIsReliable: false
+     * EnetIsReliable: true
      * IsAllowClient: true
      * </pre>
      *
@@ -1021,41 +1021,41 @@ public final class MusicGameSettleReqOuterClass {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        unk2700GDPKOANEDEB_ = emptyIntList();
+        buttonList_ = emptyIntList();
         bitField0_ = (bitField0_ & ~0x00000001);
-        unk2700NMHGADLANMM_ = 0;
+        delay_ = 0;
 
-        unk2700NNHGOCJLKFH_ = emptyIntList();
+        noteList_ = emptyIntList();
         bitField0_ = (bitField0_ & ~0x00000002);
-        unk2700NCHHEJNFECG_ = 0;
+        scoreRating_ = 0;
 
         score_ = 0;
 
-        unk2700CEPGMKAHHCD_ = 0L;
+        ugcGuid_ = 0L;
 
-        unk2700MMHHGALFHGA_ = 0;
+        restartTimes_ = 0;
 
-        unk2700CBLIJHDFKHA_ = false;
+        isCustomDelay_ = false;
 
         maxCombo_ = 0;
 
-        unk2700FBLBGPHMLAL_ = 0;
+        isFullCombo_ = 0;
 
         speed_ = 0F;
 
-        unk2700IOKPIKJDEHG_ = false;
+        isSaveScore_ = false;
 
         combo_ = 0;
 
         musicBasicId_ = 0;
 
-        unk2700DIMBABOGNEM_ = 0;
+        starRating_ = 0;
 
-        unk2700IOMOHEKJJLJ_ = 0;
+        volume_ = 0;
 
         correctHit_ = 0;
 
-        unk2700LKJNLDJAGGL_ = false;
+        isCustomSpeed_ = false;
 
         return this;
       }
@@ -1085,31 +1085,31 @@ public final class MusicGameSettleReqOuterClass {
         emu.grasscutter.net.proto.MusicGameSettleReqOuterClass.MusicGameSettleReq result = new emu.grasscutter.net.proto.MusicGameSettleReqOuterClass.MusicGameSettleReq(this);
         int from_bitField0_ = bitField0_;
         if (((bitField0_ & 0x00000001) != 0)) {
-          unk2700GDPKOANEDEB_.makeImmutable();
+          buttonList_.makeImmutable();
           bitField0_ = (bitField0_ & ~0x00000001);
         }
-        result.unk2700GDPKOANEDEB_ = unk2700GDPKOANEDEB_;
-        result.unk2700NMHGADLANMM_ = unk2700NMHGADLANMM_;
+        result.buttonList_ = buttonList_;
+        result.delay_ = delay_;
         if (((bitField0_ & 0x00000002) != 0)) {
-          unk2700NNHGOCJLKFH_.makeImmutable();
+          noteList_.makeImmutable();
           bitField0_ = (bitField0_ & ~0x00000002);
         }
-        result.unk2700NNHGOCJLKFH_ = unk2700NNHGOCJLKFH_;
-        result.unk2700NCHHEJNFECG_ = unk2700NCHHEJNFECG_;
+        result.noteList_ = noteList_;
+        result.scoreRating_ = scoreRating_;
         result.score_ = score_;
-        result.unk2700CEPGMKAHHCD_ = unk2700CEPGMKAHHCD_;
-        result.unk2700MMHHGALFHGA_ = unk2700MMHHGALFHGA_;
-        result.unk2700CBLIJHDFKHA_ = unk2700CBLIJHDFKHA_;
+        result.ugcGuid_ = ugcGuid_;
+        result.restartTimes_ = restartTimes_;
+        result.isCustomDelay_ = isCustomDelay_;
         result.maxCombo_ = maxCombo_;
-        result.unk2700FBLBGPHMLAL_ = unk2700FBLBGPHMLAL_;
+        result.isFullCombo_ = isFullCombo_;
         result.speed_ = speed_;
-        result.unk2700IOKPIKJDEHG_ = unk2700IOKPIKJDEHG_;
+        result.isSaveScore_ = isSaveScore_;
         result.combo_ = combo_;
         result.musicBasicId_ = musicBasicId_;
-        result.unk2700DIMBABOGNEM_ = unk2700DIMBABOGNEM_;
-        result.unk2700IOMOHEKJJLJ_ = unk2700IOMOHEKJJLJ_;
+        result.starRating_ = starRating_;
+        result.volume_ = volume_;
         result.correctHit_ = correctHit_;
-        result.unk2700LKJNLDJAGGL_ = unk2700LKJNLDJAGGL_;
+        result.isCustomSpeed_ = isCustomSpeed_;
         onBuilt();
         return result;
       }
@@ -1158,55 +1158,55 @@ public final class MusicGameSettleReqOuterClass {
 
       public Builder mergeFrom(emu.grasscutter.net.proto.MusicGameSettleReqOuterClass.MusicGameSettleReq other) {
         if (other == emu.grasscutter.net.proto.MusicGameSettleReqOuterClass.MusicGameSettleReq.getDefaultInstance()) return this;
-        if (!other.unk2700GDPKOANEDEB_.isEmpty()) {
-          if (unk2700GDPKOANEDEB_.isEmpty()) {
-            unk2700GDPKOANEDEB_ = other.unk2700GDPKOANEDEB_;
+        if (!other.buttonList_.isEmpty()) {
+          if (buttonList_.isEmpty()) {
+            buttonList_ = other.buttonList_;
             bitField0_ = (bitField0_ & ~0x00000001);
           } else {
-            ensureUnk2700GDPKOANEDEBIsMutable();
-            unk2700GDPKOANEDEB_.addAll(other.unk2700GDPKOANEDEB_);
+            ensureButtonListIsMutable();
+            buttonList_.addAll(other.buttonList_);
           }
           onChanged();
         }
-        if (other.getUnk2700NMHGADLANMM() != 0) {
-          setUnk2700NMHGADLANMM(other.getUnk2700NMHGADLANMM());
+        if (other.getDelay() != 0) {
+          setDelay(other.getDelay());
         }
-        if (!other.unk2700NNHGOCJLKFH_.isEmpty()) {
-          if (unk2700NNHGOCJLKFH_.isEmpty()) {
-            unk2700NNHGOCJLKFH_ = other.unk2700NNHGOCJLKFH_;
+        if (!other.noteList_.isEmpty()) {
+          if (noteList_.isEmpty()) {
+            noteList_ = other.noteList_;
             bitField0_ = (bitField0_ & ~0x00000002);
           } else {
-            ensureUnk2700NNHGOCJLKFHIsMutable();
-            unk2700NNHGOCJLKFH_.addAll(other.unk2700NNHGOCJLKFH_);
+            ensureNoteListIsMutable();
+            noteList_.addAll(other.noteList_);
           }
           onChanged();
         }
-        if (other.getUnk2700NCHHEJNFECG() != 0) {
-          setUnk2700NCHHEJNFECG(other.getUnk2700NCHHEJNFECG());
+        if (other.getScoreRating() != 0) {
+          setScoreRating(other.getScoreRating());
         }
         if (other.getScore() != 0) {
           setScore(other.getScore());
         }
-        if (other.getUnk2700CEPGMKAHHCD() != 0L) {
-          setUnk2700CEPGMKAHHCD(other.getUnk2700CEPGMKAHHCD());
+        if (other.getUgcGuid() != 0L) {
+          setUgcGuid(other.getUgcGuid());
         }
-        if (other.getUnk2700MMHHGALFHGA() != 0) {
-          setUnk2700MMHHGALFHGA(other.getUnk2700MMHHGALFHGA());
+        if (other.getRestartTimes() != 0) {
+          setRestartTimes(other.getRestartTimes());
         }
-        if (other.getUnk2700CBLIJHDFKHA() != false) {
-          setUnk2700CBLIJHDFKHA(other.getUnk2700CBLIJHDFKHA());
+        if (other.getIsCustomDelay() != false) {
+          setIsCustomDelay(other.getIsCustomDelay());
         }
         if (other.getMaxCombo() != 0) {
           setMaxCombo(other.getMaxCombo());
         }
-        if (other.getUnk2700FBLBGPHMLAL() != 0) {
-          setUnk2700FBLBGPHMLAL(other.getUnk2700FBLBGPHMLAL());
+        if (other.getIsFullCombo() != 0) {
+          setIsFullCombo(other.getIsFullCombo());
         }
         if (other.getSpeed() != 0F) {
           setSpeed(other.getSpeed());
         }
-        if (other.getUnk2700IOKPIKJDEHG() != false) {
-          setUnk2700IOKPIKJDEHG(other.getUnk2700IOKPIKJDEHG());
+        if (other.getIsSaveScore() != false) {
+          setIsSaveScore(other.getIsSaveScore());
         }
         if (other.getCombo() != 0) {
           setCombo(other.getCombo());
@@ -1214,17 +1214,17 @@ public final class MusicGameSettleReqOuterClass {
         if (other.getMusicBasicId() != 0) {
           setMusicBasicId(other.getMusicBasicId());
         }
-        if (other.getUnk2700DIMBABOGNEM() != 0) {
-          setUnk2700DIMBABOGNEM(other.getUnk2700DIMBABOGNEM());
+        if (other.getStarRating() != 0) {
+          setStarRating(other.getStarRating());
         }
-        if (other.getUnk2700IOMOHEKJJLJ() != 0) {
-          setUnk2700IOMOHEKJJLJ(other.getUnk2700IOMOHEKJJLJ());
+        if (other.getVolume() != 0) {
+          setVolume(other.getVolume());
         }
         if (other.getCorrectHit() != 0) {
           setCorrectHit(other.getCorrectHit());
         }
-        if (other.getUnk2700LKJNLDJAGGL() != false) {
-          setUnk2700LKJNLDJAGGL(other.getUnk2700LKJNLDJAGGL());
+        if (other.getIsCustomSpeed() != false) {
+          setIsCustomSpeed(other.getIsCustomSpeed());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -1256,222 +1256,222 @@ public final class MusicGameSettleReqOuterClass {
       }
       private int bitField0_;
 
-      private com.google.protobuf.Internal.IntList unk2700GDPKOANEDEB_ = emptyIntList();
-      private void ensureUnk2700GDPKOANEDEBIsMutable() {
+      private com.google.protobuf.Internal.IntList buttonList_ = emptyIntList();
+      private void ensureButtonListIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
-          unk2700GDPKOANEDEB_ = mutableCopy(unk2700GDPKOANEDEB_);
+          buttonList_ = mutableCopy(buttonList_);
           bitField0_ |= 0x00000001;
          }
       }
       /**
-       * <code>repeated uint32 Unk2700_GDPKOANEDEB = 384;</code>
-       * @return A list containing the unk2700GDPKOANEDEB.
+       * <code>repeated uint32 button_list = 384;</code>
+       * @return A list containing the buttonList.
        */
       public java.util.List<java.lang.Integer>
-          getUnk2700GDPKOANEDEBList() {
+          getButtonListList() {
         return ((bitField0_ & 0x00000001) != 0) ?
-                 java.util.Collections.unmodifiableList(unk2700GDPKOANEDEB_) : unk2700GDPKOANEDEB_;
+                 java.util.Collections.unmodifiableList(buttonList_) : buttonList_;
       }
       /**
-       * <code>repeated uint32 Unk2700_GDPKOANEDEB = 384;</code>
-       * @return The count of unk2700GDPKOANEDEB.
+       * <code>repeated uint32 button_list = 384;</code>
+       * @return The count of buttonList.
        */
-      public int getUnk2700GDPKOANEDEBCount() {
-        return unk2700GDPKOANEDEB_.size();
+      public int getButtonListCount() {
+        return buttonList_.size();
       }
       /**
-       * <code>repeated uint32 Unk2700_GDPKOANEDEB = 384;</code>
+       * <code>repeated uint32 button_list = 384;</code>
        * @param index The index of the element to return.
-       * @return The unk2700GDPKOANEDEB at the given index.
+       * @return The buttonList at the given index.
        */
-      public int getUnk2700GDPKOANEDEB(int index) {
-        return unk2700GDPKOANEDEB_.getInt(index);
+      public int getButtonList(int index) {
+        return buttonList_.getInt(index);
       }
       /**
-       * <code>repeated uint32 Unk2700_GDPKOANEDEB = 384;</code>
+       * <code>repeated uint32 button_list = 384;</code>
        * @param index The index to set the value at.
-       * @param value The unk2700GDPKOANEDEB to set.
+       * @param value The buttonList to set.
        * @return This builder for chaining.
        */
-      public Builder setUnk2700GDPKOANEDEB(
+      public Builder setButtonList(
           int index, int value) {
-        ensureUnk2700GDPKOANEDEBIsMutable();
-        unk2700GDPKOANEDEB_.setInt(index, value);
+        ensureButtonListIsMutable();
+        buttonList_.setInt(index, value);
         onChanged();
         return this;
       }
       /**
-       * <code>repeated uint32 Unk2700_GDPKOANEDEB = 384;</code>
-       * @param value The unk2700GDPKOANEDEB to add.
+       * <code>repeated uint32 button_list = 384;</code>
+       * @param value The buttonList to add.
        * @return This builder for chaining.
        */
-      public Builder addUnk2700GDPKOANEDEB(int value) {
-        ensureUnk2700GDPKOANEDEBIsMutable();
-        unk2700GDPKOANEDEB_.addInt(value);
+      public Builder addButtonList(int value) {
+        ensureButtonListIsMutable();
+        buttonList_.addInt(value);
         onChanged();
         return this;
       }
       /**
-       * <code>repeated uint32 Unk2700_GDPKOANEDEB = 384;</code>
-       * @param values The unk2700GDPKOANEDEB to add.
+       * <code>repeated uint32 button_list = 384;</code>
+       * @param values The buttonList to add.
        * @return This builder for chaining.
        */
-      public Builder addAllUnk2700GDPKOANEDEB(
+      public Builder addAllButtonList(
           java.lang.Iterable<? extends java.lang.Integer> values) {
-        ensureUnk2700GDPKOANEDEBIsMutable();
+        ensureButtonListIsMutable();
         com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, unk2700GDPKOANEDEB_);
+            values, buttonList_);
         onChanged();
         return this;
       }
       /**
-       * <code>repeated uint32 Unk2700_GDPKOANEDEB = 384;</code>
+       * <code>repeated uint32 button_list = 384;</code>
        * @return This builder for chaining.
        */
-      public Builder clearUnk2700GDPKOANEDEB() {
-        unk2700GDPKOANEDEB_ = emptyIntList();
+      public Builder clearButtonList() {
+        buttonList_ = emptyIntList();
         bitField0_ = (bitField0_ & ~0x00000001);
         onChanged();
         return this;
       }
 
-      private int unk2700NMHGADLANMM_ ;
+      private int delay_ ;
       /**
-       * <code>uint32 Unk2700_NMHGADLANMM = 795;</code>
-       * @return The unk2700NMHGADLANMM.
+       * <code>uint32 delay = 795;</code>
+       * @return The delay.
        */
       @java.lang.Override
-      public int getUnk2700NMHGADLANMM() {
-        return unk2700NMHGADLANMM_;
+      public int getDelay() {
+        return delay_;
       }
       /**
-       * <code>uint32 Unk2700_NMHGADLANMM = 795;</code>
-       * @param value The unk2700NMHGADLANMM to set.
+       * <code>uint32 delay = 795;</code>
+       * @param value The delay to set.
        * @return This builder for chaining.
        */
-      public Builder setUnk2700NMHGADLANMM(int value) {
+      public Builder setDelay(int value) {
         
-        unk2700NMHGADLANMM_ = value;
+        delay_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>uint32 Unk2700_NMHGADLANMM = 795;</code>
+       * <code>uint32 delay = 795;</code>
        * @return This builder for chaining.
        */
-      public Builder clearUnk2700NMHGADLANMM() {
+      public Builder clearDelay() {
         
-        unk2700NMHGADLANMM_ = 0;
+        delay_ = 0;
         onChanged();
         return this;
       }
 
-      private com.google.protobuf.Internal.IntList unk2700NNHGOCJLKFH_ = emptyIntList();
-      private void ensureUnk2700NNHGOCJLKFHIsMutable() {
+      private com.google.protobuf.Internal.IntList noteList_ = emptyIntList();
+      private void ensureNoteListIsMutable() {
         if (!((bitField0_ & 0x00000002) != 0)) {
-          unk2700NNHGOCJLKFH_ = mutableCopy(unk2700NNHGOCJLKFH_);
+          noteList_ = mutableCopy(noteList_);
           bitField0_ |= 0x00000002;
          }
       }
       /**
-       * <code>repeated uint32 Unk2700_NNHGOCJLKFH = 4;</code>
-       * @return A list containing the unk2700NNHGOCJLKFH.
+       * <code>repeated uint32 note_list = 4;</code>
+       * @return A list containing the noteList.
        */
       public java.util.List<java.lang.Integer>
-          getUnk2700NNHGOCJLKFHList() {
+          getNoteListList() {
         return ((bitField0_ & 0x00000002) != 0) ?
-                 java.util.Collections.unmodifiableList(unk2700NNHGOCJLKFH_) : unk2700NNHGOCJLKFH_;
+                 java.util.Collections.unmodifiableList(noteList_) : noteList_;
       }
       /**
-       * <code>repeated uint32 Unk2700_NNHGOCJLKFH = 4;</code>
-       * @return The count of unk2700NNHGOCJLKFH.
+       * <code>repeated uint32 note_list = 4;</code>
+       * @return The count of noteList.
        */
-      public int getUnk2700NNHGOCJLKFHCount() {
-        return unk2700NNHGOCJLKFH_.size();
+      public int getNoteListCount() {
+        return noteList_.size();
       }
       /**
-       * <code>repeated uint32 Unk2700_NNHGOCJLKFH = 4;</code>
+       * <code>repeated uint32 note_list = 4;</code>
        * @param index The index of the element to return.
-       * @return The unk2700NNHGOCJLKFH at the given index.
+       * @return The noteList at the given index.
        */
-      public int getUnk2700NNHGOCJLKFH(int index) {
-        return unk2700NNHGOCJLKFH_.getInt(index);
+      public int getNoteList(int index) {
+        return noteList_.getInt(index);
       }
       /**
-       * <code>repeated uint32 Unk2700_NNHGOCJLKFH = 4;</code>
+       * <code>repeated uint32 note_list = 4;</code>
        * @param index The index to set the value at.
-       * @param value The unk2700NNHGOCJLKFH to set.
+       * @param value The noteList to set.
        * @return This builder for chaining.
        */
-      public Builder setUnk2700NNHGOCJLKFH(
+      public Builder setNoteList(
           int index, int value) {
-        ensureUnk2700NNHGOCJLKFHIsMutable();
-        unk2700NNHGOCJLKFH_.setInt(index, value);
+        ensureNoteListIsMutable();
+        noteList_.setInt(index, value);
         onChanged();
         return this;
       }
       /**
-       * <code>repeated uint32 Unk2700_NNHGOCJLKFH = 4;</code>
-       * @param value The unk2700NNHGOCJLKFH to add.
+       * <code>repeated uint32 note_list = 4;</code>
+       * @param value The noteList to add.
        * @return This builder for chaining.
        */
-      public Builder addUnk2700NNHGOCJLKFH(int value) {
-        ensureUnk2700NNHGOCJLKFHIsMutable();
-        unk2700NNHGOCJLKFH_.addInt(value);
+      public Builder addNoteList(int value) {
+        ensureNoteListIsMutable();
+        noteList_.addInt(value);
         onChanged();
         return this;
       }
       /**
-       * <code>repeated uint32 Unk2700_NNHGOCJLKFH = 4;</code>
-       * @param values The unk2700NNHGOCJLKFH to add.
+       * <code>repeated uint32 note_list = 4;</code>
+       * @param values The noteList to add.
        * @return This builder for chaining.
        */
-      public Builder addAllUnk2700NNHGOCJLKFH(
+      public Builder addAllNoteList(
           java.lang.Iterable<? extends java.lang.Integer> values) {
-        ensureUnk2700NNHGOCJLKFHIsMutable();
+        ensureNoteListIsMutable();
         com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, unk2700NNHGOCJLKFH_);
+            values, noteList_);
         onChanged();
         return this;
       }
       /**
-       * <code>repeated uint32 Unk2700_NNHGOCJLKFH = 4;</code>
+       * <code>repeated uint32 note_list = 4;</code>
        * @return This builder for chaining.
        */
-      public Builder clearUnk2700NNHGOCJLKFH() {
-        unk2700NNHGOCJLKFH_ = emptyIntList();
+      public Builder clearNoteList() {
+        noteList_ = emptyIntList();
         bitField0_ = (bitField0_ & ~0x00000002);
         onChanged();
         return this;
       }
 
-      private int unk2700NCHHEJNFECG_ ;
+      private int scoreRating_ ;
       /**
-       * <code>uint32 Unk2700_NCHHEJNFECG = 15;</code>
-       * @return The unk2700NCHHEJNFECG.
+       * <code>uint32 score_rating = 15;</code>
+       * @return The scoreRating.
        */
       @java.lang.Override
-      public int getUnk2700NCHHEJNFECG() {
-        return unk2700NCHHEJNFECG_;
+      public int getScoreRating() {
+        return scoreRating_;
       }
       /**
-       * <code>uint32 Unk2700_NCHHEJNFECG = 15;</code>
-       * @param value The unk2700NCHHEJNFECG to set.
+       * <code>uint32 score_rating = 15;</code>
+       * @param value The scoreRating to set.
        * @return This builder for chaining.
        */
-      public Builder setUnk2700NCHHEJNFECG(int value) {
+      public Builder setScoreRating(int value) {
         
-        unk2700NCHHEJNFECG_ = value;
+        scoreRating_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>uint32 Unk2700_NCHHEJNFECG = 15;</code>
+       * <code>uint32 score_rating = 15;</code>
        * @return This builder for chaining.
        */
-      public Builder clearUnk2700NCHHEJNFECG() {
+      public Builder clearScoreRating() {
         
-        unk2700NCHHEJNFECG_ = 0;
+        scoreRating_ = 0;
         onChanged();
         return this;
       }
@@ -1507,95 +1507,95 @@ public final class MusicGameSettleReqOuterClass {
         return this;
       }
 
-      private long unk2700CEPGMKAHHCD_ ;
+      private long ugcGuid_ ;
       /**
-       * <code>uint64 Unk2700_CEPGMKAHHCD = 6;</code>
-       * @return The unk2700CEPGMKAHHCD.
+       * <code>uint64 ugc_guid = 6;</code>
+       * @return The ugcGuid.
        */
       @java.lang.Override
-      public long getUnk2700CEPGMKAHHCD() {
-        return unk2700CEPGMKAHHCD_;
+      public long getUgcGuid() {
+        return ugcGuid_;
       }
       /**
-       * <code>uint64 Unk2700_CEPGMKAHHCD = 6;</code>
-       * @param value The unk2700CEPGMKAHHCD to set.
+       * <code>uint64 ugc_guid = 6;</code>
+       * @param value The ugcGuid to set.
        * @return This builder for chaining.
        */
-      public Builder setUnk2700CEPGMKAHHCD(long value) {
+      public Builder setUgcGuid(long value) {
         
-        unk2700CEPGMKAHHCD_ = value;
+        ugcGuid_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>uint64 Unk2700_CEPGMKAHHCD = 6;</code>
+       * <code>uint64 ugc_guid = 6;</code>
        * @return This builder for chaining.
        */
-      public Builder clearUnk2700CEPGMKAHHCD() {
+      public Builder clearUgcGuid() {
         
-        unk2700CEPGMKAHHCD_ = 0L;
+        ugcGuid_ = 0L;
         onChanged();
         return this;
       }
 
-      private int unk2700MMHHGALFHGA_ ;
+      private int restartTimes_ ;
       /**
-       * <code>uint32 Unk2700_MMHHGALFHGA = 13;</code>
-       * @return The unk2700MMHHGALFHGA.
+       * <code>uint32 restart_times = 13;</code>
+       * @return The restartTimes.
        */
       @java.lang.Override
-      public int getUnk2700MMHHGALFHGA() {
-        return unk2700MMHHGALFHGA_;
+      public int getRestartTimes() {
+        return restartTimes_;
       }
       /**
-       * <code>uint32 Unk2700_MMHHGALFHGA = 13;</code>
-       * @param value The unk2700MMHHGALFHGA to set.
+       * <code>uint32 restart_times = 13;</code>
+       * @param value The restartTimes to set.
        * @return This builder for chaining.
        */
-      public Builder setUnk2700MMHHGALFHGA(int value) {
+      public Builder setRestartTimes(int value) {
         
-        unk2700MMHHGALFHGA_ = value;
+        restartTimes_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>uint32 Unk2700_MMHHGALFHGA = 13;</code>
+       * <code>uint32 restart_times = 13;</code>
        * @return This builder for chaining.
        */
-      public Builder clearUnk2700MMHHGALFHGA() {
+      public Builder clearRestartTimes() {
         
-        unk2700MMHHGALFHGA_ = 0;
+        restartTimes_ = 0;
         onChanged();
         return this;
       }
 
-      private boolean unk2700CBLIJHDFKHA_ ;
+      private boolean isCustomDelay_ ;
       /**
-       * <code>bool Unk2700_CBLIJHDFKHA = 422;</code>
-       * @return The unk2700CBLIJHDFKHA.
+       * <code>bool is_custom_delay = 422;</code>
+       * @return The isCustomDelay.
        */
       @java.lang.Override
-      public boolean getUnk2700CBLIJHDFKHA() {
-        return unk2700CBLIJHDFKHA_;
+      public boolean getIsCustomDelay() {
+        return isCustomDelay_;
       }
       /**
-       * <code>bool Unk2700_CBLIJHDFKHA = 422;</code>
-       * @param value The unk2700CBLIJHDFKHA to set.
+       * <code>bool is_custom_delay = 422;</code>
+       * @param value The isCustomDelay to set.
        * @return This builder for chaining.
        */
-      public Builder setUnk2700CBLIJHDFKHA(boolean value) {
+      public Builder setIsCustomDelay(boolean value) {
         
-        unk2700CBLIJHDFKHA_ = value;
+        isCustomDelay_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>bool Unk2700_CBLIJHDFKHA = 422;</code>
+       * <code>bool is_custom_delay = 422;</code>
        * @return This builder for chaining.
        */
-      public Builder clearUnk2700CBLIJHDFKHA() {
+      public Builder clearIsCustomDelay() {
         
-        unk2700CBLIJHDFKHA_ = false;
+        isCustomDelay_ = false;
         onChanged();
         return this;
       }
@@ -1631,33 +1631,33 @@ public final class MusicGameSettleReqOuterClass {
         return this;
       }
 
-      private int unk2700FBLBGPHMLAL_ ;
+      private int isFullCombo_ ;
       /**
-       * <code>uint32 Unk2700_FBLBGPHMLAL = 1058;</code>
-       * @return The unk2700FBLBGPHMLAL.
+       * <code>uint32 is_full_combo = 1058;</code>
+       * @return The isFullCombo.
        */
       @java.lang.Override
-      public int getUnk2700FBLBGPHMLAL() {
-        return unk2700FBLBGPHMLAL_;
+      public int getIsFullCombo() {
+        return isFullCombo_;
       }
       /**
-       * <code>uint32 Unk2700_FBLBGPHMLAL = 1058;</code>
-       * @param value The unk2700FBLBGPHMLAL to set.
+       * <code>uint32 is_full_combo = 1058;</code>
+       * @param value The isFullCombo to set.
        * @return This builder for chaining.
        */
-      public Builder setUnk2700FBLBGPHMLAL(int value) {
+      public Builder setIsFullCombo(int value) {
         
-        unk2700FBLBGPHMLAL_ = value;
+        isFullCombo_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>uint32 Unk2700_FBLBGPHMLAL = 1058;</code>
+       * <code>uint32 is_full_combo = 1058;</code>
        * @return This builder for chaining.
        */
-      public Builder clearUnk2700FBLBGPHMLAL() {
+      public Builder clearIsFullCombo() {
         
-        unk2700FBLBGPHMLAL_ = 0;
+        isFullCombo_ = 0;
         onChanged();
         return this;
       }
@@ -1693,33 +1693,33 @@ public final class MusicGameSettleReqOuterClass {
         return this;
       }
 
-      private boolean unk2700IOKPIKJDEHG_ ;
+      private boolean isSaveScore_ ;
       /**
-       * <code>bool Unk2700_IOKPIKJDEHG = 3;</code>
-       * @return The unk2700IOKPIKJDEHG.
+       * <code>bool is_save_score = 3;</code>
+       * @return The isSaveScore.
        */
       @java.lang.Override
-      public boolean getUnk2700IOKPIKJDEHG() {
-        return unk2700IOKPIKJDEHG_;
+      public boolean getIsSaveScore() {
+        return isSaveScore_;
       }
       /**
-       * <code>bool Unk2700_IOKPIKJDEHG = 3;</code>
-       * @param value The unk2700IOKPIKJDEHG to set.
+       * <code>bool is_save_score = 3;</code>
+       * @param value The isSaveScore to set.
        * @return This builder for chaining.
        */
-      public Builder setUnk2700IOKPIKJDEHG(boolean value) {
+      public Builder setIsSaveScore(boolean value) {
         
-        unk2700IOKPIKJDEHG_ = value;
+        isSaveScore_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>bool Unk2700_IOKPIKJDEHG = 3;</code>
+       * <code>bool is_save_score = 3;</code>
        * @return This builder for chaining.
        */
-      public Builder clearUnk2700IOKPIKJDEHG() {
+      public Builder clearIsSaveScore() {
         
-        unk2700IOKPIKJDEHG_ = false;
+        isSaveScore_ = false;
         onChanged();
         return this;
       }
@@ -1786,64 +1786,64 @@ public final class MusicGameSettleReqOuterClass {
         return this;
       }
 
-      private int unk2700DIMBABOGNEM_ ;
+      private int starRating_ ;
       /**
-       * <code>uint32 Unk2700_DIMBABOGNEM = 2;</code>
-       * @return The unk2700DIMBABOGNEM.
+       * <code>uint32 star_rating = 2;</code>
+       * @return The starRating.
        */
       @java.lang.Override
-      public int getUnk2700DIMBABOGNEM() {
-        return unk2700DIMBABOGNEM_;
+      public int getStarRating() {
+        return starRating_;
       }
       /**
-       * <code>uint32 Unk2700_DIMBABOGNEM = 2;</code>
-       * @param value The unk2700DIMBABOGNEM to set.
+       * <code>uint32 star_rating = 2;</code>
+       * @param value The starRating to set.
        * @return This builder for chaining.
        */
-      public Builder setUnk2700DIMBABOGNEM(int value) {
+      public Builder setStarRating(int value) {
         
-        unk2700DIMBABOGNEM_ = value;
+        starRating_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>uint32 Unk2700_DIMBABOGNEM = 2;</code>
+       * <code>uint32 star_rating = 2;</code>
        * @return This builder for chaining.
        */
-      public Builder clearUnk2700DIMBABOGNEM() {
+      public Builder clearStarRating() {
         
-        unk2700DIMBABOGNEM_ = 0;
+        starRating_ = 0;
         onChanged();
         return this;
       }
 
-      private int unk2700IOMOHEKJJLJ_ ;
+      private int volume_ ;
       /**
-       * <code>uint32 Unk2700_IOMOHEKJJLJ = 1953;</code>
-       * @return The unk2700IOMOHEKJJLJ.
+       * <code>uint32 volume = 1953;</code>
+       * @return The volume.
        */
       @java.lang.Override
-      public int getUnk2700IOMOHEKJJLJ() {
-        return unk2700IOMOHEKJJLJ_;
+      public int getVolume() {
+        return volume_;
       }
       /**
-       * <code>uint32 Unk2700_IOMOHEKJJLJ = 1953;</code>
-       * @param value The unk2700IOMOHEKJJLJ to set.
+       * <code>uint32 volume = 1953;</code>
+       * @param value The volume to set.
        * @return This builder for chaining.
        */
-      public Builder setUnk2700IOMOHEKJJLJ(int value) {
+      public Builder setVolume(int value) {
         
-        unk2700IOMOHEKJJLJ_ = value;
+        volume_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>uint32 Unk2700_IOMOHEKJJLJ = 1953;</code>
+       * <code>uint32 volume = 1953;</code>
        * @return This builder for chaining.
        */
-      public Builder clearUnk2700IOMOHEKJJLJ() {
+      public Builder clearVolume() {
         
-        unk2700IOMOHEKJJLJ_ = 0;
+        volume_ = 0;
         onChanged();
         return this;
       }
@@ -1879,33 +1879,33 @@ public final class MusicGameSettleReqOuterClass {
         return this;
       }
 
-      private boolean unk2700LKJNLDJAGGL_ ;
+      private boolean isCustomSpeed_ ;
       /**
-       * <code>bool Unk2700_LKJNLDJAGGL = 1285;</code>
-       * @return The unk2700LKJNLDJAGGL.
+       * <code>bool is_custom_speed = 1285;</code>
+       * @return The isCustomSpeed.
        */
       @java.lang.Override
-      public boolean getUnk2700LKJNLDJAGGL() {
-        return unk2700LKJNLDJAGGL_;
+      public boolean getIsCustomSpeed() {
+        return isCustomSpeed_;
       }
       /**
-       * <code>bool Unk2700_LKJNLDJAGGL = 1285;</code>
-       * @param value The unk2700LKJNLDJAGGL to set.
+       * <code>bool is_custom_speed = 1285;</code>
+       * @param value The isCustomSpeed to set.
        * @return This builder for chaining.
        */
-      public Builder setUnk2700LKJNLDJAGGL(boolean value) {
+      public Builder setIsCustomSpeed(boolean value) {
         
-        unk2700LKJNLDJAGGL_ = value;
+        isCustomSpeed_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>bool Unk2700_LKJNLDJAGGL = 1285;</code>
+       * <code>bool is_custom_speed = 1285;</code>
        * @return This builder for chaining.
        */
-      public Builder clearUnk2700LKJNLDJAGGL() {
+      public Builder clearIsCustomSpeed() {
         
-        unk2700LKJNLDJAGGL_ = false;
+        isCustomSpeed_ = false;
         onChanged();
         return this;
       }
@@ -1976,20 +1976,18 @@ public final class MusicGameSettleReqOuterClass {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\030MusicGameSettleReq.proto\"\344\003\n\022MusicGame" +
-      "SettleReq\022\034\n\023Unk2700_GDPKOANEDEB\030\200\003 \003(\r\022" +
-      "\034\n\023Unk2700_NMHGADLANMM\030\233\006 \001(\r\022\033\n\023Unk2700" +
-      "_NNHGOCJLKFH\030\004 \003(\r\022\033\n\023Unk2700_NCHHEJNFEC" +
-      "G\030\017 \001(\r\022\r\n\005score\030\t \001(\r\022\033\n\023Unk2700_CEPGMK" +
-      "AHHCD\030\006 \001(\004\022\033\n\023Unk2700_MMHHGALFHGA\030\r \001(\r" +
-      "\022\034\n\023Unk2700_CBLIJHDFKHA\030\246\003 \001(\010\022\021\n\tmax_co" +
-      "mbo\030\005 \001(\r\022\034\n\023Unk2700_FBLBGPHMLAL\030\242\010 \001(\r\022" +
-      "\016\n\005speed\030\231\003 \001(\002\022\033\n\023Unk2700_IOKPIKJDEHG\030\003" +
-      " \001(\010\022\r\n\005combo\030\001 \001(\r\022\026\n\016music_basic_id\030\007 " +
-      "\001(\r\022\033\n\023Unk2700_DIMBABOGNEM\030\002 \001(\r\022\034\n\023Unk2" +
-      "700_IOMOHEKJJLJ\030\241\017 \001(\r\022\023\n\013correct_hit\030\016 " +
-      "\001(\r\022\034\n\023Unk2700_LKJNLDJAGGL\030\205\n \001(\010B\033\n\031emu" +
-      ".grasscutter.net.protob\006proto3"
+      "\n\030MusicGameSettleReq.proto\"\203\003\n\022MusicGame" +
+      "SettleReq\022\024\n\013button_list\030\200\003 \003(\r\022\016\n\005delay" +
+      "\030\233\006 \001(\r\022\021\n\tnote_list\030\004 \003(\r\022\024\n\014score_rati" +
+      "ng\030\017 \001(\r\022\r\n\005score\030\t \001(\r\022\020\n\010ugc_guid\030\006 \001(" +
+      "\004\022\025\n\rrestart_times\030\r \001(\r\022\030\n\017is_custom_de" +
+      "lay\030\246\003 \001(\010\022\021\n\tmax_combo\030\005 \001(\r\022\026\n\ris_full" +
+      "_combo\030\242\010 \001(\r\022\016\n\005speed\030\231\003 \001(\002\022\025\n\ris_save" +
+      "_score\030\003 \001(\010\022\r\n\005combo\030\001 \001(\r\022\026\n\016music_bas" +
+      "ic_id\030\007 \001(\r\022\023\n\013star_rating\030\002 \001(\r\022\017\n\006volu" +
+      "me\030\241\017 \001(\r\022\023\n\013correct_hit\030\016 \001(\r\022\030\n\017is_cus" +
+      "tom_speed\030\205\n \001(\010B\033\n\031emu.grasscutter.net." +
+      "protob\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -2000,7 +1998,7 @@ public final class MusicGameSettleReqOuterClass {
     internal_static_MusicGameSettleReq_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_MusicGameSettleReq_descriptor,
-        new java.lang.String[] { "Unk2700GDPKOANEDEB", "Unk2700NMHGADLANMM", "Unk2700NNHGOCJLKFH", "Unk2700NCHHEJNFECG", "Score", "Unk2700CEPGMKAHHCD", "Unk2700MMHHGALFHGA", "Unk2700CBLIJHDFKHA", "MaxCombo", "Unk2700FBLBGPHMLAL", "Speed", "Unk2700IOKPIKJDEHG", "Combo", "MusicBasicId", "Unk2700DIMBABOGNEM", "Unk2700IOMOHEKJJLJ", "CorrectHit", "Unk2700LKJNLDJAGGL", });
+        new java.lang.String[] { "ButtonList", "Delay", "NoteList", "ScoreRating", "Score", "UgcGuid", "RestartTimes", "IsCustomDelay", "MaxCombo", "IsFullCombo", "Speed", "IsSaveScore", "Combo", "MusicBasicId", "StarRating", "Volume", "CorrectHit", "IsCustomSpeed", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

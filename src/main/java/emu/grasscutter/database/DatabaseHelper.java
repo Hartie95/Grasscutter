@@ -22,6 +22,7 @@ import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.mail.Mail;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.quest.GameMainQuest;
+import emu.grasscutter.game.world.SceneGroupInstance;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -357,5 +358,14 @@ public final class DatabaseHelper {
 
     public static void saveMusicGameBeatmap(MusicGameBeatmap musicGameBeatmap) {
         DatabaseManager.getGameDatastore().save(musicGameBeatmap);
+    }
+
+    public static void saveGroupInstance(SceneGroupInstance instance) {
+        DatabaseManager.getGameDatastore().save(instance);
+    }
+
+    public static SceneGroupInstance loadGroupInstance(int groupId, Player owner) {
+        SceneGroupInstance instance = DatabaseManager.getGameDatastore().find(SceneGroupInstance.class).filter(Filters.and(Filters.eq("ownerUid", owner.getUid()), Filters.eq("groupId", groupId))).first();
+        return instance;
     }
 }

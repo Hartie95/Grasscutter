@@ -223,6 +223,19 @@
       "description": "添加或完成任务",
       "enabled": "Questing enabled."
     },
+    "group": {
+      "invalid_groupid": "Invalid group ID.",
+      "invalid_suiteid": "Invalid suite ID.",
+      "group_not_found": "Group not found.",
+      "description": "Alter group loading",
+      "refreshed": "Group %s refreshed."
+    },
+    "cutscene": {
+      "description": "Plays a cutscene"
+    },
+    "sound": {
+      "description": "Plays a sound"
+    },
     "reload": {
       "reload_start": "正在重载配置文件和数据...",
       "reload_done": "重载完成。",
@@ -312,7 +325,7 @@
     "team": {
       "invalid_usage": "无效的用法。",
       "invalid_index": "无效的索引。",
-      "add_too_much": "服务端仅允许你队伍里至多有 %d 名角色。",
+      "add_too_much": "服务端仅允许你队伍里至多有 %s 名角色。",
       "failed_to_add_avatar": "无法根据ID %s 添加角色。",
       "failed_to_parse_index": "无法解析索引：%s",
       "remove_too_much": "你不能删除那么多角色，你的队伍列表将为空。",
@@ -320,7 +333,7 @@
       "index_out_of_range": "你指定的索引超出了范围。",
       "failed_parse_avatar_id": "无法解析的角色ID：%s",
       "avatar_already_in_team": "角色已经在你的队伍中了。",
-      "avatar_not_found": "无法找到该角色：%d",
+      "avatar_not_found": "无法找到该角色：%s",
       "description": "手动修改你的队伍"
     },
     "teleportAll": {
@@ -333,6 +346,17 @@
       "exists_error": "此场景不存在。",
       "success": "传送 %s 到坐标 %s, %s, %s，场景为 %s。",
       "description": "改变指定玩家的位置"
+    },
+    "trialAvatarActivity": {
+      "description": "操纵试用角色活动的功能。这包括切换地牢和奖励的状态。",
+      "not_found": "未找到试用角色活动玩家数据。也许该活动未被启用。",
+      "invalid_param": "无效的参数。",
+      "schedule_not_found": "未找到计划 %s。",
+      "success_schedule": "已将计划 ID 更改为 %s。",
+      "success_dungeon": "已切换角色 %s 的地牢状态。",
+      "success_dungeon_all": "已切换所有角色的地牢状态。",
+      "success_reward": "已切换角色 %s 的奖励状态。",
+      "success_reward_all": "已切换所有角色的奖励状态。"
     },
     "weather": {
       "success": "已设置天气ID 为 %s，气候类型为 %s。",

@@ -1,8 +1,8 @@
 package emu.grasscutter.game.quest.content;
 
-import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.game.quest.GameQuest;
 import emu.grasscutter.game.quest.QuestValueContent;
+import emu.grasscutter.data.common.quest.SubQuestData.QuestContentCondition;
 
 import static emu.grasscutter.game.quest.enums.QuestContent.QUEST_CONTENT_QUEST_STATE_EQUAL;
 
@@ -10,7 +10,7 @@ import static emu.grasscutter.game.quest.enums.QuestContent.QUEST_CONTENT_QUEST_
 public class ContentQuestStateEqual extends BaseContent {
 
     @Override
-    public boolean execute(GameQuest quest, QuestData.QuestContentCondition condition, String paramStr, int... params) {
+    public boolean execute(GameQuest quest, QuestContentCondition condition, String paramStr, int... params) {
         GameQuest checkQuest = quest.getOwner().getQuestManager().getQuestById(condition.getParam()[0]);
         if (checkQuest == null) {
             return false;

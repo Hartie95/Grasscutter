@@ -85,7 +85,7 @@ public final class RegionHandler implements Router {
         });
 
         // Create a config object.
-        byte[] customConfig = "{\"sdkenv\":\"2\",\"checkdevice\":\"false\",\"loadPatch\":\"false\",\"showexception\":\"false\",\"regionConfig\":\"pm|fk|add\",\"downloadMode\":\"0\"}".getBytes();
+        byte[] customConfig = "{\"sdkenv\":\"2\",\"checkdevice\":\"false\",\"loadPatch\":\"false\",\"showexception\":\"false\",\"regionConfig\":\"pm|fk|add\",\"downloadMode\":\"0\",\"debugmenu\":\"true\",\"debuglog\":\"true\"}".getBytes();
         Crypto.xor(customConfig, Crypto.DISPATCH_KEY); // XOR the config with the key.
 
         // Create an updated region list.
@@ -142,6 +142,7 @@ public final class RegionHandler implements Router {
             try {
                 QueryCurrentRegionEvent event = new QueryCurrentRegionEvent(regionData); event.call();
 
+                Grasscutter.getLogger().warn("Params: {}", ctx.queryParamMap());
                 if (ctx.queryParam("dispatchSeed") == null) {
                     // More love for UA Patch players
                     var rsp = new QueryCurRegionRspJson();
@@ -159,6 +160,7 @@ public final class RegionHandler implements Router {
                     throw new Exception("Key ID was not set");
 
                 Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+                Grasscutter.getLogger().warn("Key id: {}", key_id);
                 cipher.init(Cipher.ENCRYPT_MODE, Crypto.EncryptionKeys.get(Integer.valueOf(key_id)));
                 var regionInfo = Utils.base64Decode(event.getRegionInfo());
 

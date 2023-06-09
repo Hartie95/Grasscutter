@@ -1,12 +1,12 @@
 package emu.grasscutter.game.quest.exec;
 
 import emu.grasscutter.Grasscutter;
-import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.game.props.ElementType;
 import emu.grasscutter.game.quest.GameQuest;
 import emu.grasscutter.game.quest.QuestValueExec;
 import emu.grasscutter.game.quest.enums.QuestExec;
 import emu.grasscutter.game.quest.handlers.QuestExecHandler;
+import emu.grasscutter.data.common.quest.SubQuestData.QuestExecParam;
 import lombok.val;
 
 /**
@@ -15,7 +15,7 @@ import lombok.val;
 @QuestValueExec(QuestExec.QUEST_EXEC_CHANGE_AVATAR_ELEMET)
 public class ExecChangeAvatarElemet extends QuestExecHandler {
     @Override
-    public boolean execute(GameQuest quest, QuestData.QuestExecParam condition, String... paramStr) {
+    public boolean execute(GameQuest quest, QuestExecParam condition, String... paramStr) {
         val targetElement = ElementType.getTypeByValue(Integer.parseInt(paramStr[0]));
         val owner = quest.getOwner();
         val mainAvatar = owner.getAvatars().getAvatarById(owner.getMainCharacterId());

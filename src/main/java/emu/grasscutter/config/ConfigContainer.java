@@ -87,6 +87,7 @@ public class ConfigContainer {
         public String packets = "./packets/";
         public String scripts = "resources:Scripts/";
         public String plugins = "./plugins/";
+        public String cache = "./server/cache/";
 
         // UNUSED (potentially added later?)
         // public String dumps = "./dumps/";
@@ -144,7 +145,7 @@ public class ConfigContainer {
         public int accessPort = 0;
 
         /* Entities within a certain range will be loaded for the player */
-        public int loadEntitiesForPlayerRange = 100;
+        public int loadEntitiesForPlayerRange = 300;
         public boolean enableScriptInBigWorld = false;
         public boolean enableConsole = true;
 
@@ -157,9 +158,20 @@ public class ConfigContainer {
         /* Show annoying loop packets or no */
         public Boolean isShowLoopPackets = false;
 
+        public Boolean cacheSceneEntitiesEveryRun = false;
+
         public GameOptions gameOptions = new GameOptions();
         public JoinOptions joinOptions = new JoinOptions();
         public ConsoleAccount serverAccount = new ConsoleAccount();
+
+        public VisionOptions[] visionOptions = new VisionOptions[] {
+            new VisionOptions("VISION_LEVEL_NORMAL"         , 80    , 20),
+            new VisionOptions("VISION_LEVEL_LITTLE_REMOTE"  , 16    , 40),
+            new VisionOptions("VISION_LEVEL_REMOTE"         , 1000  , 250),
+            new VisionOptions("VISION_LEVEL_SUPER"          , 4000  , 1000),
+            new VisionOptions("VISION_LEVEL_NEARBY"         , 40    , 20),
+            new VisionOptions("VISION_LEVEL_SUPER_NEARBY"   , 20    , 20)
+        };
     }
 
     /* Data containers. */
@@ -250,6 +262,18 @@ public class ConfigContainer {
             public boolean resinUsage = false;
             public int cap = 160;
             public int rechargeTime = 480;
+        }
+    }
+
+    public static class VisionOptions {
+        public String name;
+        public int visionRange;
+        public int gridWidth;
+
+        public VisionOptions(String name, int visionRange, int gridWidth) {
+            this.name = name;
+            this.visionRange = visionRange;
+            this.gridWidth = gridWidth;
         }
     }
 

@@ -223,6 +223,19 @@
       "description": "Ajoute ou termine une quête",
       "enabled": "Quêtes activées."
     },
+    "group": {
+      "invalid_groupid": "Invalid group ID.",
+      "invalid_suiteid": "Invalid suite ID.",
+      "group_not_found": "Group not found.",
+      "description": "Alter group loading",
+      "refreshed": "Group %s refreshed."
+    },
+    "cutscene": {
+      "description": "Joue une cinématique"
+    },
+    "sound": {
+      "description": "Plays a sound"
+    },
     "reload": {
       "reload_start": "Rechargement de la configuration.",
       "reload_done": "Rechargement terminé.",
@@ -333,6 +346,17 @@
       "exists_error": "La scène spécifié n'existe pas.",
       "success": "%s a été téléporté à %s, %s, %s dans la scène %s.",
       "description": "Change la position du joueur"
+    },
+    "trialAvatarActivity": {
+      "description": "Manipuler les fonctionnalités de Trial Avatar Activity. Cela inclut le basculement des états de donjon et de récompense.",
+      "not_found": "Les données du lecteur d'activité d'avatar d'essai sont introuvables. Peut-être que l'activité n'est pas activée.",
+      "invalid_param": "Paramètre invalide.",
+      "schedule_not_found": "Horaire %s introuvable.",
+      "success_schedule": "ID de planification changé en %s.",
+      "success_dungeon": "Basculement du statut du donjon de l'avatar %s.",
+      "success_dungeon_all": "Basculement du statut de donjon de tous les avatars.",
+      "success_reward": "Basculement du statut de récompense de l'avatar %s.",
+      "success_reward_all": "Basculement du statut de récompense de tous les avatars."
     },
     "weather": {
       "success": "L'ID de la météo à été défini a %s avec le type de climat %s.",

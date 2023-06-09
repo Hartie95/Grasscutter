@@ -21,6 +21,7 @@ import emu.grasscutter.net.proto.EnterTypeOuterClass.EnterType;
 import emu.grasscutter.net.proto.MotionStateOuterClass.MotionState;
 import emu.grasscutter.net.proto.PlayerDieTypeOuterClass.PlayerDieType;
 import emu.grasscutter.net.proto.RetcodeOuterClass.Retcode;
+import emu.grasscutter.net.proto.VisionTypeOuterClass.VisionType;
 import emu.grasscutter.server.event.player.PlayerTeamDeathEvent;
 import emu.grasscutter.server.packet.send.PacketAddCustomTeamRsp;
 import emu.grasscutter.server.packet.send.PacketAvatarDieAnimationEndRsp;
@@ -63,8 +64,10 @@ public class TeamManager extends BasePlayerDataManager {
 
     @Transient private int useTemporarilyTeamIndex = -1;
     @Transient private List<TeamInfo> temporaryTeam; // Temporary Team for tower
-    // Trial Teams, using hashmap not list since only one unique trial avatar can be in a single team
-    @Transient @Getter private Map<Integer, Long> trialTeamGuid;
+    @Transient @Getter @Setter private boolean useTrialTeam;
+    @Transient @Getter @Setter private TeamInfo trialAvatarTeam;
+    // hold trial avatars for later use in rebuilding active team
+    @Transient @Getter @Setter private Map<Integer, Avatar> trialAvatars;
     @Transient @Getter @Setter private int previousIndex = -1; // index of character selection in team before adding trial avatar
 
     public TeamManager() {
@@ -73,7 +76,8 @@ public class TeamManager extends BasePlayerDataManager {
         this.gadgets = new HashSet<>();
         this.teamResonances = new IntOpenHashSet();
         this.teamResonancesConfig = new IntOpenHashSet();
-        this.trialTeamGuid = new HashMap<>();
+        this.trialAvatars = new HashMap<>();
+        this.trialAvatarTeam = new TeamInfo();
     }
 
     public TeamManager(Player player) {
@@ -119,6 +123,7 @@ public class TeamManager extends BasePlayerDataManager {
     }
 
     public TeamInfo getCurrentTeamInfo() {
+        if (useTrialTeam) return this.getTrialAvatarTeam();
         if (useTemporarilyTeamIndex >= 0 &&
             useTemporarilyTeamIndex < temporaryTeam.size()) {
             return temporaryTeam.get(useTemporarilyTeamIndex);
@@ -138,6 +143,9 @@ public class TeamManager extends BasePlayerDataManager {
     }
 
     public EntityAvatar getCurrentAvatarEntity() {
+        if(currentCharacterIndex >= getActiveTeam().size()){
+            return this.getActiveTeam().get(0);
+        }
         return this.getActiveTeam().get(currentCharacterIndex);
     }
 
@@ -351,7 +359,7 @@ public class TeamManager extends BasePlayerDataManager {
             prevSelectedAvatarIndex = Math.min(this.currentCharacterIndex, this.getActiveTeam().size() - 1);
         }
         this.currentCharacterIndex = prevSelectedAvatarIndex;
-        
+
         updateTeamProperties();
 
         // Run callback
@@ -418,54 +426,75 @@ public class TeamManager extends BasePlayerDataManager {
         this.addAvatarsToTeam(teamInfo, newTeam);
     }
 
-    public void addAvatarToTrialTeam(Avatar avatar){
-        // add to trial team
-        getTrialTeamGuid().put(avatar.getAvatarId(), avatar.getGuid());
+    public void setupTrialAvatarTeamForQuest() {
         setPreviousIndex(getCurrentCharacterIndex());
-        EntityAvatar newEntity = new EntityAvatar(getPlayer().getScene(), avatar);
-        boolean inTeam = false;
-        int index;
-        // replace avatar with trial avatar if in team already
-        // Note: index increments to the size of active team before exiting loop
-        for (index = 0; index < getActiveTeam().size(); index++){
-            EntityAvatar activeEntity = getActiveTeam().get(index);
-            if (activeEntity.getAvatar().getAvatarId() == avatar.getAvatarId()){
-                inTeam = true;
-                getActiveTeam().set(index, newEntity);
-                break;
-            }
-            
-        }
-        if (!inTeam) getActiveTeam().add(newEntity);
-
-        // select the newly added trial avatar
-        // Limit character index in case it's out of bounds
-        setCurrentCharacterIndex(index >= getActiveTeam().size() ? index-1 : index);
-        updateTeamProperties(); // is necessary to update team at scene
+        TeamInfo originalTeam = getCurrentTeamInfo();
+        this.useTrialTeam = true;
+        getTrialAvatarTeam().copyFrom(originalTeam);
     }
 
-    public EntityAvatar trialAvatarInTeam(int trialAvatarId) {
-        return getActiveTeam().stream()
-            .filter(entityAvatar -> entityAvatar.getAvatar().getTrialAvatarId() == trialAvatarId)
-            .findFirst()
-            .orElse(null);
+    public void setupTrialAvatarTeamForActivity() {
+        setPreviousIndex(getCurrentCharacterIndex());
+        getActiveTeam().clear();
+        this.useTrialTeam = true;
     }
 
-    public void removeAvatarFromTrialTeam(EntityAvatar trialAvatar) {
-        getTrialTeamGuid().remove(trialAvatar.getAvatar().getAvatarId());
-        getActiveTeam().remove(trialAvatar);
+    public void trialAvatarTeamPostUpdate() {
+        trialAvatarTeamPostUpdate(getActiveTeam().size()-1);
+    }
 
-        if (getPreviousIndex() > -1) { // restore character selection before adding trial avatar
-            setCurrentCharacterIndex(getPreviousIndex());
-            setPreviousIndex(-1);
-        }
+    public void trialAvatarTeamPostUpdate(int newCharacterIndex) {
+        setCurrentCharacterIndex(Math.min(newCharacterIndex, getActiveTeam().size() - 1));
+        updateTeamProperties();
+        getPlayer().getScene().addEntity(getCurrentAvatarEntity());
+    }
 
-        // Limit character index in case its out of bounds
-        if (getCurrentCharacterIndex() >= getActiveTeam().size() || getCurrentCharacterIndex() < 0) {
-            setCurrentCharacterIndex(getCurrentCharacterIndex() - 1);
-        }
+    public void addAvatarToTrialTeam(Avatar trialAvatar) {
+        getActiveTeam().forEach(x -> getPlayer().getScene().removeEntity(x, VisionType.VISION_TYPE_REMOVE));
+        getActiveTeam().removeIf(x -> x.getAvatar().getAvatarId() == trialAvatar.getAvatarId());
+        getCurrentTeamInfo().getAvatars().removeIf(x -> x == trialAvatar.getAvatarId());
+        getActiveTeam().add(new EntityAvatar(getPlayer().getScene(), trialAvatar));
+        getCurrentTeamInfo().addAvatar(trialAvatar);
+        getTrialAvatars().put(trialAvatar.getAvatarId(), trialAvatar);
+    }
 
-        updateTeamProperties();        
+    public long getTrialAvatarGuid(int trialAvatarId) {
+        return getTrialAvatars().values().stream()
+            .filter(avatar -> avatar.getTrialAvatarId() == trialAvatarId)
+            .map(avatar -> avatar.getGuid())
+            .findFirst().orElse(0L);
+    }
+
+    public void unsetTrialAvatarTeam() {
+        trialAvatarTeamPostUpdate(getPreviousIndex());
+        setPreviousIndex(-1);
+    }
+
+    public void removeTrialAvatarTeamForQuest(int trialAvatarId) {
+        this.useTrialTeam = false;
+        this.trialAvatarTeam = new TeamInfo();
+        getActiveTeam().forEach(x -> getPlayer().getScene().removeEntity(x, VisionType.VISION_TYPE_REMOVE));
+        getActiveTeam().removeIf(x -> x.getAvatar().getTrialAvatarId() == trialAvatarId);
+        getTrialAvatars().values().removeIf(x -> x.getTrialAvatarId() == trialAvatarId);
+        int[] indexCounter = new int[]{-1};
+        getCurrentTeamInfo().getAvatars().forEach(avatarId -> {
+            indexCounter[0] += 1;
+            if (getActiveTeam().stream().map(x -> x.getAvatar().getAvatarId()).toList().contains(avatarId)) return;
+            getActiveTeam().add(indexCounter[0], new EntityAvatar(getPlayer().getScene(), getPlayer().getAvatars().getAvatarById(avatarId)));
+        });
+        unsetTrialAvatarTeam();
+    }
+
+    public void removeTrialAvatarTeamForActivity() {
+        this.useTrialTeam = false;
+        this.trialAvatarTeam = new TeamInfo();
+        getActiveTeam().forEach(x -> getPlayer().getScene().removeEntity(x, VisionType.VISION_TYPE_REMOVE));
+        getActiveTeam().clear();
+        getTrialAvatars().clear();
+        getCurrentTeamInfo().getAvatars().forEach(avatarId -> {
+            getActiveTeam().add(new EntityAvatar(getPlayer().getScene(), getPlayer().getAvatars().getAvatarById(avatarId)));
+        });
+        unsetTrialAvatarTeam();
     }
 
     public void setupTemporaryTeam(List<List<Long>> guidList) {

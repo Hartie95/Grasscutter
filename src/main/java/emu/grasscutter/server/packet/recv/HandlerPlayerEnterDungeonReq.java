@@ -5,6 +5,8 @@ import emu.grasscutter.net.packet.PacketOpcodes;
 import emu.grasscutter.net.proto.PlayerEnterDungeonReqOuterClass.PlayerEnterDungeonReq;
 import emu.grasscutter.net.packet.PacketHandler;
 import emu.grasscutter.server.game.GameSession;
+import emu.grasscutter.server.packet.send.PacketPlayerEnterDungeonRsp;
+import lombok.val;
 
 @Opcodes(PacketOpcodes.PlayerEnterDungeonReq)
 public class HandlerPlayerEnterDungeonReq extends PacketHandler {
@@ -14,7 +16,8 @@ public class HandlerPlayerEnterDungeonReq extends PacketHandler {
         // Auto template
         PlayerEnterDungeonReq req = PlayerEnterDungeonReq.parseFrom(payload);
 
-        session.getServer().getDungeonSystem().enterDungeon(session.getPlayer(), req.getPointId(), req.getDungeonId());
+        val success = session.getServer().getDungeonSystem().enterDungeon(session.getPlayer(), req.getPointId(), req.getDungeonId());
+        session.getPlayer().sendPacket(new PacketPlayerEnterDungeonRsp(req.getPointId(), req.getDungeonId(), success));
     }
 
 }

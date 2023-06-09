@@ -15,6 +15,8 @@ import emu.grasscutter.scripts.data.SceneGroup;
 import emu.grasscutter.scripts.data.SceneMonster;
 import emu.grasscutter.server.game.BaseGameSystem;
 import emu.grasscutter.server.game.GameServer;
+import lombok.val;
+import org.luaj.vm2.LuaError;
 
 import java.util.HashMap;
 import java.util.List;
@@ -65,11 +67,15 @@ public class WorldDataSystem extends BaseGameSystem {
     }
 
     private SceneGroup getInvestigationGroup(int sceneId, int groupId) {
-        var key = sceneId + "_" + groupId;
+        val key = sceneId + "_" + groupId;
         if (!sceneInvestigationGroupMap.containsKey(key)) {
-            var group = SceneGroup.of(groupId).load(sceneId);
-            sceneInvestigationGroupMap.putIfAbsent(key, group);
-            return group;
+            try{
+                val group = SceneGroup.of(groupId).load(sceneId);
+                sceneInvestigationGroupMap.putIfAbsent(key, group);
+                return group;
+            } catch (LuaError luaError){
+                Grasscutter.getLogger().error("failed to get investigationGroup {} in scene{}:", groupId, sceneId, luaError);
+            }
         }
         return sceneInvestigationGroupMap.get(key);
     }

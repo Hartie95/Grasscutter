@@ -6,16 +6,16 @@ import dev.morphia.annotations.Indexed;
 import dev.morphia.annotations.Transient;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
-import emu.grasscutter.data.binout.MainQuestData;
-import emu.grasscutter.data.binout.MainQuestData.SubQuestData;
-import emu.grasscutter.data.binout.MainQuestData.TalkData;
+import emu.grasscutter.data.common.quest.MainQuestData;
+import emu.grasscutter.data.common.quest.MainQuestData.TalkData;
 import emu.grasscutter.data.binout.ScriptSceneData;
-import emu.grasscutter.data.excels.QuestData;
+import emu.grasscutter.data.common.quest.SubQuestData;
 import emu.grasscutter.data.excels.RewardData;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.ActionReason;
 import emu.grasscutter.game.quest.enums.*;
+import emu.grasscutter.game.world.World;
 import emu.grasscutter.net.proto.ChildQuestOuterClass.ChildQuest;
 import emu.grasscutter.net.proto.ParentQuestOuterClass.ParentQuest;
 import emu.grasscutter.server.packet.send.PacketCodexDataUpdateNotify;
@@ -37,8 +37,9 @@ public class GameMainQuest {
     @Getter private Map<Integer, GameQuest> childQuests;
     @Getter private int parentQuestId;
     @Getter private int[] questVars;
+    @Getter private long[] timeVar;
     //QuestUpdateQuestVarReq is sent in two stages...
-    @Getter private List<Integer> questVarsUpdate;
+    private List<Integer> questVarsUpdate;
     @Getter private ParentQuestState state;
     @Getter private boolean isFinished;
     @Getter List<QuestGroupSuite> questGroupSuites;
@@ -58,22 +59,29 @@ public class GameMainQuest {
         this.talks = new HashMap<>();
         //official server always has a list of 5 questVars, with default value 0
         this.questVars = new int[] {0,0,0,0,0};
+        this.timeVar = new long[] {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}; // theoretically max is 10 here
         this.state = ParentQuestState.PARENT_QUEST_STATE_NONE;
         this.questGroupSuites = new ArrayList<>();
         addAllChildQuests();
     }
 
+    public List<Integer> getQuestVarsUpdate() {
+        if(questVarsUpdate == null){
+            questVarsUpdate = new ArrayList<>();
+        }
+        return questVarsUpdate;
+    }
+
     private void addAllChildQuests() {
-        List<Integer> subQuestIds = Arrays.stream(GameData.getMainQuestDataMap().get(this.parentQuestId).getSubQuests()).map(SubQuestData::getSubId).toList();
-        for (Integer subQuestId : subQuestIds) {
-            QuestData questConfig = GameData.getQuestDataMap().get(subQuestId);
-            this.childQuests.put(subQuestId, new GameQuest(this, questConfig));
+        val subQuests = Arrays.stream(GameData.getMainQuestDataMap().get(this.parentQuestId).getSubQuests()).toList();
+        for (SubQuestData subQuestData : subQuests) {
+            this.childQuests.put(subQuestData.getSubId(), new GameQuest(this, subQuestData));
         }
     }
 
     public Collection<GameQuest> getActiveQuests(){
         return childQuests.values().stream()
-            .filter(q->q.getState().getValue() == QuestState.UNFINISHED.getValue())
+            .filter(q->q.getState().getValue() == QuestState.QUEST_STATE_UNFINISHED.getValue())
             .toList();
     }
 
@@ -162,10 +170,10 @@ public class GameMainQuest {
         }
 
         // handoff main quest
-        if (mainQuestData.getSuggestTrackMainQuestList() != null) {
+        /*if (mainQuestData.getSuggestTrackMainQuestList() != null) {
             Arrays.stream(mainQuestData.getSuggestTrackMainQuestList())
                 .forEach(getQuestManager()::startMainQuest);
-        }
+        }*/
     }
     //TODO
     public void fail() {}
@@ -241,7 +249,7 @@ public class GameMainQuest {
         if (avatarData == null) return false;
 
         String avatarPos = avatarData.getPos();
-        QuestData.Guide guide = GameData.getQuestDataMap().get(subId).getGuide();
+        val guide = GameData.getQuestDataMap().get(subId).getGuide();
         if (guide == null) return false;
 
         int sceneId = guide.getGuideScene();
@@ -298,35 +306,6 @@ public class GameMainQuest {
                 questManager.checkQuestAlreadyFullfilled(quest);
             }
         }
-    }
-
-    public void tryAcceptSubQuests(QuestCond condType, String paramStr, int... params) {
-        try {
-            List<GameQuest> subQuestsWithCond = getChildQuests().values().stream()
-                .filter(p -> p.getState() == QuestState.QUEST_STATE_UNSTARTED || p.getState() == QuestState.UNFINISHED)
-                .filter(p -> p.getQuestData().getAcceptCond().stream().anyMatch(q -> condType == QuestCond.QUEST_COND_NONE || q.getType() == condType))
-                .toList();
-
-            for (GameQuest subQuestWithCond : subQuestsWithCond) {
-                val acceptCond = subQuestWithCond.getQuestData().getAcceptCond();
-                int[] accept = new int[acceptCond.size()];
-
-                for (int i = 0; i < subQuestWithCond.getQuestData().getAcceptCond().size(); i++) {
-                    val condition = acceptCond.get(i);
-                    boolean result = this.getOwner().getServer().getQuestSystem().triggerCondition(subQuestWithCond, condition, paramStr, params);
-                    accept[i] = result ? 1 : 0;
-                }
-
-                boolean shouldAccept = LogicType.calculate(subQuestWithCond.getQuestData().getAcceptCondComb(), accept);
-
-                if (shouldAccept)
-                    subQuestWithCond.start();
-            }
-            this.save();
-        } catch (Exception e) {
-            Grasscutter.getLogger().error("An error occurred while trying to accept quest.", e);
-        }
-
     }
 
     public void tryFailSubQuests(QuestContent condType, String paramStr, int... params) {
@@ -428,4 +407,58 @@ public class GameMainQuest {
         return proto.build();
     }
 
+    // TimeVar handling TODO check if ingame or irl time
+    public boolean initTimeVar(int index){
+        if(index >= this.timeVar.length){
+            Grasscutter.getLogger().error("Trying to init out of bounds time var {} for quest {}", index, this.parentQuestId);
+            return false;
+        }
+        this.timeVar[index] = owner.getWorld().getTotalGameTimeMinutes();
+        owner.getActiveQuestTimers().add(this.parentQuestId);
+        return true;
+    }
+
+    public boolean clearTimeVar(int index){
+        if(index >= this.timeVar.length){
+            Grasscutter.getLogger().error("Trying to clear out of bounds time var {} for quest {}", index, this.parentQuestId);
+            return false;
+        }
+        this.timeVar[index] = -1;
+        if(!checkActiveTimers()){
+            owner.getActiveQuestTimers().remove(this.parentQuestId);
+        }
+        return true;
+    }
+
+    public boolean checkActiveTimers(){
+        return Arrays.stream(timeVar).anyMatch(value -> value!=-1);
+    }
+
+    public long getDaysSinceTimeVar(int index){
+        if(index >= this.timeVar.length){
+            Grasscutter.getLogger().error("Trying to get days for out of bounds time var {} for quest {}", index, this.parentQuestId);
+            return -1;
+        }
+        val varTime = timeVar[index];
+
+        if(varTime == -1){
+            return 0;
+        }
+
+        return owner.getWorld().getTotalGameTimeDays() - World.getDaysForGameTime(varTime);
+    }
+
+    public long getHoursSinceTimeVar(int index){
+        if(index >= this.timeVar.length){
+            Grasscutter.getLogger().error("Trying to get hours for out of bounds time var {} for quest {}", index, this.parentQuestId);
+            return -1;
+        }
+        val varTime = timeVar[index];
+
+        if(varTime == -1){
+            return 0;
+        }
+
+        return owner.getWorld().getTotalGameTimeDays() - World.getHoursForGameTime(varTime);
+    }
 }

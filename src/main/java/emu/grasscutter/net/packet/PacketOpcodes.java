@@ -901,18 +901,20 @@ public class PacketOpcodes {
     public static final int MultistagePlayInfoNotify = 5372;
     public static final int MultistagePlaySettleNotify = 5313;
     public static final int MultistagePlayStageEndNotify = 5379;
-    public static final int MusicGameGetBeatmapReq = 6318;
-    public static final int MusicGameGetBeatmapRsp = 6309;
+    public static final int GetUgcReq = 6326;
+    public static final int GetUgcRsp = 6318;
     public static final int MusicGameSettleReq = 8892;
     public static final int MusicGameSettleRsp = 8673;
     public static final int MusicGameStartReq = 8406;
     public static final int MusicGameStartRsp = 8326;
-    public static final int MusicGameCreateBeatmapRsp = 6347;
-    public static final int MusicGameCreateBeatmapReq = 6326;
-    public static final int MusicGameSearchBeatmapRsp = 6304;
-    public static final int MusicGameSearchBeatmapReq = 6343;
-    public static final int MusicGameStartToPlayOthersBeatmapReq = 6302;
-    public static final int MusicGameStartToPlayOthersBeatmapRsp = 6313;
+    public static final int SaveUgcRsp = 6322;
+    public static final int SaveUgcReq = 6329;
+    public static final int GetUgcBriefInfoRsp = 6307;
+    public static final int GetUgcBriefInfoReq = 6325;
+    public static final int CheckUgcUpdateReq = 6320;
+    public static final int CheckUgcUpdateRsp = 6345;
+    public static final int CheckUgcStateReq = 6342;
+    public static final int CheckUgcStateRsp = 6314;
     public static final int NavMeshStatsNotify = 2316;
     public static final int NormalUidOpNotify = 5726;
     public static final int NpcTalkReq = 572;
@@ -1495,7 +1497,6 @@ public class PacketOpcodes {
     public static final int Unk2700_CGNFBKKBPJE = 8240;
     public static final int Unk2700_CHICHNGLKPI = 8149;
     public static final int Unk2700_CILGDLMHCNG_ServerNotify = 1951;
-    public static final int Unk2700_CIOMEDJDPBP_ClientReq = 6342;
     public static final int Unk2700_CJKCCLEGPCM = 8153;
     public static final int Unk2700_CLKGPNDKIDD = 8725;
     public static final int Unk2700_CLMGFEOPNFH = 8938;
@@ -1504,7 +1505,6 @@ public class PacketOpcodes {
     public static final int Unk2700_COGBIJAPDLE = 8535;
     public static final int Unk2700_CPDDDMPAIDL = 8817;
     public static final int Unk2700_CPEMGFIMICD = 8588;
-    public static final int Unk2700_DAGJNGODABM_ClientReq = 6329;
     public static final int Unk2700_DBPDHLEGOLB = 8127;
     public static final int Unk2700_DCBEFDDECOJ = 8858;
     public static final int Unk2700_DCKKCAJCNKP_ServerRsp = 6207;
@@ -1527,7 +1527,6 @@ public class PacketOpcodes {
     public static final int Unk2700_EELPPGCAKHL = 8373;
     public static final int Unk2700_EHAMOPKCIGI_ServerNotify = 4805;
     public static final int Unk2700_EHFBIEDHILL = 8882;
-    public static final int Unk2700_EJHALNBHHHD_ServerRsp = 6322;
     public static final int Unk2700_EJIOFGEEIOM = 8837;
     public static final int Unk2700_EKBMEKPHJGK = 8726;
     public static final int Unk2700_EMHAHHAKOGA = 8163;
@@ -1574,7 +1573,6 @@ public class PacketOpcodes {
     public static final int Unk2700_GPOIPAHPHJE = 8967;
     public static final int Unk2700_HBLAGOMHKPL_ClientRsp = 137;
     public static final int Unk2700_HBOFACHAGIF_ServerNotify = 9072;
-    public static final int Unk2700_HDBFJJOBIAP_ClientReq = 6325;
     public static final int Unk2700_HFCDIGNAAPJ = 8129;
     public static final int Unk2700_HGMCBHFFDLJ = 8826;
     public static final int Unk2700_HGMOIKODALP_ServerRsp = 6220;
@@ -1616,7 +1614,6 @@ public class PacketOpcodes {
     public static final int Unk2700_JEHIAJHHIMP_ServerNotify = 109;
     public static final int Unk2700_JFGFIDBPGBK = 8381;
     public static final int Unk2700_JHMIHJFFJBO = 8862;
-    public static final int Unk2700_JJAFAJIKDDK_ServerRsp = 6307;
     public static final int Unk2700_JJCDNAHAPKD_ClientReq = 6226;
     public static final int Unk2700_JKFGMBAMNDA_ServerNotify = 5320;
     public static final int Unk2700_JKOKBPFCILA_ClientReq = 467;
@@ -1656,7 +1653,6 @@ public class PacketOpcodes {
     public static final int Unk2700_LIJCBOBECHJ = 8964;
     public static final int Unk2700_LJINJNECBIA = 8113;
     public static final int Unk2700_LKFKCNJFGIF_ServerRsp = 458;
-    public static final int Unk2700_LKPBBMPFPPE_ClientReq = 6326;
     public static final int Unk2700_LLBCBPADBNO = 8154;
     public static final int Unk2700_LMAKABBJNLN = 8253;
     public static final int Unk2700_LNBBLNNPNBE_ServerNotify = 4583;
@@ -1665,7 +1661,6 @@ public class PacketOpcodes {
     public static final int Unk2700_LPMIMLCNEDA = 8518;
     public static final int Unk2700_MBIAJKLACBG = 5757;
     public static final int Unk2700_MCJIOOELGHG_ServerNotify = 6033;
-    public static final int Unk2700_MCOFAKMDMEF_ServerRsp = 6345;
     public static final int Unk2700_MDGKMNEBIBA = 8038;
     public static final int Unk2700_MDPHLPEGFCG_ClientReq = 4020;
     public static final int Unk2700_MEBFPBDNPGO_ServerNotify = 4847;
@@ -1694,7 +1689,6 @@ public class PacketOpcodes {
     public static final int Unk2700_NCPLKHGCOAH = 8767;
     public static final int Unk2700_NDDBFNNHLFE = 8340;
     public static final int Unk2700_NEHPMNPAAKC = 8806;
-    public static final int Unk2700_NELNFCMDMHE_ServerRsp = 6314;
     public static final int Unk2700_NFGNGFLNOOJ_ServerNotify = 4811;
     public static final int Unk2700_NGEKONFLEBB = 8703;
     public static final int Unk2700_NGPMINKIOPK = 8956;

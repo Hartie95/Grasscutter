@@ -4,11 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
-import emu.grasscutter.data.GameData;
-import emu.grasscutter.data.GameDepot;
-import emu.grasscutter.data.GameResource;
-import emu.grasscutter.data.ResourceLoader.AvatarConfig;
-import emu.grasscutter.data.ResourceType;
+import emu.grasscutter.data.*;
 import emu.grasscutter.data.ResourceType.LoadPriority;
 import emu.grasscutter.data.binout.AbilityEmbryoEntry;
 import emu.grasscutter.game.props.ElementType;
@@ -58,10 +54,10 @@ public class AvatarSkillDepotData extends GameResource {
         }
         // Set embryo abilities (if player skill depot)
         if (getSkillDepotAbilityGroup() != null && getSkillDepotAbilityGroup().length() > 0) {
-            AvatarConfig config = GameDepot.getPlayerAbilities().get(getSkillDepotAbilityGroup());
+            ResourceLoader.AbilityGroup config = GameDepot.getPlayerAbilities().get(getSkillDepotAbilityGroup());
 
             if (config != null) {
-                this.setAbilities(new AbilityEmbryoEntry(getSkillDepotAbilityGroup(), config.abilities.stream().map(Object::toString).toArray(String[]::new)));
+                this.setAbilities(new AbilityEmbryoEntry(getSkillDepotAbilityGroup(), config.targetAbilities.stream().map(Object::toString).toArray(String[]::new)));
             }
         }
 

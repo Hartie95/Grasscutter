@@ -18,4 +18,5 @@ public class GadgetData extends GameResource {
     private String itemJsonName;
     private long nameTextMapHash;
     private int campID;
+    private String visionLevel;
 }

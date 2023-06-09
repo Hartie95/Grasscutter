@@ -8,6 +8,7 @@ import emu.grasscutter.scripts.data.SceneMonster;
 import emu.grasscutter.scripts.data.ScriptArgs;
 import emu.grasscutter.scripts.listener.ScriptMonsterListener;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -20,6 +21,7 @@ public class ScriptMonsterTideService {
     private final AtomicInteger monsterKillCount;
     private final int monsterSceneLimit;
     private final ConcurrentLinkedQueue<Integer> monsterConfigOrders;
+    private final List<Integer> monsterConfigIds;
     private final OnMonsterCreated onMonsterCreated= new OnMonsterCreated();
     private final OnMonsterDead onMonsterDead= new OnMonsterDead();
 
@@ -32,6 +34,7 @@ public class ScriptMonsterTideService {
         this.monsterKillCount = new AtomicInteger(0);
         this.monsterAlive = new AtomicInteger(0);
         this.monsterConfigOrders = new ConcurrentLinkedQueue<>(List.of(ordersConfigId));
+        this.monsterConfigIds = List.of(ordersConfigId);
 
         this.sceneScriptManager.getScriptMonsterSpawnService().addMonsterCreatedListener(onMonsterCreated);
         this.sceneScriptManager.getScriptMonsterSpawnService().addMonsterDeadListener(onMonsterDead);
@@ -44,7 +47,7 @@ public class ScriptMonsterTideService {
     public class OnMonsterCreated implements ScriptMonsterListener{
         @Override
         public void onNotify(EntityMonster sceneMonster) {
-            if(monsterSceneLimit > 0){
+            if(monsterConfigIds.contains(sceneMonster.getConfigId()) && monsterSceneLimit > 0){
                 monsterAlive.incrementAndGet();
                 monsterTideCount.decrementAndGet();
             }
@@ -77,7 +80,7 @@ public class ScriptMonsterTideService {
             }
             // spawn the last turn of monsters
             // fix the 5-2
-            sceneScriptManager.callEvent(new ScriptArgs(EventType.EVENT_MONSTER_TIDE_DIE, monsterKillCount.get()));
+            sceneScriptManager.callEvent(new ScriptArgs(currentGroup.id, EventType.EVENT_MONSTER_TIDE_DIE, monsterKillCount.get()));
         }
 
     }

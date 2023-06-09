@@ -2,18 +2,29 @@ package emu.grasscutter.server.packet.send;
 
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.packet.PacketOpcodes;
-import emu.grasscutter.net.proto.MusicGameCreateBeatmapRspOuterClass;
-import emu.grasscutter.net.proto.MusicGameUnknown1EnumOuterClass;
+import emu.grasscutter.net.proto.RetcodeOuterClass;
+import emu.grasscutter.net.proto.SaveUgcRspOuterClass.SaveUgcRsp;
+import emu.grasscutter.net.proto.UgcTypeOuterClass.UgcType;
+import lombok.val;
 
 public class PacketMusicGameCreateBeatmapRsp extends BasePacket {
 
-	public PacketMusicGameCreateBeatmapRsp(long musicShareId, MusicGameUnknown1EnumOuterClass.MusicGameUnknown1Enum unknownEnum1) {
-		super(PacketOpcodes.MusicGameCreateBeatmapRsp);
+	public PacketMusicGameCreateBeatmapRsp(long musicShareId, UgcType ugcType) {
+		super(PacketOpcodes.SaveUgcRsp);
 
-        var proto = MusicGameCreateBeatmapRspOuterClass.MusicGameCreateBeatmapRsp.newBuilder();
+        val proto = SaveUgcRsp.newBuilder()
+            .setUgcGuid(musicShareId)
+            .setUgcType(ugcType);;
 
-        proto.setMusicShareId(musicShareId)
-            .setUnknownEnum1(unknownEnum1);
+        this.setData(proto);
+	}
+
+	public PacketMusicGameCreateBeatmapRsp(RetcodeOuterClass.Retcode retCode, UgcType ugcType) {
+		super(PacketOpcodes.SaveUgcRsp);
+
+        val proto = SaveUgcRsp.newBuilder()
+            .setRetcode(retCode.getNumber())
+            .setUgcType(ugcType);
 
         this.setData(proto);
 	}

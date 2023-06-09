@@ -87,7 +87,7 @@ public class JsonAdapters {
                     reader.beginArray();
                     val array = new FloatArrayList(3);
                     while (reader.hasNext())
-                        array.add(reader.nextInt());
+                        array.add((float)reader.nextDouble());
                     reader.endArray();
                     return new Position(array);
                 case BEGIN_OBJECT:  // "pos": {"x": x, "y": y, "z": z}
@@ -117,6 +117,35 @@ public class JsonAdapters {
             writer.value(i.getX());
             writer.value(i.getY());
             writer.value(i.getZ());
+            writer.endArray();
+        };
+    }
+
+    static class GridPositionAdapter extends TypeAdapter<GridPosition> {
+        @Override
+        public GridPosition read(JsonReader reader) throws IOException {
+            switch (reader.peek()) {
+                case BEGIN_ARRAY:  // "pos": [x,z,width]
+                    reader.beginArray();
+                    val array = new IntArrayList(3);
+                    while (reader.hasNext())
+                        array.add(reader.nextInt());
+                    if(array.size() != 3) throw new IOException("invalid size on GridPosition definition - ");
+                    reader.endArray();
+                    return new GridPosition(array);
+                case STRING:  // "(x,z,width)"
+                    return new GridPosition(reader.nextString());
+                default:
+                    throw new IOException("Invalid Position definition - " + reader.peek().name());
+            }
+        }
+
+        @Override
+        public void write(JsonWriter writer, GridPosition i) throws IOException {
+            writer.beginArray();
+            writer.value(i.getX());
+            writer.value(i.getZ());
+            writer.value(i.getWidth());
             writer.endArray();
         };
     }

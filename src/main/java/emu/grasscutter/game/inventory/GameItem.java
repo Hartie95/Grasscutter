@@ -133,11 +133,6 @@ public class GameItem {
         }
     }
 
-    public void removeOwner() {
-        this.ownerId = 0;
-        this.guid = 0;
-    }
-
     public ObjectId getObjectId() {
         return id;
     }

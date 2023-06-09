@@ -1,6 +1,6 @@
 package emu.grasscutter.game.entity;
 
-import emu.grasscutter.data.binout.ConfigGadget;
+import emu.grasscutter.data.binout.config.ConfigEntityGadget;
 import emu.grasscutter.game.props.FightProperty;
 import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.game.world.Scene;
@@ -44,13 +44,13 @@ public abstract class EntityBaseGadget extends GameEntity {
     @Override
     public void callLuaHPEvent(EntityDamageEvent event) {
         super.callLuaHPEvent(event);
-        getScene().getScriptManager().callEvent(new ScriptArgs(EVENT_SPECIFIC_GADGET_HP_CHANGE, getConfigId(), getGadgetId())
+        getScene().getScriptManager().callEvent(new ScriptArgs(this.getGroupId(), EVENT_SPECIFIC_GADGET_HP_CHANGE, getConfigId(), getGadgetId())
             .setSourceEntityId(getId())
             .setParam3((int) this.getFightProperty(FightProperty.FIGHT_PROP_CUR_HP))
             .setEventSource(Integer.toString(getConfigId())));
     }
 
-    protected void fillFightProps(ConfigGadget configGadget) {
+    protected void fillFightProps(ConfigEntityGadget configGadget) {
         if (configGadget == null || configGadget.getCombat() == null) {
             return;
         }

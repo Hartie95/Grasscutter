@@ -223,6 +223,19 @@
       "description": "Adaugă sau termină misiuni",
       "enabled": "Questing enabled."
     },
+    "group": {
+      "invalid_groupid": "Invalid group ID.",
+      "invalid_suiteid": "Invalid suite ID.",
+      "group_not_found": "Group not found.",
+      "description": "Alter group loading",
+      "refreshed": "Group %s refreshed."
+    },
+    "cutscene": {
+      "description": "Plays a cutscene"
+    },
+    "sound": {
+      "description": "Plays a sound"
+    },
     "reload": {
       "reload_start": "Se reîncarcă configurația.",
       "reload_done": "Reîncărcare completă.",
@@ -333,6 +346,17 @@
       "exists_error": "Scena specificată nu există.",
       "success": "Teleportat %s la %s, %s, %s în scena %s.",
       "description": "Schimbă poziția jucătorului."
+    },
+    "trialAvatarActivity": {
+      "description": "Manipulați funcționalitățile activității de probă avatarului. Aceasta include comutarea stărilor de temniță și recompensă.",
+      "not_found": "Nie znaleziono danych gracza o aktywności awatara w wersji próbnej. Być może aktywność nie jest włączona.",
+      "invalid_param": "Niewłaściwy parametr.",
+      "schedule_not_found": "Nie znaleziono harmonogramu %s.",
+      "success_schedule": "Zmieniono identyfikator harmonogramu na %s.",
+      "success_dungeon": "Zmieniono stan lochów awatara %s.",
+      "success_dungeon_all": "Zmieniono stan lochów wszystkich awatarów.",
+      "success_reward": "Zmieniono status nagrody awatara %s.",
+      "success_reward_all": "Zmieniono status nagrody dla wszystkich awatarów."
     },
     "weather": {
       "success": "A setat ID-ul meteo la %s cu tipul de climă %s",

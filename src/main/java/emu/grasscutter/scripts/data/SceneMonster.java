@@ -10,4 +10,6 @@ public class SceneMonster extends SceneObject{
 	public int pose_id;
 	public int drop_id;
 	public boolean disableWander;
+    public int title_id;
+    public int special_name_id;
 }

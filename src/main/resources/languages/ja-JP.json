@@ -223,6 +223,19 @@
       "description": "クエストを追加または終了する｡",
       "enabled": "Questing enabled."
     },
+    "group": {
+      "invalid_groupid": "Invalid group ID.",
+      "invalid_suiteid": "Invalid suite ID.",
+      "group_not_found": "Group not found.",
+      "description": "Alter group loading",
+      "refreshed": "Group %s refreshed."
+    },
+    "cutscene": {
+      "description": "カットシーンを再生します"
+    },
+    "sound": {
+      "description": "Plays a sound"
+    },
     "reload": {
       "reload_start": "設定を再読み込みしています。",
       "reload_done": "再読み込み完了｡",
@@ -333,6 +346,17 @@
       "exists_error": "指定されたシーンが存在しません。",
       "success": "%s を %s、%s、%s のシーン %s にテレポートしました。",
       "description": "プレイヤーの位置を変更する"
+    },
+    "trialAvatarActivity": {
+      "description": "トライアル アバター アクティビティの機能を操作します。これには、ダンジョンと報酬の状態の切り替えが含まれます。",
+      "not_found": "試用アバター アクティビティ プレーヤー データが見つかりません。アクティビティが有効になっていない可能性があります。",
+      "invalid_param": "無効なパラメーター。",
+      "schedule_not_found": "スケジュール %s が見つかりません。",
+      "success_schedule": "スケジュール ID を %s に変更しました。",
+      "success_dungeon": "アバター %s のダンジョン ステータスを切り替えました。",
+      "success_dungeon_all": "すべてのアバターのダンジョン ステータスを切り替えました。",
+      "success_reward": "アバター %s の報酬ステータスを切り替えました。",
+      "success_reward_all": "すべてのアバターの報酬ステータスを切り替えました。"
     },
     "weather": {
       "success": "天気IDを %s に設定し、気候タイプは %s です。",

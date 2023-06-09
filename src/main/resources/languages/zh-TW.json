@@ -223,6 +223,19 @@
       "description": "添加或完成任務",
       "enabled": "Questing enabled."
     },
+    "group": {
+      "invalid_groupid": "Invalid group ID.",
+      "invalid_suiteid": "Invalid suite ID.",
+      "group_not_found": "Group not found.",
+      "description": "Alter group loading",
+      "refreshed": "Group %s refreshed."
+    },
+    "cutscene": {
+      "description": "Plays a cutscene"
+    },
+    "sound": {
+      "description": "Plays a sound"
+    },
     "reload": {
       "reload_start": "正在重新加載設定檔。",
       "reload_done": "重新加載已完成。",
@@ -312,7 +325,7 @@
     "team": {
       "invalid_usage": "無效的用法。",
       "invalid_index": "無效索引。",
-      "add_too_much": "服務端只允許您的隊伍裡最多 %d 名角色。",
+      "add_too_much": "服務端只允許您的隊伍裡最多 %s 名角色。",
       "failed_to_add_avatar": "無法根據ID %s 添加角色。",
       "failed_to_parse_index": "無法解析的索引：%s",
       "remove_too_much": "您不能删除那麼多的角色，因為您的隊伍列表角色會全部被刪除。",
@@ -320,7 +333,7 @@
       "index_out_of_range": "您指定的索引超出了範圍。",
       "failed_parse_avatar_id": "無法解析的角色ID：%s",
       "avatar_already_in_team": "該角色已經在您的隊伍當中了。",
-      "avatar_not_found": "無法找到該角色：%d",
+      "avatar_not_found": "無法找到該角色：%s",
       "description": "手動修改您的隊伍配置。"
     },
     "teleportAll": {
@@ -333,6 +346,17 @@
       "exists_error": "此場景不存在。",
       "success": "傳送 %s 到座標 %s,%s,%s ，場景為 %s 。",
       "description": "將玩家的位置傳送到你所指定的座標。"
+    },
+    "trialAvatarActivity": {
+      "description": "操縱試用角色活動的功能。這包括切換地牢和獎勵的狀態。",
+      "not_found": "未找到試用角色活動玩家數據。也許該活動未被啟用。",
+      "invalid_param": "無效的參數。",
+      "schedule_not_found": "未找到計劃 %s。",
+      "success_schedule": "已將計劃 ID 更改為 %s。",
+      "success_dungeon": "已切換角色 %s 的地牢狀態。",
+      "success_dungeon_all": "已切換所有角色的地牢狀態。",
+      "success_reward": "已切換角色 %s 的獎勵狀態。",
+      "success_reward_all": "已切換所有角色的獎勵狀態。"
     },
     "weather": {
       "success": "已設定天氣ID 為 %s，氣候型別為 %s。",

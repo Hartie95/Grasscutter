@@ -18,7 +18,7 @@ public class GadgetRewardStatue extends GadgetContent {
 	public boolean onInteract(Player player, GadgetInteractReq req) {
 		if (player.getScene().getDungeonManager() != null || player.getScene().getChallenge() instanceof DungeonChallenge dungeonChallenge) {
             var useCondensed = req.getResinCostType() == ResinCostTypeOuterClass.ResinCostType.RESIN_COST_TYPE_CONDENSE;
-            player.getScene().getDungeonManager().getStatueDrops(player, useCondensed);
+            player.getScene().getDungeonManager().getStatueDrops(player, useCondensed, getGadget().getGroupId());
 		}
 
 		player.sendPacket(new PacketGadgetInteractRsp(getGadget(), InteractType.INTERACT_TYPE_OPEN_STATUE));

@@ -54,7 +54,7 @@ public final class ServerTask implements Runnable {
      * @return True if the task should be canceled, false otherwise.
      */
     public boolean shouldCancel() {
-        return this.period == -1 && ticks > delay;
+        return this.period == -1 && ticks >= delay;
     }
 
     /**
@@ -62,6 +62,10 @@ public final class ServerTask implements Runnable {
      */
     @Override public void run() {
         // Run the runnable.
-        this.runnable.run();
+        try {
+            this.runnable.run();
+        } catch (Exception ex){
+            Grasscutter.getLogger().error("Exception during task: ", ex);
+        }
     }
 }

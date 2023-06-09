@@ -12,9 +12,11 @@ import javax.script.Bindings;
 import javax.script.CompiledScript;
 import javax.script.ScriptException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @ToString
@@ -27,6 +29,7 @@ public class SceneGroup {
     public Position pos;
 
     public Map<Integer,SceneMonster> monsters; // <ConfigId, Monster>
+    public Map<Integer, SceneNPC> npcs; // <ConfigId, Npc>
     public Map<Integer, SceneGadget> gadgets; // <ConfigId, Gadgets>
     public Map<String, SceneTrigger> triggers;
     public Map<Integer, SceneRegion> regions;
@@ -36,7 +39,9 @@ public class SceneGroup {
     public SceneBusiness business;
     public SceneGarbage garbages;
     public SceneInitConfig init_config;
-    @Getter public boolean dynamic_load;
+    @Getter public boolean dynamic_load = false;
+
+    public SceneReplaceable is_replaceable;
 
     private transient boolean loaded; // Not an actual variable in the scripts either
     private transient CompiledScript script;
@@ -104,6 +109,10 @@ public class SceneGroup {
                     .collect(Collectors.toMap(x -> x.config_id, y -> y, (a, b) -> a));
             this.monsters.values().forEach(m -> m.group = this);
 
+            this.npcs = ScriptLoader.getSerializer().toList(SceneNPC.class, this.bindings.get("npcs")).stream()
+                    .collect(Collectors.toMap(x -> x.config_id, y -> y, (a, b) -> a));
+            this.npcs.values().forEach(m -> m.group = this);
+
             this.gadgets = ScriptLoader.getSerializer().toList(SceneGadget.class, this.bindings.get("gadgets")).stream()
                     .collect(Collectors.toMap(x -> x.config_id, y -> y, (a, b) -> a));
             this.gadgets.values().forEach(m -> m.group = this);
@@ -135,12 +144,32 @@ public class SceneGroup {
             // Add monsters and gadgets to suite
             this.suites.forEach(i -> i.init(this));
 
-        } catch (ScriptException e) {
+        } catch (Exception e) {
             Grasscutter.getLogger().error("An error occurred while loading group " + this.id + " in scene " + sceneId + ".", e);
         }
 
         Grasscutter.getLogger().debug("Successfully loaded group {} in scene {}.", this.id, sceneId);
         return this;
+    }
+
+    public int findInitSuiteIndex(int exclude_index) { //TODO: Investigate end index
+        if(init_config == null) return 1;
+        if(init_config.io_type == 1) return init_config.suite; //IO TYPE FLOW
+        if(init_config.rand_suite) {
+            if(suites.size() == 1) {
+                return init_config.suite;
+            } else {
+                List<Integer> randSuiteList = new ArrayList<>();
+                for(int i = 0; i < suites.size(); i++) {
+                    if(i == exclude_index) continue;
+
+                    var suite = suites.get(i);
+                    for(int j = 0; j < suite.rand_weight; j++) randSuiteList.add(Integer.valueOf(i));
+                }
+                return randSuiteList.get(new Random().nextInt(randSuiteList.size()));
+            }
+        }
+        return init_config.suite;
     }
 
     public Optional<SceneBossChest> searchBossChestInGroup() {

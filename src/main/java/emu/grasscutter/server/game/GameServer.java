@@ -2,6 +2,7 @@ package emu.grasscutter.server.game;
 
 import emu.grasscutter.GameConstants;
 import emu.grasscutter.Grasscutter;
+import emu.grasscutter.data.GameData;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.Account;
 import emu.grasscutter.game.battlepass.BattlePassSystem;
@@ -24,6 +25,7 @@ import emu.grasscutter.game.systems.AnnouncementSystem;
 import emu.grasscutter.game.systems.InventorySystem;
 import emu.grasscutter.game.systems.MultiplayerSystem;
 import emu.grasscutter.game.tower.TowerSystem;
+import emu.grasscutter.game.world.SceneGroupInstance;
 import emu.grasscutter.game.world.World;
 import emu.grasscutter.game.world.WorldDataSystem;
 import emu.grasscutter.net.packet.PacketHandler;
@@ -233,11 +235,25 @@ public final class GameServer extends KcpServer {
 
     public void registerWorld(World world) {
         this.getWorlds().add(world);
+
+        //TODO: Test this
+        /* GameData.getRefreshPolicyExcelConfigDataMap().forEach(rp -> {
+            int interval = rp.getIntervalInSeconds(world);
+            getScheduler().scheduleDelayedRepeatingTask(() -> {
+                world.getScenes().values().forEach(s -> s.getLoadedGroups().forEach(g -> {
+                    if(g.refresh_id == rp.getId()) {
+                    SceneGroupInstance instance = s.getScriptManager().getCachedGroupInstanceById(g.id);
+                    if((world.getGameTime() - instance.getLastTimeRefreshed()) >= interval)
+                        s.getScriptManager().refreshGroup(instance);
+                    }
+                }));
+            }, interval, interval);
+        }); */
     }
 
     public void deregisterWorld(World world) {
         // TODO Auto-generated method stub
-
+        world.save(); //Save the player's world
     }
 
     public void start() {
@@ -269,5 +285,7 @@ public final class GameServer extends KcpServer {
         for (Player player : list) {
             player.getSession().close();
         }
+
+        getWorlds().forEach(World::save);
     }
 }

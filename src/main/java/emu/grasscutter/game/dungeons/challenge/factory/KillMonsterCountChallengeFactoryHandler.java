@@ -2,10 +2,10 @@ package emu.grasscutter.game.dungeons.challenge.factory;
 
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.ChallengeType;
-import emu.grasscutter.game.dungeons.challenge.trigger.InTimeTrigger;
-import emu.grasscutter.game.dungeons.challenge.trigger.KillMonsterTrigger;
+import emu.grasscutter.game.dungeons.challenge.trigger.KillMonsterCountTrigger;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.scripts.data.SceneGroup;
+import lombok.val;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ public class KillMonsterCountChallengeFactoryHandler implements ChallengeFactory
 
     @Override
     public WorldChallenge build(int challengeIndex, int challengeId, int groupId, int goal, int param5, int param6, Scene scene, SceneGroup group) {
-        var realGroup = scene.getScriptManager().getGroupById(groupId);
+        val realGroup = scene.getScriptManager().getGroupById(groupId);
         return new WorldChallenge(
                 scene, realGroup,
                 challengeId, // Id
@@ -26,7 +26,7 @@ public class KillMonsterCountChallengeFactoryHandler implements ChallengeFactory
                 List.of(goal, groupId),
                 0, // Limit
                 goal,  // Goal
-                List.of(new KillMonsterTrigger())
+                List.of(new KillMonsterCountTrigger())
                 );
     }
 }

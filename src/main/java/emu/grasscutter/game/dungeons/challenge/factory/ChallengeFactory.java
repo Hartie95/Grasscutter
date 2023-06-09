@@ -14,10 +14,12 @@ public class ChallengeFactory {
     private static final List<ChallengeFactoryHandler> challengeFactoryHandlers = new ArrayList<>();
 
     static {
-        challengeFactoryHandlers.add(new DungeonGuardChallengeFactoryHandler());
-        challengeFactoryHandlers.add(new KillGadgetChallengeFactoryHandler());
-        challengeFactoryHandlers.add(new KillMonsterChallengeFactoryHandler());
+        challengeFactoryHandlers.add(new KillAndGuardChallengeFactoryHandler());
         challengeFactoryHandlers.add(new KillMonsterCountChallengeFactoryHandler());
+        challengeFactoryHandlers.add(new KillMonsterInTimeChallengeFactoryHandler());
+        challengeFactoryHandlers.add(new KillMonsterTimeChallengeFactoryHandler());
+        challengeFactoryHandlers.add(new SurviveChallengeFactoryHandler());
+        challengeFactoryHandlers.add(new TriggerInTimeChallengeFactoryHandler());
     }
 
     public static WorldChallenge getChallenge(int localChallengeId, int challengeDataId, int param3, int param4, int param5, int param6, Scene scene, SceneGroup group){

@@ -5,7 +5,7 @@ import emu.grasscutter.data.excels.MonsterData;
 import emu.grasscutter.data.excels.WorldLevelData;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.trigger.ChallengeTrigger;
-import emu.grasscutter.game.dungeons.challenge.trigger.KillMonsterTrigger;
+import emu.grasscutter.game.dungeons.challenge.trigger.KillMonsterCountTrigger;
 import emu.grasscutter.game.entity.EntityGadget;
 import emu.grasscutter.game.entity.EntityMonster;
 import emu.grasscutter.game.props.FightProperty;
@@ -51,7 +51,7 @@ public class BlossomActivity {
             List.of(goal, timeout),
             timeout,
             goal, challengeTriggers);
-        challengeTriggers.add(new KillMonsterTrigger());
+        challengeTriggers.add(new KillMonsterCountTrigger());
         //this.challengeTriggers.add(new InTimeTrigger());
     }
     public WorldChallenge getChallenge() {

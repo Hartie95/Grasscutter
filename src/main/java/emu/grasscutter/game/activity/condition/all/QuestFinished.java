@@ -18,6 +18,6 @@ public class QuestFinished extends ActivityConditionBaseHandler {
             .getQuestManager()
             .getQuestById(params[0]);
 
-        return quest != null && quest.getState() == QuestState.FINISHED;
+        return quest != null && quest.getState() == QuestState.QUEST_STATE_FINISHED;
     }
 }

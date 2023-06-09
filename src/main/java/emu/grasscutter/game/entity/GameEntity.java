@@ -1,5 +1,10 @@
 package emu.grasscutter.game.entity;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import emu.grasscutter.Grasscutter;
+import emu.grasscutter.game.ability.Ability;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.ElementType;
 import emu.grasscutter.game.props.FightProperty;
@@ -48,10 +53,18 @@ public abstract class GameEntity {
     // Abilities
     private Object2FloatMap<String> metaOverrideMap;
     private Int2ObjectMap<String> metaModifiers;
+    private Map<Integer, Integer> instanceToHash;
+    private Int2ObjectMap<String> instanceToName;
+
+    private Map<String, Ability> abilities = new HashMap<>();
 
     public GameEntity(Scene scene) {
         this.scene = scene;
         this.motionState = MotionState.MOTION_STATE_NONE;
+    }
+
+    public Map<String, Ability> getAbilities() {
+        return abilities;
     }
 
     public int getEntityType() {
@@ -84,6 +97,20 @@ public abstract class GameEntity {
             this.metaModifiers = new Int2ObjectOpenHashMap<>();
         }
         return this.metaModifiers;
+    }
+
+    public Map<Integer, Integer> getInstanceToHash() {
+        if (this.instanceToHash == null) {
+            this.instanceToHash = new HashMap<>();
+        }
+        return this.instanceToHash;
+    }
+
+    public Int2ObjectMap<String> getInstanceToName() {
+        if (this.instanceToName == null) {
+            this.instanceToName = new Int2ObjectOpenHashMap<>();
+        }
+        return this.instanceToName;
     }
 
     public abstract Int2FloatMap getFightProperties();
@@ -186,6 +213,7 @@ public abstract class GameEntity {
             isDead = true;
         }
         callLuaHPEvent(event);
+        callAbilityBeHurt(event);
 
         // Packets
         this.getScene().broadcastPacket(new PacketEntityFightPropUpdateNotify(this, FightProperty.FIGHT_PROP_CUR_HP));
@@ -200,6 +228,10 @@ public abstract class GameEntity {
         if (entityController != null) {
             entityController.onBeHurt(this, event.getAttackElementType(), true);//todo is host handling
         }
+    }
+
+    public void callAbilityBeHurt(EntityDamageEvent event) {
+        abilities.values().forEach(ability -> ability.onBeingHit(event));
     }
 
     /**

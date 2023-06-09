@@ -2,8 +2,9 @@ package emu.grasscutter.game.quest.conditions;
 
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
-import emu.grasscutter.data.excels.QuestData;
-import emu.grasscutter.game.quest.GameQuest;
+import emu.grasscutter.data.common.quest.SubQuestData;
+import emu.grasscutter.data.common.quest.SubQuestData.*;
+import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.quest.QuestValueCond;
 import lombok.val;
 
@@ -13,9 +14,10 @@ import static emu.grasscutter.game.quest.enums.QuestCond.QUEST_COND_COMPLETE_TAL
 public class ConditionCompleteTalk extends BaseCondition {
 
     @Override
-    public boolean execute(GameQuest quest, QuestData.QuestAcceptCondition condition, String paramStr, int... params) {
+    public boolean execute(Player owner, SubQuestData questData, QuestAcceptCondition condition, String paramStr, int... params) {
         val talkId = condition.getParam()[0];
-        val checkMainQuest = quest.getOwner().getQuestManager().getMainQuestByTalkId(talkId);
+        val unknownParam = condition.getParam()[1]; // e.g. 3 for 7081601
+        val checkMainQuest = owner.getQuestManager().getMainQuestByTalkId(talkId);
         if (checkMainQuest == null || GameData.getMainQuestDataMap().get(checkMainQuest.getParentQuestId()).getTalks() == null) {
             Grasscutter.getLogger().debug("Warning: mainQuest {} hasn't been started yet, or has no talks", talkId / 100);
             return false;

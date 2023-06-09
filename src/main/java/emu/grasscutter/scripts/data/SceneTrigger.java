@@ -14,6 +14,7 @@ public class SceneTrigger {
     private String source;
     private String condition;
     private String action;
+    private String tag;
 
 	public transient SceneGroup currentGroup;
 	@Override

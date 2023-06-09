@@ -3,15 +3,18 @@ package emu.grasscutter.game.activity;
 import com.esotericsoftware.reflectasm.ConstructorAccess;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.ActivityData;
+import emu.grasscutter.data.server.ActivityCondGroup;
 import emu.grasscutter.game.activity.condition.ActivityConditionExecutor;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.WatcherTriggerType;
+import emu.grasscutter.game.quest.enums.QuestCond;
 import emu.grasscutter.net.proto.ActivityInfoOuterClass;
 import emu.grasscutter.utils.DateHelper;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import lombok.val;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,8 +26,8 @@ public abstract class ActivityHandler {
     /**
      * Must set before initWatchers
      */
-    ActivityConfigItem activityConfigItem;
-    ActivityData activityData;
+    @Getter ActivityConfigItem activityConfigItem;
+    @Getter ActivityData activityData;
     Map<WatcherTriggerType, List<ActivityWatcher>> watchersMap = new HashMap<>();
 
     abstract public void onProtoBuild(PlayerActivityData playerActivityData, ActivityInfoOuterClass.ActivityInfo.Builder activityInfo);
@@ -49,6 +52,34 @@ public abstract class ActivityHandler {
             watchersMap.computeIfAbsent(watcherData.getTriggerConfig().getWatcherTriggerType(), k -> new ArrayList<>());
             watchersMap.get(watcherData.getTriggerConfig().getWatcherTriggerType()).add(watcher);
         });
+    }
+
+    protected void triggerCondEvents(Player player){
+        if(activityData == null){
+            return;
+        }
+        val questManager = player.getQuestManager();
+        activityData.getCondGroupId().forEach(condGroupId -> {
+            val condGroup = GameData.getActivityCondGroupMap().get((int)condGroupId);
+            if(condGroup != null)
+                condGroup.getCondIds().forEach(condID -> questManager.queueEvent(QuestCond.QUEST_COND_ACTIVITY_COND, condID));
+        });
+    }
+
+    private List<Integer> getActivityConditions(){
+        if(activityData == null){
+            return new ArrayList<>();
+        }
+        return activityData.getCondGroupId().stream().map(condGroupId -> GameData.getActivityCondGroupMap().get((int)condGroupId))
+            .filter(Objects::nonNull)
+            .map(ActivityCondGroup::getCondIds)
+            .flatMap(Collection::stream)
+            .toList();
+    }
+
+    // TODO handle possible overwrites
+    private List<Integer> getMeetConditions(ActivityConditionExecutor conditionExecutor){
+        return conditionExecutor.getMeetActivitiesConditions(getActivityConditions());
     }
 
     private Map<Integer, PlayerActivityData.WatcherInfo> initWatchersDataForPlayer(){
@@ -77,7 +108,7 @@ public abstract class ActivityHandler {
             .setBeginTime(DateHelper.getUnixTime(activityConfigItem.getBeginTime()))
             .setFirstDayStartTime(DateHelper.getUnixTime(activityConfigItem.getBeginTime()))
             .setEndTime(DateHelper.getUnixTime(activityConfigItem.getEndTime()))
-            .addAllMeetCondList(conditionExecutor.getMeetActivitiesConditions(activityConfigItem.getMeetCondList()));
+            .addAllMeetCondList(getMeetConditions(conditionExecutor));
 
         if (playerActivityData != null){
             proto.addAllWatcherInfoList(playerActivityData.getAllWatcherInfoList());

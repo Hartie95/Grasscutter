@@ -56,7 +56,7 @@ public class PlayerProgress {
         }
 
         int addToObtainedCount(int amount){
-            this.obtainedCount+=obtainedCount;
+            this.obtainedCount+=amount;
             return this.obtainedCount;
         }
     }

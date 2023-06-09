@@ -7,6 +7,7 @@ import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.player.Player.SceneLoadState;
 import emu.grasscutter.game.props.EnterReason;
 import emu.grasscutter.game.props.EntityIdType;
+import emu.grasscutter.game.props.PlayerProperty;
 import emu.grasscutter.game.props.SceneType;
 import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.game.world.data.TeleportProperties;
@@ -48,8 +49,11 @@ public class World implements Iterable<Player> {
     @Getter
     private int tickCount = 0;
     @Getter private boolean isPaused = false;
+    @Getter private boolean isGameTimeLocked = false;
     private long lastUpdateTime;
     @Getter private long currentWorldTime = 0;
+
+    @Getter private long currentGameTime = 540;
 
     public World(Player player) {
         this(player, false);
@@ -66,8 +70,15 @@ public class World implements Iterable<Player> {
         this.isMultiplayer = isMultiplayer;
         this.lastUpdateTime = System.currentTimeMillis();
         this.currentWorldTime = owner.getPlayerGameTime();
+        this.isGameTimeLocked = owner.getBoolProperty(PlayerProperty.PROP_IS_GAME_TIME_LOCKED);
 
         this.owner.getServer().registerWorld(this);
+    }
+
+    public boolean setGameTimeLocked(boolean gameTimeLocked) {
+        isGameTimeLocked = gameTimeLocked;
+        getPlayers().forEach(p -> p.setProperty(PlayerProperty.PROP_IS_GAME_TIME_LOCKED, gameTimeLocked));
+        return true;
     }
 
     public Player getHost() {
@@ -213,7 +224,12 @@ public class World implements Iterable<Player> {
     }
 
     public void deregisterScene(Scene scene) {
+        scene.saveGroups();
         this.getScenes().remove(scene.getId());
+    }
+
+    public void save() {
+        this.getScenes().values().forEach(Scene::saveGroups);
     }
 
     public boolean transferPlayerToScene(Player player, int sceneId, Position pos) {
@@ -374,10 +390,9 @@ public class World implements Iterable<Player> {
         if (this.getPlayerCount() == 0) return true;
         this.scenes.forEach((k, scene) -> scene.onTick());
 
-        // trigger game time tick for quests TODO maybe move it to onTick for QuestManager?
-        players.forEach(p -> p.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_GAME_TIME_TICK,
-            getGameTimeHours() , // hours
-            0)); //days
+        if(!isGameTimeLocked && !isPaused){
+            currentGameTime++;
+        }
 
 
         // sync time every 10 seconds
@@ -402,23 +417,11 @@ public class World implements Iterable<Player> {
         if(diff < 0){
             diff = 1440 + diff;
         }
-        this.currentWorldTime += days * 1440 * 1000L + diff * 1000L;
-        this.owner.updatePlayerGameTime(currentWorldTime);
+        this.currentGameTime += days * 1440L + diff;
+        this.owner.updatePlayerGameTime(currentGameTime);
         this.players.forEach(player -> player.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_GAME_TIME_TICK,
             getGameTimeHours(), // hours
             days)); //days
-    }
-
-    public int getGameTime() {
-        return (int)(getWorldTimeSeconds() % 1440);
-    }
-
-    public int getGameTimeHours() {
-        return getGameTime() / 60 ;
-    }
-
-    public long getGameTimeDays() {
-        return getWorldTimeSeconds() / 1440 ;
     }
 
     public void setPaused(boolean paused) {
@@ -431,6 +434,52 @@ public class World implements Iterable<Player> {
         scenes.forEach((key, scene) -> scene.setPaused(paused));
     }
 
+    public static long getDaysForGameTime(long inGameMinutes){
+        return inGameMinutes / 1440;
+    }
+
+    public static long getHoursForGameTime(long inGameMinutes){
+        return inGameMinutes / 60;
+    }
+
+    /**
+     * Returns the current in game days world time in ingame minutes (0-1439)
+     */
+    public int getGameTime() {
+        return (int)(currentGameTime % 1440);
+    }
+
+    /**
+     * Returns the current in game days world time in ingame hours (0-23)
+     */
+    public int getGameTimeHours() {
+        return getGameTime() / 60 ;
+    }
+
+    /**
+     * Returns the total number of in game days that got completed since the beginning of the game
+     */
+    public long getTotalGameTimeDays() {
+        return getDaysForGameTime(getTotalGameTimeMinutes());
+    }
+
+    /**
+     * Returns the total number of in game hours that got completed since the beginning of the game
+     */
+    public long getTotalGameTimeHours() {
+        return getHoursForGameTime(getTotalGameTimeMinutes());
+    }
+
+    /**
+     * Returns the total amount of ingame minutes that got completed since the beginning of the game
+     */
+    public long getTotalGameTimeMinutes() {
+        return currentGameTime;
+    }
+
+    /**
+     * Returns the ingame world time in irl millis
+     */
     public long getWorldTime() {
         if(!isPaused) {
             long newUpdateTime = System.currentTimeMillis();
@@ -438,10 +487,6 @@ public class World implements Iterable<Player> {
             this.lastUpdateTime = newUpdateTime;
         }
         return currentWorldTime;
-    }
-
-    public long getWorldTimeSeconds() {
-        return getWorldTime()/1000;
     }
 
     @Override

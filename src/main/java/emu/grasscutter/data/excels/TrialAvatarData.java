@@ -5,7 +5,7 @@ import emu.grasscutter.data.ResourceType;
 import lombok.*;
 import java.util.List;
 
-@ResourceType(name = "TrialAvatarExcelConfigData.json") 
+@ResourceType(name = "TrialAvatarExcelConfigData.json")
 @EqualsAndHashCode(callSuper=false)
 @Data
 public class TrialAvatarData extends GameResource {
