@@ -34,9 +34,6 @@ import emu.grasscutter.net.proto.FetterDataOuterClass.FetterData;
 import emu.grasscutter.net.proto.ShowAvatarInfoOuterClass;
 import emu.grasscutter.net.proto.ShowAvatarInfoOuterClass.ShowAvatarInfo;
 import emu.grasscutter.net.proto.ShowEquipOuterClass.ShowEquip;
-import emu.grasscutter.net.proto.TrialAvatarInfoOuterClass.TrialAvatarInfo;
-import emu.grasscutter.net.proto.TrialAvatarGrantRecordOuterClass.TrialAvatarGrantRecord;
-import emu.grasscutter.net.proto.TrialAvatarGrantRecordOuterClass.TrialAvatarGrantRecord.GrantReason;
 import emu.grasscutter.server.packet.send.*;
 import emu.grasscutter.utils.ProtoHelper;
 import it.unimi.dsi.fastutil.ints.*;
@@ -88,15 +85,6 @@ public class Avatar {
 
     @Getter @Setter private int nameCardRewardId;
     @Getter @Setter private int nameCardId;
-
-    // trial avatar property
-    @Getter @Setter private int trialAvatarId = 0;
-    // cannot store to db if grant reason is not integer
-    @Getter @Setter private int grantReason = GrantReason.GRANT_REASON_INVALID.getNumber();
-    @Getter @Setter private int fromParentQuestId = 0;
-    // so far no outer class or prop value has information of this, but from packet i sniff
-    // 1 = normal, 2 = trial avatar
-    @Getter @Setter private int avatarType = 1;
 
     @Deprecated // Do not use. Morhpia only!
     public Avatar() {
@@ -841,11 +829,10 @@ public class Avatar {
     }
 
     public void save() {
-        if (getTrialAvatarId() > 0) return; // dont save trial avatar
         DatabaseHelper.saveAvatar(this);
     }
 
-    public AvatarInfo toProto() {
+    public AvatarInfo.Builder protoBuilder() {
         int fetterLevel = this.getFetterLevel();
         AvatarFetterInfo.Builder avatarFetter = AvatarFetterInfo.newBuilder()
                 .setExpLevel(fetterLevel);
@@ -873,17 +860,15 @@ public class Avatar {
                 .putAllSkillLevelMap(this.getSkillLevelMap())
                 .addAllInherentProudSkillList(this.getProudSkillList())
                 .putAllProudSkillExtraLevelMap(getProudSkillBonusMap())
-                .setAvatarType(this.getAvatarType())
+                .setAvatarType(1)
                 .setBornTime(this.getBornTime())
                 .setWearingFlycloakId(this.getFlyCloak())
                 .setCostumeId(this.getCostume())
                 .setIsFocus(false);
 
-        if (this.getAvatarType() == 1){
-            avatarInfo.setFetterInfo(avatarFetter);
-            if (this.getPlayer().getNameCardList().contains(this.getNameCardId())) {
-                avatarFetter.addRewardedFetterLevelList(10);
-            }
+        avatarInfo.setFetterInfo(avatarFetter);
+        if (this.getPlayer().getNameCardList().contains(this.getNameCardId())) {
+            avatarFetter.addRewardedFetterLevelList(10);
         }
 
         this.getSkillExtraChargeMap().forEach((skillId, count) ->
@@ -897,8 +882,11 @@ public class Avatar {
         avatarInfo.putPropMap(PlayerProperty.PROP_SATIATION_VAL.getId(), ProtoHelper.newPropValue(PlayerProperty.PROP_SATIATION_VAL, 0));
         avatarInfo.putPropMap(PlayerProperty.PROP_SATIATION_PENALTY_TIME.getId(), ProtoHelper.newPropValue(PlayerProperty.PROP_SATIATION_PENALTY_TIME, 0));
 
-        avatarInfo.setTrialAvatarInfo(trialAvatarInfoProto());
-        return avatarInfo.build();
+        return avatarInfo;
+    }
+
+    public AvatarInfo toProto() {
+        return this.protoBuilder().build();
     }
 
     // used only in character showcase
@@ -939,129 +927,6 @@ public class Avatar {
         }
 
         return showAvatarInfo.build();
-    }
-
-    public void setTrialAvatarInfo(int avatarLevel, int trialAvatarId, GrantReason grantReason, int fromParentQuestId){
-        this.setLevel(avatarLevel);
-        this.setPromoteLevel(getMinPromoteLevel(avatarLevel));
-        this.setTrialAvatarId(trialAvatarId);
-        this.setGrantReason(grantReason.getNumber());
-        this.setFromParentQuestId(fromParentQuestId);
-        this.setAvatarType(2);
-        this.setTrialSkillLevel();
-        this.setTrialItems();
-    }
-
-    private int getTrialAvatarTemplateLevel(){
-        return getLevel() <= 9 ? 1 :
-            (int) (Math.floor(getLevel() / 10f) * 10); // round trial level to fit template levels
-    }
-
-    public int getTrialSkillLevel() {
-        if (GameData.getTrialAvatarCustomData().isEmpty()) { // use default data if custom data not available
-            int trialAvatarTemplateLevel = getTrialAvatarTemplateLevel(); // round trial level to fit template levels
-
-            TrialAvatarTemplateData templateData = GameData.getTrialAvatarTemplateDataMap().get(trialAvatarTemplateLevel);
-            return templateData == null ? 1 : templateData.getTrialAvatarSkillLevel();
-        }
-        if (GameData.getTrialAvatarCustomData().get(getTrialAvatarId()) == null) return 1;
-
-        return GameData.getTrialAvatarCustomData().get(getTrialAvatarId()).getCoreProudSkillLevel(); // enhanced version of weapon
-    }
-
-    public void setTrialSkillLevel() {
-        getSkillLevelMap().keySet().stream().forEach(skill -> setSkillLevel(skill, getTrialSkillLevel()));
-    }
-
-    public int getTrialWeaponId() {
-        if (GameData.getTrialAvatarCustomData().isEmpty()) { // use default data if custom data not available
-            if (GameData.getTrialAvatarDataMap().get(getTrialAvatarId()) == null)
-                return getAvatarData().getInitialWeapon();
-
-            return GameData.getItemDataMap().get(getAvatarData().getInitialWeapon()+100) == null ?
-                getAvatarData().getInitialWeapon() :
-                getAvatarData().getInitialWeapon()+100; // enhanced version of weapon
-        }
-        // use custom data
-        if (GameData.getTrialAvatarCustomData().get(getTrialAvatarId()) == null) return 0;
-
-        val trialCustomParams = GameData.getTrialAvatarCustomData().get(trialAvatarId).getTrialAvatarParamList();
-        return trialCustomParams.size() < 2 ? getAvatarData().getInitialWeapon() :
-            Integer.parseInt(trialCustomParams.get(1).split(";")[0]);
-    }
-
-    public List<Integer> getTrialReliquary() {
-        if (!GameData.getTrialAvatarCustomData().isEmpty()) {
-            // try using custom data
-            if (GameData.getTrialAvatarCustomData().get(getTrialAvatarId()) != null) {
-                val trialCustomParams = GameData.getTrialAvatarCustomData().get(getTrialAvatarId()).getTrialAvatarParamList();
-                if (trialCustomParams.size() > 2) {
-                    return Stream.of(trialCustomParams.get(2).split(";")).map(Integer::parseInt).toList();
-                }
-            }
-        }
-        int trialAvatarTemplateLevel = getTrialAvatarTemplateLevel();
-
-        TrialAvatarTemplateData templateData = GameData.getTrialAvatarTemplateDataMap().get(trialAvatarTemplateLevel);
-        return templateData == null ? List.of() : templateData.getTrialReliquaryList();
-    }
-
-    public void setTrialItems(){
-        // add enhanced verion of trial weapon
-        GameItem weapon = new GameItem(getTrialWeaponId());
-        weapon.setLevel(getLevel());
-        weapon.setExp(0);
-        weapon.setPromoteLevel(getMinPromoteLevel(getLevel()));
-        getEquips().put(weapon.getEquipSlot(), weapon);
-
-        // add Trial Artifacts
-        getTrialReliquary().forEach(id -> {
-            TrialReliquaryData reliquaryData = GameData.getTrialReliquaryDataMap().get(id);
-            if (reliquaryData == null) return;
-
-            GameItem relic = new GameItem(reliquaryData.getReliquaryId());
-            relic.setLevel(reliquaryData.getLevel());
-            relic.setMainPropId(reliquaryData.getMainPropId());
-            relic.getAppendPropIdList().addAll(reliquaryData.getAppendPropList());
-            getEquips().put(relic.getEquipSlot(), relic);
-        });
-
-        // add costume if any (ambor, rosiaria, mona, Jean)
-        GameData.getAvatarCostumeDataItemIdMap().values().stream().forEach(costumeData -> {
-            if (costumeData.getCharacterId() != getAvatarId()) return;
-            setCostume(costumeData.getId());
-        });
-    }
-
-    public void equipTrialItems(){
-        getEquips().forEach((itemEquipTypeValues, item) -> {
-            item.setEquipCharacter(getAvatarId());
-            item.setOwner(getPlayer());
-            if (item.getItemData().getEquipType() == EquipType.EQUIP_WEAPON && getPlayer().getWorld() != null) {
-                item.setWeaponEntityId(this.getPlayer().getWorld().getNextEntityId(EntityIdType.WEAPON));
-                getPlayer().sendPacket(new PacketAvatarEquipChangeNotify(this, item));
-            }
-        });
-    }
-
-    public TrialAvatarInfo trialAvatarInfoProto(){
-        TrialAvatarInfo.Builder trialAvatar = TrialAvatarInfo.newBuilder()
-            .setTrialAvatarId(this.getTrialAvatarId())
-            .setGrantRecord(TrialAvatarGrantRecord.newBuilder()
-                .setGrantReason(this.getGrantReason())
-                .setFromParentQuestId(this.getFromParentQuestId()));
-
-        if (this.getTrialAvatarId() > 0){ // if it is actual trial avatar
-            // add artifacts or wepon for trial character
-            int itemCount = 0;
-            for (GameItem item : this.getEquips().values()) {
-                trialAvatar.addTrialEquipList(itemCount, item.toProto());
-                itemCount++;
-            }
-
-        }
-
-        return trialAvatar.build();
     }
 
     @PostLoad

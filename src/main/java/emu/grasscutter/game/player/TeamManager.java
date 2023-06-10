@@ -9,6 +9,7 @@ import emu.grasscutter.GameConstants;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.AvatarSkillDepotData;
 import emu.grasscutter.game.avatar.Avatar;
+import emu.grasscutter.game.avatar.TrialAvatar;
 import emu.grasscutter.game.entity.EntityAvatar;
 import emu.grasscutter.game.entity.EntityBaseGadget;
 import emu.grasscutter.game.props.ElementType;
@@ -446,7 +447,9 @@ public class TeamManager extends BasePlayerDataManager {
     public void trialAvatarTeamPostUpdate(int newCharacterIndex) {
         setCurrentCharacterIndex(Math.min(newCharacterIndex, getActiveTeam().size() - 1));
         updateTeamProperties();
-        getPlayer().getScene().addEntity(getCurrentAvatarEntity());
+        if (getPlayer().getScene() != null) {
+            getPlayer().getScene().addEntity(getCurrentAvatarEntity());
+        }
     }
 
     public void addAvatarToTrialTeam(Avatar trialAvatar) {
@@ -460,8 +463,8 @@ public class TeamManager extends BasePlayerDataManager {
 
     public long getTrialAvatarGuid(int trialAvatarId) {
         return getTrialAvatars().values().stream()
-            .filter(avatar -> avatar.getTrialAvatarId() == trialAvatarId)
-            .map(avatar -> avatar.getGuid())
+            .filter(avatar -> ((TrialAvatar) avatar).getTrialAvatarId() == trialAvatarId)
+            .map(Avatar::getGuid)
             .findFirst().orElse(0L);
     }
 
@@ -474,13 +477,13 @@ public class TeamManager extends BasePlayerDataManager {
         this.useTrialTeam = false;
         this.trialAvatarTeam = new TeamInfo();
         getActiveTeam().forEach(x -> getPlayer().getScene().removeEntity(x, VisionType.VISION_TYPE_REMOVE));
-        getActiveTeam().removeIf(x -> x.getAvatar().getTrialAvatarId() == trialAvatarId);
-        getTrialAvatars().values().removeIf(x -> x.getTrialAvatarId() == trialAvatarId);
+        getActiveTeam().removeIf(x -> (x.getAvatar() instanceof TrialAvatar) && ((TrialAvatar) x.getAvatar()).getTrialAvatarId() == trialAvatarId);
+        getTrialAvatars().values().removeIf(x -> (x instanceof TrialAvatar) && ((TrialAvatar) x).getTrialAvatarId() == trialAvatarId);
         int[] indexCounter = new int[]{-1};
         getCurrentTeamInfo().getAvatars().forEach(avatarId -> {
             indexCounter[0] += 1;
             if (getActiveTeam().stream().map(x -> x.getAvatar().getAvatarId()).toList().contains(avatarId)) return;
-            getActiveTeam().add(indexCounter[0], new EntityAvatar(getPlayer().getScene(), getPlayer().getAvatars().getAvatarById(avatarId)));
+            getActiveTeam().add(indexCounter[0], new EntityAvatar(getPlayer().getAvatars().getAvatarById(avatarId)));
         });
         unsetTrialAvatarTeam();
     }

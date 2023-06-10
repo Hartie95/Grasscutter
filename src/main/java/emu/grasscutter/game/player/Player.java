@@ -4,9 +4,9 @@ import dev.morphia.annotations.*;
 import emu.grasscutter.GameConstants;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
-import emu.grasscutter.data.binout.AbilityData;
 import emu.grasscutter.data.binout.config.ConfigLevelEntity;
 import emu.grasscutter.data.binout.config.fields.ConfigAbilityData;
+import emu.grasscutter.data.custom.TrialAvatarCustomData;
 import emu.grasscutter.data.excels.*;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.Account;
@@ -15,6 +15,7 @@ import emu.grasscutter.game.ability.AbilityManager;
 import emu.grasscutter.game.activity.ActivityManager;
 import emu.grasscutter.game.avatar.Avatar;
 import emu.grasscutter.game.avatar.AvatarStorage;
+import emu.grasscutter.game.avatar.TrialAvatar;
 import emu.grasscutter.game.battlepass.BattlePassManager;
 import emu.grasscutter.game.entity.EntityAvatar;
 import emu.grasscutter.game.entity.GameEntity;
@@ -832,37 +833,39 @@ public class Player {
     }
 
     public List<Integer> getTrialAvatarParam (int trialAvatarId) {
-        if (GameData.getTrialAvatarCustomData().isEmpty()) { // use default data if custom data not available
-            if (GameData.getTrialAvatarDataMap().get(trialAvatarId) == null) return List.of();
+        val trialCustomDataMap = GameData.getTrialAvatarCustomData();
+        if (trialCustomDataMap.isEmpty()) { // use default data if custom data not available
+            TrialAvatarData trialDefaultData = GameData.getTrialAvatarDataMap().get(trialAvatarId);
+            if (trialDefaultData == null) return List.of();
 
-            return GameData.getTrialAvatarDataMap().get(trialAvatarId)
-                .getTrialAvatarParamList();
+            return trialDefaultData.getTrialAvatarParamList();
         }
-        // use custom data
-        if (GameData.getTrialAvatarCustomData().get(trialAvatarId) == null) return List.of();
 
-        val trialCustomParams = GameData.getTrialAvatarCustomData().get(trialAvatarId).getTrialAvatarParamList();
-        return trialCustomParams.isEmpty() ? List.of() : Stream.of(trialCustomParams.get(0).split(";")).map(Integer::parseInt).toList();
+        TrialAvatarCustomData trialCustomData = GameData.getTrialAvatarCustomData().get(trialAvatarId);
+        // use custom data
+        if (trialCustomData == null) return List.of();
+
+        val trialCustomParams = trialCustomData.getTrialAvatarParamList();
+        return trialCustomParams.isEmpty() ? List.of() :
+            Stream.of(trialCustomParams.get(0).split(";")).map(Integer::parseInt).toList();
     }
 
     public boolean addTrialAvatar(int trialAvatarId, GrantReason reason, int questMainId){
         List<Integer> trialAvatarBasicParam = getTrialAvatarParam(trialAvatarId);
         if (trialAvatarBasicParam.isEmpty()) return false;
 
-        Avatar avatar = new Avatar(trialAvatarBasicParam.get(0));
-        if (avatar.getAvatarData() == null || !hasSentLoginPackets()) return false;
+        TrialAvatar trialAvatar = new TrialAvatar(trialAvatarBasicParam, trialAvatarId, reason, questMainId);
+        if (trialAvatar.getAvatarData() == null || !hasSentLoginPackets()) return false;
 
-        avatar.setOwner(this);
-        // Add trial weapons and relics
-        avatar.setTrialAvatarInfo(trialAvatarBasicParam.get(1), trialAvatarId, reason, questMainId);
-        avatar.equipTrialItems();
+        trialAvatar.setOwner(this);
+        trialAvatar.equipTrialItems();
         // Recalc stats
-        avatar.recalcStats();
+        trialAvatar.recalcStats();
 
         // Packet, mimic official server behaviour, add to player's bag but not saving to db
-        sendPacket(new PacketAvatarAddNotify(avatar, false));
+        sendPacket(new PacketAvatarAddNotify(trialAvatar, false));
         // add to avatar to temporary trial team
-        getTeamManager().addAvatarToTrialTeam(avatar);
+        getTeamManager().addAvatarToTrialTeam(trialAvatar);
         return true;
     }
 
