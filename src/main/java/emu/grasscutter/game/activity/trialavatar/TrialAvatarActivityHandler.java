@@ -23,27 +23,28 @@ import emu.grasscutter.utils.JsonUtils;
 import java.util.*;
 import java.util.stream.*;
 import lombok.*;
+import org.jetbrains.annotations.NotNull;
 
 @GameActivity(ActivityType.NEW_ACTIVITY_TRIAL_AVATAR)
 public class TrialAvatarActivityHandler extends ActivityHandler {
     @Getter @Setter private int selectedTrialAvatarIndex;
 
     @Override
-    public void onInitPlayerActivityData(PlayerActivityData playerActivityData) {
+    public void onInitPlayerActivityData(@NotNull PlayerActivityData playerActivityData) {
         TrialAvatarPlayerData trialAvatarPlayerData = TrialAvatarPlayerData.create(getActivityConfigItem().getScheduleId());
 
         playerActivityData.setDetail(trialAvatarPlayerData);
     }
 
     @Override
-    public void onProtoBuild(PlayerActivityData playerActivityData, ActivityInfo.Builder activityInfo) {
+    public void onProtoBuild(PlayerActivityData playerActivityData, @NotNull ActivityInfo.Builder activityInfo) {
         TrialAvatarPlayerData trialAvatarPlayerData = getTrialAvatarPlayerData(playerActivityData);
 
         activityInfo.setTrialAvatarInfo(trialAvatarPlayerData.toProto());
     }
 
     @Override
-    public void initWatchers(Map<WatcherTriggerType, ConstructorAccess<?>> activityWatcherTypeMap) {
+    public void initWatchers(@NotNull Map<WatcherTriggerType, ConstructorAccess<?>> activityWatcherTypeMap) {
         var watcherType = activityWatcherTypeMap.get(WatcherTriggerType.TRIGGER_FINISH_CHALLENGE);
         ActivityWatcher watcher;
         if(watcherType != null){
@@ -57,7 +58,7 @@ public class TrialAvatarActivityHandler extends ActivityHandler {
         getWatchersMap().get(WatcherTriggerType.TRIGGER_FINISH_CHALLENGE).add(watcher);
     }
 
-    public TrialAvatarPlayerData getTrialAvatarPlayerData(PlayerActivityData playerActivityData) {
+    public TrialAvatarPlayerData getTrialAvatarPlayerData(@NotNull PlayerActivityData playerActivityData) {
         if (playerActivityData.getDetail() == null || playerActivityData.getDetail().isBlank()) {
             onInitPlayerActivityData(playerActivityData);
             playerActivityData.save();
@@ -76,7 +77,7 @@ public class TrialAvatarActivityHandler extends ActivityHandler {
         return data!=null ? data.getTriggerConfig().getParamList() : Collections.emptyList();
     }
 
-    public boolean enterTrialDungeon(Player player, int trialAvatarIndexId, int enterPointId) {
+    public boolean enterTrialDungeon(@NotNull Player player, int trialAvatarIndexId, int enterPointId) {
         // TODO, not sure if this will cause problem in MP, since we are entering trial activity dungeon
         player.sendPacket(new PacketScenePlayerLocationNotify(player.getScene())); // official does send this
 
@@ -86,13 +87,13 @@ public class TrialAvatarActivityHandler extends ActivityHandler {
                 getTrialActivityDungeonId(trialAvatarIndexId))) return false;
 
         setSelectedTrialAvatarIndex(trialAvatarIndexId);
-
         return true;
     }
 
     public List<Integer> getBattleAvatarsList() {
         val activityData = GameData.getTrialAvatarActivityDataByAvatarIndex(getSelectedTrialAvatarIndex());
         if (activityData == null || activityData.getBattleAvatarsList().isBlank()) return List.of();
+
         return Stream.of(activityData.getBattleAvatarsList().split(",")).map(Integer::parseInt).toList();
     }
 
@@ -103,13 +104,7 @@ public class TrialAvatarActivityHandler extends ActivityHandler {
         return new DungeonTrialTeam(battleAvatarsList, GrantReason.GRANT_REASON_BY_TRIAL_AVATAR_ACTIVITY);
     }
 
-    public void unsetTrialAvatarTeam(Player player) {
-        if (getSelectedTrialAvatarIndex() <= 0) return;
-        player.removeTrialAvatarForActivity();
-        setSelectedTrialAvatarIndex(0);
-    }
-
-    public boolean getReward(Player player, int trialAvatarIndexId) {
+    public boolean getReward(@NotNull Player player, int trialAvatarIndexId) {
         val playerActivityData = player.getActivityManager().getPlayerActivityDataByActivityType(ActivityType.NEW_ACTIVITY_TRIAL_AVATAR);
 
         if(playerActivityData.isEmpty()){

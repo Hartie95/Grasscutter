@@ -3,6 +3,8 @@ package emu.grasscutter.game.player;
 import static emu.grasscutter.config.Configuration.*;
 
 import java.util.*;
+import java.util.stream.IntStream;
+
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Transient;
 import emu.grasscutter.GameConstants;
@@ -16,151 +18,110 @@ import emu.grasscutter.game.props.ElementType;
 import emu.grasscutter.game.props.EnterReason;
 import emu.grasscutter.game.props.FightProperty;
 import emu.grasscutter.game.world.World;
-import emu.grasscutter.net.packet.BasePacket;
-import emu.grasscutter.net.packet.PacketOpcodes;
 import emu.grasscutter.net.proto.EnterTypeOuterClass.EnterType;
 import emu.grasscutter.net.proto.MotionStateOuterClass.MotionState;
 import emu.grasscutter.net.proto.PlayerDieTypeOuterClass.PlayerDieType;
 import emu.grasscutter.net.proto.RetcodeOuterClass.Retcode;
-import emu.grasscutter.net.proto.VisionTypeOuterClass.VisionType;
 import emu.grasscutter.server.event.player.PlayerTeamDeathEvent;
-import emu.grasscutter.server.packet.send.PacketAddCustomTeamRsp;
-import emu.grasscutter.server.packet.send.PacketAvatarDieAnimationEndRsp;
-import emu.grasscutter.server.packet.send.PacketAvatarFightPropUpdateNotify;
-import emu.grasscutter.server.packet.send.PacketAvatarLifeStateChangeNotify;
-import emu.grasscutter.server.packet.send.PacketAvatarTeamUpdateNotify;
-import emu.grasscutter.server.packet.send.PacketChangeAvatarRsp;
-import emu.grasscutter.server.packet.send.PacketChangeMpTeamAvatarRsp;
-import emu.grasscutter.server.packet.send.PacketChangeTeamNameRsp;
-import emu.grasscutter.server.packet.send.PacketChooseCurAvatarTeamRsp;
-import emu.grasscutter.server.packet.send.PacketCustomTeamListNotify;
-import emu.grasscutter.server.packet.send.PacketPlayerEnterSceneNotify;
-import emu.grasscutter.server.packet.send.PacketRemoveCustomTeamRsp;
-import emu.grasscutter.server.packet.send.PacketSceneTeamUpdateNotify;
-import emu.grasscutter.server.packet.send.PacketSetUpAvatarTeamRsp;
-import emu.grasscutter.server.packet.send.PacketWorldPlayerDieNotify;
+import emu.grasscutter.server.packet.send.*;
 import emu.grasscutter.utils.Position;
 import emu.grasscutter.utils.Utils;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.val;
+import org.jetbrains.annotations.NotNull;
 
 @Entity
 public class TeamManager extends BasePlayerDataManager {
     // This needs to be a LinkedHashMap to guarantee insertion order.
-    @Getter private LinkedHashMap<Integer, TeamInfo> teams;
-    private int currentTeamIndex;
-    @Getter @Setter private int currentCharacterIndex;
-
-    @Transient @Getter @Setter private TeamInfo mpTeam;
+    @Getter @Setter private LinkedHashMap<Integer, TeamInfo> teams;
+    @Getter @Setter private int currentTeamId;
+    @Getter private int currentCharacterIndex;
     @Transient @Getter @Setter private int entityId;
-    @Transient private final List<EntityAvatar> avatars;
+    @Transient @Getter private final List<EntityAvatar> activeTeam;
     @Transient @Getter private final Set<EntityBaseGadget> gadgets;
     @Transient @Getter private final IntSet teamResonances;
     @Transient @Getter private final IntSet teamResonancesConfig;
-
-    @Transient private int useTemporarilyTeamIndex = -1;
-    @Transient private List<TeamInfo> temporaryTeam; // Temporary Team for tower
+    @Transient @Getter @Setter private TeamInfo mpTeam;
+    @Transient @Getter @Setter private int temporaryTeamIndex = -1;
+    @Transient @Getter private final List<TeamInfo> temporaryTeam; // Temporary Team for tower
     @Transient @Getter @Setter private boolean useTrialTeam;
     @Transient @Getter @Setter private TeamInfo trialAvatarTeam;
-    // hold trial avatars for later use in rebuilding active team
-    @Transient @Getter @Setter private Map<Integer, Avatar> trialAvatars;
+    // used to hold trial avatar's guid,
+    // normal avatar's guid should not come in here
+    @Transient @Getter private final LinkedHashMap<Integer, Long> entityGuids;
     @Transient @Getter @Setter private int previousIndex = -1; // index of character selection in team before adding trial avatar
 
     public TeamManager() {
         this.mpTeam = new TeamInfo();
-        this.avatars = new ArrayList<>();
+        this.activeTeam = new ArrayList<>();
         this.gadgets = new HashSet<>();
         this.teamResonances = new IntOpenHashSet();
         this.teamResonancesConfig = new IntOpenHashSet();
-        this.trialAvatars = new HashMap<>();
+        this.temporaryTeam = new ArrayList<>();
         this.trialAvatarTeam = new TeamInfo();
+        this.entityGuids = new LinkedHashMap<>();
     }
 
     public TeamManager(Player player) {
         this();
-        this.setPlayer(player);
+        setPlayer(player);
 
-        this.teams = new LinkedHashMap<>();
-        this.currentTeamIndex = 1;
-        for (int i = 1; i <= GameConstants.DEFAULT_TEAMS; i++) {
-            this.teams.put(i, new TeamInfo());
-        }
+        this.setCurrentTeamId(1);
+        this.setTeams(new LinkedHashMap<>());
+        IntStream.rangeClosed(1, GameConstants.DEFAULT_TEAMS)
+            .forEachOrdered(i -> this.getTeams().put(i, new TeamInfo()));
     }
 
     public World getWorld() {
-        return this.getPlayer().getWorld();
-    }
-
-    /**
-     * Search through all teams and if the team matches, return that index.
-     * Otherwise, return -1.
-     * No match could mean that the team does not currently belong to the player.
-     */
-    public int getTeamId(TeamInfo team) {
-        for (int i = 1; i <= this.teams.size(); i++) {
-            if (this.teams.get(i).equals(team)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    public int getCurrentTeamId() {
-        // Starts from 1
-        return currentTeamIndex;
-    }
-
-    private void setCurrentTeamId(int currentTeamIndex) {
-        this.currentTeamIndex = currentTeamIndex;
+        return getPlayer().getWorld();
     }
 
     public long getCurrentCharacterGuid() {
-        return this.getCurrentAvatarEntity().getAvatar().getGuid();
+        return getCurrentAvatarEntity().getAvatar().getGuid();
     }
 
     public TeamInfo getCurrentTeamInfo() {
-        if (useTrialTeam) return this.getTrialAvatarTeam();
-        if (useTemporarilyTeamIndex >= 0 &&
-            useTemporarilyTeamIndex < temporaryTeam.size()) {
-            return temporaryTeam.get(useTemporarilyTeamIndex);
+        if (isUseTrialTeam()) return getTrialAvatarTeam();
+        if (getTemporaryTeamIndex() >= 0 &&
+            getTemporaryTeamIndex() < getTemporaryTeam().size()) {
+            return getTemporaryTeam().get(getTemporaryTeamIndex());
         }
-        if (this.getPlayer().isInMultiplayer()) {
-            return this.getMpTeam();
+        if (getPlayer().isInMultiplayer()) {
+            return getMpTeam();
         }
-        return this.getTeams().get(this.currentTeamIndex);
+
+        return getCurrentSinglePlayerTeamInfo();
     }
 
     public TeamInfo getCurrentSinglePlayerTeamInfo() {
-        return this.getTeams().get(this.currentTeamIndex);
+        return getTeams().get(getCurrentTeamId());
     }
 
-    public List<EntityAvatar> getActiveTeam() {
-        return avatars;
+    public void setCurrentCharacterIndex(int index) {
+        // clip index within [0, active team size)
+        this.currentCharacterIndex = Math.min(Math.max(index, 0), getActiveTeam().size()-1);
     }
 
     public EntityAvatar getCurrentAvatarEntity() {
-        if(currentCharacterIndex >= getActiveTeam().size()){
-            return this.getActiveTeam().get(0);
-        }
-        return this.getActiveTeam().get(currentCharacterIndex);
-    }
+        if (getActiveTeam().isEmpty() || getCurrentCharacterIndex() < 0) return null;
 
-    public boolean isSpawned() {
-        return this.getPlayer().getScene() != null && this.getPlayer().getScene().getEntities().containsKey(this.getCurrentAvatarEntity().getId());
+        if(getCurrentCharacterIndex() >= getActiveTeam().size()) return getActiveTeam().get(0);
+
+        return getActiveTeam().get(getCurrentCharacterIndex());
     }
 
     public int getMaxTeamSize() {
-        if (this.getPlayer().isInMultiplayer()) {
-            int max = GAME_OPTIONS.avatarLimits.multiplayerTeam;
-            if (this.getPlayer().getWorld().getHost() == this.getPlayer()) {
-                return Math.max(1, (int) Math.ceil(max / (double) this.getWorld().getPlayerCount()));
-            }
-            return Math.max(1, (int) Math.floor(max / (double) this.getWorld().getPlayerCount()));
+        if (getPlayer().isInMultiplayer()) {
+            int teamSize = GAME_OPTIONS.avatarLimits.multiplayerTeam / getWorld().getPlayerCount();
+
+            return Math.max(1, getPlayer().getWorld().getHost() == getPlayer() ?
+                (int) Math.floor(teamSize) : (int) Math.ceil(teamSize));
         }
 
         return GAME_OPTIONS.avatarLimits.singlePlayerTeam;
@@ -169,28 +130,10 @@ public class TeamManager extends BasePlayerDataManager {
     // Methods
 
     /**
-     * Returns true if there is space to add the number of avatars to the team.
+     * Returns true if there is space to add the multiple avatars to the team.
      */
-    public boolean canAddAvatarsToTeam(TeamInfo team, int avatars) {
-        return team.size() + avatars <= this.getMaxTeamSize();
-    }
-
-    /**
-     * Returns true if there is space to add to the team.
-     */
-    public boolean canAddAvatarToTeam(TeamInfo team) {
-        return this.canAddAvatarsToTeam(team, 1);
-    }
-
-    /**
-     * Returns true if there is space to add the number of avatars to the current team.
-     * If the current team is temporary, returns false.
-     */
-    public boolean canAddAvatarsToCurrentTeam(int avatars) {
-        if (this.useTemporarilyTeamIndex != -1) {
-            return false;
-        }
-        return this.canAddAvatarsToTeam(this.getCurrentTeamInfo(), avatars);
+    public boolean canAddAvatarsToTeam(@NotNull TeamInfo team, int avatars) {
+        return team.size() + avatars <= getMaxTeamSize();
     }
 
     /**
@@ -198,7 +141,7 @@ public class TeamManager extends BasePlayerDataManager {
      * If the current team is temporary, returns false.
      */
     public boolean canAddAvatarToCurrentTeam() {
-        return this.canAddAvatarsToCurrentTeam(1);
+        return canAddAvatarsToTeam(getCurrentTeamInfo(), 1);
     }
 
     /**
@@ -206,79 +149,29 @@ public class TeamManager extends BasePlayerDataManager {
      * Returns true if all were successfully added.
      * If some can not be added, returns false and does not add any.
      */
-    public boolean addAvatarsToTeam(TeamInfo team, Collection<Avatar> avatars) {
-        if (!this.canAddAvatarsToTeam(team, avatars.size())) {
-            return false;
-        }
+    public void addAvatarToCurrentTeam(Avatar avatar) {
+        if (!canAddAvatarToCurrentTeam()) return;
 
         // Convert avatars into a collection of avatar IDs, then add
-        team.getAvatars().addAll(avatars.stream().map(a -> a.getAvatarId()).toList());
+        getCurrentTeamInfo().getAvatars().add(avatar.getAvatarId());
 
-        // Update team
-        if (this.getPlayer().isInMultiplayer()) {
-            if (team.equals(this.getMpTeam())) {
-                // MP team Packet
-                this.updateTeamEntities(new PacketChangeMpTeamAvatarRsp(this.getPlayer(), team));
-            }
-        } else {
-            // SP team update packet
-            this.getPlayer().sendPacket(new PacketAvatarTeamUpdateNotify(this.getPlayer()));
+        // SP team update packet
+        getPlayer().sendPacket(new PacketAvatarTeamUpdateNotify(getPlayer()));
 
-            int teamId = this.getTeamId(team);
-            if (teamId != -1) {
-                // This is one of the player's teams
-                // Update entites
-                if (teamId == this.getCurrentTeamId()) {
-                    this.updateTeamEntities(new PacketSetUpAvatarTeamRsp(this.getPlayer(), teamId, team));
-                } else {
-                    this.getPlayer().sendPacket(new PacketSetUpAvatarTeamRsp(this.getPlayer(), teamId, team));
-                }
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Try to add an avatar to a team.
-     * Returns true if successful.
-     */
-    public boolean addAvatarToTeam(TeamInfo team, Avatar avatar) {
-        return this.addAvatarsToTeam(team, Collections.singleton(avatar));
-    }
-
-    /**
-     * Try to add the collection of avatars to the current team.
-     * Will not modify a temporary team.
-     * Returns true if all were successfully added.
-     * If some can not be added, returns false and does not add any.
-     */
-    public boolean addAvatarsToCurrentTeam(Collection<Avatar> avatars) {
-        if (this.useTemporarilyTeamIndex != -1) {
-            return false;
-        }
-        return this.addAvatarsToTeam(this.getCurrentTeamInfo(), avatars);
-    }
-
-    /**
-     * Try to add an avatar to the current team.
-     * Will not modify a temporary team.
-     * Returns true if successful.
-     */
-    public boolean addAvatarToCurrentTeam(Avatar avatar) {
-        return this.addAvatarsToCurrentTeam(Collections.singleton(avatar));
+        // Update entities
+        updateTeamEntities(true);
     }
 
     private void updateTeamResonances() {
-        this.getTeamResonances().clear();
-        this.getTeamResonancesConfig().clear();
+        getTeamResonances().clear();
+        getTeamResonancesConfig().clear();
         // Official resonances require a full party
-        if (this.avatars.size() < 4) return;
+        if (getActiveTeam().size() < 4) return;
 
         // TODO: make this actually read from TeamResonanceExcelConfigData.json for the real resonances and conditions
         // Currently we just hardcode these conditions, but this won't work for modded resources or future changes
         var elementCounts = new Object2IntOpenHashMap<ElementType>();
-        this.getActiveTeam().stream()
+        getActiveTeam().stream()
             .map(EntityAvatar::getAvatar).filter(Objects::nonNull)
             .map(Avatar::getSkillDepot).filter(Objects::nonNull)
             .map(AvatarSkillDepotData::getElementType).filter(Objects::nonNull)
@@ -287,21 +180,63 @@ public class TeamManager extends BasePlayerDataManager {
         // Dual element resonances
         elementCounts.object2IntEntrySet().stream()
             .filter(e -> e.getIntValue() >= 2)
-            .map(e -> e.getKey())
+            .map(Map.Entry::getKey)
             .filter(elementType -> elementType.getTeamResonanceId() != 0)
             .forEach(elementType -> {
-                this.teamResonances.add(elementType.getTeamResonanceId());
-                this.teamResonancesConfig.add(elementType.getConfigHash());
+                getTeamResonances().add(elementType.getTeamResonanceId());
+                getTeamResonancesConfig().add(elementType.getConfigHash());
             });
 
         // Four element resonance
         if (elementCounts.size() >= 4) {
-            this.teamResonances.add(ElementType.Default.getTeamResonanceId());
-            this.teamResonancesConfig.add(ElementType.Default.getConfigHash());
+            getTeamResonances().add(ElementType.Default.getTeamResonanceId());
+            getTeamResonancesConfig().add(ElementType.Default.getConfigHash());
         }
     }
 
-    public void updateTeamProperties(){
+    /**
+     * Updates the active team of the player based on the current team information.
+     * Removes any entities that are not in the new team and adds any new entities.
+     * Also updates the selected character index and team properties.
+     */
+     public synchronized void updateTeamEntities(boolean shouldReplace) {
+        // Sanity check - Should never happen
+        if (getCurrentTeamInfo().getAvatars().isEmpty()) return;
+
+        // If current team has changed
+        EntityAvatar currentEntity = getCurrentAvatarEntity();
+        Long2ObjectMap<EntityAvatar> existingAvatars = new Long2ObjectOpenHashMap<>();
+
+        getActiveTeam().forEach(entity -> existingAvatars.put(entity.getAvatar().getGuid(), entity));
+
+        // Clear active team entity list
+        getActiveTeam().clear();
+
+        // Add back entities into team
+         getCurrentTeamInfo().getAvatars().forEach(avatarId -> {
+             val avatarStorage = getPlayer().getAvatars();
+             long avatarGuid = getEntityGuids().getOrDefault(
+                 avatarId, avatarStorage.getAvatarById(avatarId).getGuid());
+
+             getActiveTeam().add(existingAvatars.containsKey(avatarGuid) ?
+                 existingAvatars.remove(avatarGuid) :
+                 new EntityAvatar(getPlayer().getScene(), avatarStorage.getAvatarByGuid(avatarGuid)));
+         });
+
+        // Set new selected character index
+         int prevSelectedIndex;
+         if (getEntityGuids().isEmpty()) {
+             prevSelectedIndex = getPreviousIndex() > 0 ? getPreviousIndex() : getActiveTeam().indexOf(currentEntity);
+         } else {
+             // it means that there is trial avatar and the first of multiple (if any) of them
+             // will be used as index
+             prevSelectedIndex = getCurrentTeamInfo().getAvatars().indexOf(
+                 getEntityGuids().keySet().iterator().next()
+             );
+         }
+
+         setCurrentCharacterIndex(prevSelectedIndex < 0 ? getCurrentCharacterIndex() : prevSelectedIndex);
+
         // Update team resonances
         updateTeamResonances();
 
@@ -310,298 +245,174 @@ public class TeamManager extends BasePlayerDataManager {
 
         // Skill charges packet - Yes, this is official server behavior as of 2.6.0
         getActiveTeam().stream().map(EntityAvatar::getAvatar).forEach(Avatar::sendSkillExtraChargeMap);
-    }
 
-    public void updateTeamEntities(BasePacket responsePacket) {
-        // Sanity check - Should never happen
-        if (this.getCurrentTeamInfo().getAvatars().size() <= 0) {
-            return;
-        }
+        saveAvatars(existingAvatars.values());
 
-        // If current team has changed
-        EntityAvatar currentEntity = this.getCurrentAvatarEntity();
-        Int2ObjectMap<EntityAvatar> existingAvatars = new Int2ObjectOpenHashMap<>();
-        int prevSelectedAvatarIndex = -1;
+        if (getPlayer().getScene() == null) return;
 
-        for (EntityAvatar entity : this.getActiveTeam()) {
-            existingAvatars.put(entity.getAvatar().getAvatarId(), entity);
-        }
-
-        // Clear active team entity list
-        this.getActiveTeam().clear();
-
-        // Add back entities into team
-        for (int i = 0; i < this.getCurrentTeamInfo().getAvatars().size(); i++) {
-            int avatarId = this.getCurrentTeamInfo().getAvatars().get(i);
-            EntityAvatar entity;
-
-            if (existingAvatars.containsKey(avatarId)) {
-                entity = existingAvatars.get(avatarId);
-                existingAvatars.remove(avatarId);
-                if (entity == currentEntity) {
-                    prevSelectedAvatarIndex = i;
-                }
-            } else {
-                entity = new EntityAvatar(this.getPlayer().getScene(), this.getPlayer().getAvatars().getAvatarById(avatarId));
-            }
-
-            this.getActiveTeam().add(entity);
-        }
-
-        // Unload removed entities
-        for (EntityAvatar entity : existingAvatars.values()) {
-            this.getPlayer().getScene().removeEntity(entity);
-            entity.getAvatar().save();
-        }
-
-        // Set new selected character index
-        if (prevSelectedAvatarIndex == -1) {
-            // Previous selected avatar is not in the same spot, we will select the current one in the prev slot
-            prevSelectedAvatarIndex = Math.min(this.currentCharacterIndex, this.getActiveTeam().size() - 1);
-        }
-        this.currentCharacterIndex = prevSelectedAvatarIndex;
-
-        updateTeamProperties();
-
-        // Run callback
-        if (responsePacket != null) {
-            this.getPlayer().sendPacket(responsePacket);
-        }
+        existingAvatars.values().forEach(entity -> getPlayer().getScene().removeEntity(entity));
 
         // Check if character changed
-        if (currentEntity != this.getCurrentAvatarEntity()) {
+        if (currentEntity != getCurrentAvatarEntity() && shouldReplace) {
+            if (currentEntity == null) {
+                getPlayer().getScene().addEntity(getCurrentAvatarEntity());
+                return;
+            }
             // Remove and Add
-            this.getPlayer().getScene().replaceEntity(currentEntity, this.getCurrentAvatarEntity());
+            getPlayer().getScene().replaceEntity(currentEntity, getCurrentAvatarEntity());
         }
     }
 
-    public synchronized void setupAvatarTeam(int teamId, List<Long> list) {
+    public List<Integer> newTeam(@NotNull Collection<Long> guidList) {
+        return guidList.stream()
+            .map(guid -> getPlayer().getAvatars().getAvatarByGuid(guid))
+            .filter(Objects::nonNull)
+            .map(Avatar::getAvatarId).toList();
+    }
+
+    public synchronized boolean setupAvatarTeam(int teamId, @NotNull List<Long> guidList, long guid) {
         // Sanity checks
-        if (list.size() == 0 || list.size() > this.getMaxTeamSize() || this.getPlayer().isInMultiplayer()) {
-            return;
-        }
+        TeamInfo teamInfo = getTeams().get(teamId);
+        if (guidList.isEmpty() || guidList.size() > getMaxTeamSize() || teamInfo == null
+            || !canAddAvatarsToTeam(teamInfo, newTeam(guidList).size())) return false;
 
-        // Get team
-        TeamInfo teamInfo = this.getTeams().get(teamId);
-        if (teamInfo == null) {
-            return;
-        }
-
-        // Set team data
-        LinkedHashSet<Avatar> newTeam = new LinkedHashSet<>();
-        for (Long aLong : list) {
-            Avatar avatar = this.getPlayer().getAvatars().getAvatarByGuid(aLong);
-            if (avatar == null || newTeam.contains(avatar)) {
-                // Should never happen
-                return;
-            }
-            newTeam.add(avatar);
-        }
-
-        // Clear current team info and add avatars from our new team
+        // Set team data and clear current team info and add avatars from our new team
         teamInfo.getAvatars().clear();
-        this.addAvatarsToTeam(teamInfo, newTeam);
+
+        // Convert avatars into a collection of avatar IDs, then add
+        teamInfo.getAvatars().addAll(newTeam(guidList));
+
+        // Update team
+        // SP team update packet
+        getPlayer().sendPacket(new PacketAvatarTeamUpdateNotify(getPlayer()));
+
+        // This is one of the player's teams
+        // Update entities
+        if (teamId == getCurrentTeamId()) {
+            setCurrentCharacterIndex(guidList.indexOf(guid));
+            updateTeamEntities(true);
+        }
+        return true;
     }
 
-    public void setupMpTeam(List<Long> list) {
+    public boolean setupMpTeam(@NotNull List<Long> guidList, long guid) {
         // Sanity checks
-        if (list.size() == 0 || list.size() > this.getMaxTeamSize() || !this.getPlayer().isInMultiplayer()) {
-            return;
-        }
+        TeamInfo teamInfo = getMpTeam();
+        if (guidList.isEmpty() || guidList.size() > getMaxTeamSize() ||
+            !canAddAvatarsToTeam(teamInfo, newTeam(guidList).size())) return false;
 
-        TeamInfo teamInfo = this.getMpTeam();
-
-        // Set team data
-        LinkedHashSet<Avatar> newTeam = new LinkedHashSet<>();
-        for (Long aLong : list) {
-            Avatar avatar = this.getPlayer().getAvatars().getAvatarByGuid(aLong);
-            if (avatar == null || newTeam.contains(avatar)) {
-                // Should never happen
-                return;
-            }
-            newTeam.add(avatar);
-        }
-
-        // Clear current team info and add avatars from our new team
+        // Set team data and clear current team info and add avatars from our new team
         teamInfo.getAvatars().clear();
-        this.addAvatarsToTeam(teamInfo, newTeam);
+
+        // Convert avatars into a collection of avatar IDs, then add
+        teamInfo.getAvatars().addAll(newTeam(guidList));
+        setCurrentCharacterIndex(guidList.indexOf(guid));
+
+        // MP team Packet
+        updateTeamEntities(true);
+        return true;
     }
 
-    public void setupTrialAvatarTeamForQuest() {
+    public synchronized void setupTrialAvatarTeamForQuest() {
+        getTrialAvatarTeam().copyFrom(getCurrentTeamInfo());
+        setupTrialAvatarTeamForActivity();
+    }
+
+    public synchronized void setupTrialAvatarTeamForActivity() {
         setPreviousIndex(getCurrentCharacterIndex());
-        TeamInfo originalTeam = getCurrentTeamInfo();
-        this.useTrialTeam = true;
-        getTrialAvatarTeam().copyFrom(originalTeam);
+        setUseTrialTeam(true);
     }
 
-    public void setupTrialAvatarTeamForActivity() {
-        setPreviousIndex(getCurrentCharacterIndex());
-        getActiveTeam().clear();
-        this.useTrialTeam = true;
-    }
-
-    public void trialAvatarTeamPostUpdate() {
-        trialAvatarTeamPostUpdate(getActiveTeam().size()-1);
-    }
-
-    public void trialAvatarTeamPostUpdate(int newCharacterIndex) {
-        setCurrentCharacterIndex(Math.min(newCharacterIndex, getActiveTeam().size() - 1));
-        updateTeamProperties();
-        if (getPlayer().getScene() != null) {
-            getPlayer().getScene().addEntity(getCurrentAvatarEntity());
-        }
-    }
-
-    public void addAvatarToTrialTeam(Avatar trialAvatar) {
-        getActiveTeam().forEach(x -> getPlayer().getScene().removeEntity(x, VisionType.VISION_TYPE_REMOVE));
-        getActiveTeam().removeIf(x -> x.getAvatar().getAvatarId() == trialAvatar.getAvatarId());
+    public void addAvatarToTrialTeam(TrialAvatar trialAvatar) {
         getCurrentTeamInfo().getAvatars().removeIf(x -> x == trialAvatar.getAvatarId());
-        getActiveTeam().add(new EntityAvatar(getPlayer().getScene(), trialAvatar));
         getCurrentTeamInfo().addAvatar(trialAvatar);
-        getTrialAvatars().put(trialAvatar.getAvatarId(), trialAvatar);
+        getEntityGuids().put(trialAvatar.getAvatarId(), trialAvatar.getGuid());
+        getActiveTeam().add(new EntityAvatar(getPlayer().getScene(), trialAvatar));
     }
 
-    public long getTrialAvatarGuid(int trialAvatarId) {
-        return getTrialAvatars().values().stream()
-            .filter(avatar -> ((TrialAvatar) avatar).getTrialAvatarId() == trialAvatarId)
-            .map(Avatar::getGuid)
-            .findFirst().orElse(0L);
-    }
-
-    public void unsetTrialAvatarTeam() {
-        trialAvatarTeamPostUpdate(getPreviousIndex());
+    public synchronized void removeTrialAvatarTeam() {
+        setUseTrialTeam(false);
+        setTrialAvatarTeam(new TeamInfo());
+        getEntityGuids().clear();
+        updateTeamEntities(true);
         setPreviousIndex(-1);
     }
 
-    public void removeTrialAvatarTeamForQuest(int trialAvatarId) {
-        this.useTrialTeam = false;
-        this.trialAvatarTeam = new TeamInfo();
-        getActiveTeam().forEach(x -> getPlayer().getScene().removeEntity(x, VisionType.VISION_TYPE_REMOVE));
-        getActiveTeam().removeIf(x -> (x.getAvatar() instanceof TrialAvatar) && ((TrialAvatar) x.getAvatar()).getTrialAvatarId() == trialAvatarId);
-        getTrialAvatars().values().removeIf(x -> (x instanceof TrialAvatar) && ((TrialAvatar) x).getTrialAvatarId() == trialAvatarId);
-        int[] indexCounter = new int[]{-1};
-        getCurrentTeamInfo().getAvatars().forEach(avatarId -> {
-            indexCounter[0] += 1;
-            if (getActiveTeam().stream().map(x -> x.getAvatar().getAvatarId()).toList().contains(avatarId)) return;
-            getActiveTeam().add(indexCounter[0], new EntityAvatar(getPlayer().getAvatars().getAvatarById(avatarId)));
-        });
-        unsetTrialAvatarTeam();
-    }
-
-    public void removeTrialAvatarTeamForActivity() {
-        this.useTrialTeam = false;
-        this.trialAvatarTeam = new TeamInfo();
-        getActiveTeam().forEach(x -> getPlayer().getScene().removeEntity(x, VisionType.VISION_TYPE_REMOVE));
-        getActiveTeam().clear();
-        getTrialAvatars().clear();
-        getCurrentTeamInfo().getAvatars().forEach(avatarId -> {
-            getActiveTeam().add(new EntityAvatar(getPlayer().getScene(), getPlayer().getAvatars().getAvatarById(avatarId)));
-        });
-        unsetTrialAvatarTeam();
-    }
-
-    public void setupTemporaryTeam(List<List<Long>> guidList) {
-        this.temporaryTeam = guidList.stream().map(list -> {
-                // Sanity checks
-                if (list.size() == 0 || list.size() > this.getMaxTeamSize()) {
-                    return null;
-                }
-
-                // Set team data
-                LinkedHashSet<Avatar> newTeam = new LinkedHashSet<>();
-                for (Long aLong : list) {
-                    Avatar avatar = this.getPlayer().getAvatars().getAvatarByGuid(aLong);
-                    if (avatar == null || newTeam.contains(avatar)) {
-                        // Should never happen
-                        return null;
-                    }
-                    newTeam.add(avatar);
-                }
-
-                // convert to avatar ids
-                return newTeam.stream()
-                    .map(Avatar::getAvatarId)
-                    .toList();
-            })
+    public void setupTemporaryTeam(@NotNull List<List<Long>> guidListList) {
+        getTemporaryTeam().clear();
+        // Sanity checks
+        // Set team data and convert to avatar ids
+        getTemporaryTeam().addAll(guidListList.stream()
+            .map(guidList -> (guidList.isEmpty() || guidList.size() > getMaxTeamSize()) ?
+                null : newTeam(guidList))
             .filter(Objects::nonNull)
+            .filter(List::isEmpty)
             .map(TeamInfo::new)
-            .toList();
+            .toList());
     }
 
     public void useTemporaryTeam(int index) {
-        this.useTemporarilyTeamIndex = index;
-        this.updateTeamEntities(null);
+        setTemporaryTeamIndex(index);
+        updateTeamEntities(true);
     }
 
     public void cleanTemporaryTeam() {
         // check if using temporary team
-        if (useTemporarilyTeamIndex < 0) {
+        if (getTemporaryTeamIndex() < 0) {
             return;
         }
 
-        this.useTemporarilyTeamIndex = -1;
-        this.temporaryTeam = null;
-        this.updateTeamEntities(null);
+        setTemporaryTeamIndex(-1);
+        getTemporaryTeam().clear();
+        updateTeamEntities(true);
     }
-    public synchronized void setCurrentTeam(int teamId) {
-        //
-        if (this.getPlayer().isInMultiplayer()) {
-            return;
-        }
 
+    public synchronized boolean setCurrentTeam(int teamId) {
         // Get team
-        TeamInfo teamInfo = this.getTeams().get(teamId);
-        if (teamInfo == null || teamInfo.getAvatars().size() == 0) {
-            return;
+        TeamInfo teamInfo = getTeams().get(teamId);
+        if (getPlayer().isInMultiplayer() || teamInfo == null || teamInfo.getAvatars().isEmpty()) {
+            return false;
         }
 
         // Set
-        this.setCurrentTeamId(teamId);
-        this.updateTeamEntities(new PacketChooseCurAvatarTeamRsp(teamId));
+        setCurrentTeamId(teamId);
+        updateTeamEntities(true);
+        return true;
     }
 
-    public synchronized void setTeamName(int teamId, String teamName) {
+    public synchronized boolean setTeamName(int teamId, String teamName) {
         // Get team
-        TeamInfo teamInfo = this.getTeams().get(teamId);
-        if (teamInfo == null) {
-            return;
-        }
+        TeamInfo teamInfo = getTeams().get(teamId);
+        if (teamInfo == null) return false;
 
         teamInfo.setName(teamName);
-
-        // Packet
-        this.getPlayer().sendPacket(new PacketChangeTeamNameRsp(teamId, teamName));
+        return true;
     }
 
-    public synchronized void changeAvatar(long guid) {
-        EntityAvatar oldEntity = this.getCurrentAvatarEntity();
+    public synchronized int changeAvatar(long guid) {
+        // TODO replace resulting retcode with appropriate ones
+        EntityAvatar oldEntity = getCurrentAvatarEntity();
 
-        if (guid == oldEntity.getAvatar().getGuid()) {
-            return;
-        }
+        if (guid == oldEntity.getAvatar().getGuid()) return Retcode.RET_FAIL_VALUE;
 
-        EntityAvatar newEntity = null;
-        int index = -1;
-        for (int i = 0; i < this.getActiveTeam().size(); i++) {
-            if (guid == this.getActiveTeam().get(i).getAvatar().getGuid()) {
-                index = i;
-                newEntity = this.getActiveTeam().get(i);
-            }
-        }
+        int index = IntStream.range(0, getActiveTeam().size())
+            .filter(i -> guid == getActiveTeam().get(i).getAvatar().getGuid())
+            .findFirst()
+            .orElse(-1);
 
-        if (index < 0 || newEntity == oldEntity) {
-            return;
-        }
+        EntityAvatar newEntity = (index == -1) ? null : getActiveTeam().get(index);
+
+        if (index < 0 || newEntity == oldEntity) return Retcode.RET_FAIL_VALUE;
 
         // Set index
-        this.setCurrentCharacterIndex(index);
+        setCurrentCharacterIndex(index);
 
         // Old entity motion state
         oldEntity.setMotionState(MotionState.MOTION_STATE_STANDBY);
 
         // Remove and Add
-        this.getPlayer().getScene().replaceEntity(oldEntity, newEntity);
-        this.getPlayer().sendPacket(new PacketChangeAvatarRsp(guid));
+        getPlayer().getScene().replaceEntity(oldEntity, newEntity);
+        return Retcode.RET_SUCC_VALUE;
     }
 
     public void onAvatarDieDamage(){
@@ -612,11 +423,9 @@ public class TeamManager extends BasePlayerDataManager {
     }
 
     public void onAvatarDie(long dieGuid) {
-        EntityAvatar deadAvatar = this.getCurrentAvatarEntity();
+        EntityAvatar deadAvatar = getCurrentAvatarEntity();
 
-        if (deadAvatar.isAlive() || deadAvatar.getId() != dieGuid) {
-            return;
-        }
+        if (deadAvatar.isAlive() || deadAvatar.getId() != dieGuid) return;
 
         PlayerDieType dieType = deadAvatar.getKilledType();
         int killedBy = deadAvatar.getKilledBy();
@@ -625,77 +434,67 @@ public class TeamManager extends BasePlayerDataManager {
             // Died in water. Do not replace
             // The official server has skipped this notify and will just respawn the team immediately after the animation.
             // TODO: Perhaps find a way to get vanilla experience?
-            this.getPlayer().sendPacket(new PacketWorldPlayerDieNotify(dieType, killedBy));
-        } else {
-            // Replacement avatar
-            EntityAvatar replacement = null;
-            int replaceIndex = -1;
-
-            for (int i = 0; i < this.getActiveTeam().size(); i++) {
-                EntityAvatar entity = this.getActiveTeam().get(i);
-                if (entity.isAlive()) {
-                    replaceIndex = i;
-                    replacement = entity;
-                    break;
-                }
-            }
-
-            if (replacement == null) {
-                // No more living team members...
-                this.getPlayer().sendPacket(new PacketWorldPlayerDieNotify(dieType, killedBy));
-                // Invoke player team death event.
-                PlayerTeamDeathEvent event = new PlayerTeamDeathEvent(this.getPlayer(),
-                    this.getActiveTeam().get(this.getCurrentCharacterIndex()));
-                event.call();
-            } else {
-                // Set index and spawn replacement member
-                this.setCurrentCharacterIndex(replaceIndex);
-                this.getPlayer().getScene().addEntity(replacement);
-            }
+            getPlayer().sendPacket(new PacketWorldPlayerDieNotify(dieType, killedBy));
+            return;
         }
 
-        // Response packet
-        this.getPlayer().sendPacket(new PacketAvatarDieAnimationEndRsp(deadAvatar.getId(), 0));
+        // Replacement avatar
+        int replaceIndex = IntStream.range(0, getActiveTeam().size())
+            .filter(i -> getActiveTeam().get(i).isAlive())
+            .findFirst()
+            .orElse(-1);
+
+        EntityAvatar replacement = (replaceIndex != -1) ? getActiveTeam().get(replaceIndex) : null;
+
+        if (replacement == null) {
+            // No more living team members...
+            getPlayer().sendPacket(new PacketWorldPlayerDieNotify(dieType, killedBy));
+            // Invoke player team death event.
+            PlayerTeamDeathEvent event = new PlayerTeamDeathEvent(getPlayer(),
+                getActiveTeam().get(getCurrentCharacterIndex()));
+            event.call();
+            return;
+        }
+        // Set index and spawn replacement member
+        setCurrentCharacterIndex(replaceIndex);
+        getPlayer().getScene().addEntity(replacement);
     }
 
     public boolean reviveAvatar(Avatar avatar) {
-        for (EntityAvatar entity : this.getActiveTeam()) {
-            if (entity.getAvatar() == avatar) {
-                if (entity.isAlive()) {
-                    return false;
-                }
+        val entityAvatar = getActiveTeam().stream()
+            .filter(entity -> entity.getAvatar() == avatar && !entity.isAlive()).findFirst();
 
-                entity.setFightProperty(FightProperty.FIGHT_PROP_CUR_HP, 1f);
-                this.getPlayer().sendPacket(new PacketAvatarFightPropUpdateNotify(entity.getAvatar(), FightProperty.FIGHT_PROP_CUR_HP));
-                this.getPlayer().sendPacket(new PacketAvatarLifeStateChangeNotify(entity.getAvatar()));
-                return true;
-            }
+        if (entityAvatar.isPresent()) {
+            EntityAvatar entity = entityAvatar.get();
+            FightProperty curHpProp = FightProperty.FIGHT_PROP_CUR_HP;
+            entity.setFightProperty(curHpProp, 1f);
+            getPlayer().sendPacket(new PacketAvatarFightPropUpdateNotify(entity.getAvatar(), curHpProp));
+            getPlayer().sendPacket(new PacketAvatarLifeStateChangeNotify(entity.getAvatar()));
+            return true;
         }
 
         return false;
     }
 
     public boolean healAvatar(Avatar avatar, int healRate, int healAmount) {
-        for (EntityAvatar entity : this.getActiveTeam()) {
-            if (entity.getAvatar() == avatar) {
-                if (!entity.isAlive()) {
-                    return false;
-                }
+        val entityAvatar = getActiveTeam().stream()
+            .filter(entity -> entity.getAvatar() == avatar && entity.isAlive()).findFirst();
 
-                entity.setFightProperty(
-                    FightProperty.FIGHT_PROP_CUR_HP,
-                    (float) Math.min(
-                        (entity.getFightProperty(FightProperty.FIGHT_PROP_CUR_HP) +
-                            entity.getFightProperty(FightProperty.FIGHT_PROP_MAX_HP) * (float) healRate / 100.0 +
-                            (float) healAmount / 100.0),
-                        entity.getFightProperty(FightProperty.FIGHT_PROP_MAX_HP)
-                    )
-                );
-                this.getPlayer().sendPacket(new PacketAvatarFightPropUpdateNotify(entity.getAvatar(), FightProperty.FIGHT_PROP_CUR_HP));
-                this.getPlayer().sendPacket(new PacketAvatarLifeStateChangeNotify(entity.getAvatar()));
-                return true;
-            }
+        if (entityAvatar.isPresent()) {
+            EntityAvatar entity = entityAvatar.get();
+            FightProperty curHpProp = FightProperty.FIGHT_PROP_CUR_HP;
+            float currentHp = entity.getFightProperty(curHpProp);
+            float maxHp = entity.getFightProperty(FightProperty.FIGHT_PROP_MAX_HP);
+            float finalHp = (float) Math.min((
+                currentHp + maxHp * (float) healRate / 100.0 + (float) healAmount / 100.0),
+                maxHp);
+
+            entity.setFightProperty(curHpProp, finalHp);
+            getPlayer().sendPacket(new PacketAvatarFightPropUpdateNotify(entity.getAvatar(), curHpProp));
+            getPlayer().sendPacket(new PacketAvatarLifeStateChangeNotify(entity.getAvatar()));
+            return true;
         }
+
         return false;
     }
 
@@ -707,88 +506,69 @@ public class TeamManager extends BasePlayerDataManager {
         //		     return;
         //		}
         //	}
-        player.getStaminaManager().stopSustainedStaminaHandler(); // prevent drowning immediately after respawn
+        getPlayer().getStaminaManager().stopSustainedStaminaHandler(); // prevent drowning immediately after respawn
 
         // Revive all team members
-        for (EntityAvatar entity : this.getActiveTeam()) {
-            entity.setFightProperty(
-                FightProperty.FIGHT_PROP_CUR_HP,
-                entity.getFightProperty(FightProperty.FIGHT_PROP_MAX_HP) * .4f
-            );
-            this.getPlayer().sendPacket(new PacketAvatarFightPropUpdateNotify(entity.getAvatar(), FightProperty.FIGHT_PROP_CUR_HP));
-            this.getPlayer().sendPacket(new PacketAvatarLifeStateChangeNotify(entity.getAvatar()));
-        }
+        FightProperty curHpProp = FightProperty.FIGHT_PROP_CUR_HP;
+        getActiveTeam().forEach(entity -> {
+            float maxHp = entity.getFightProperty(FightProperty.FIGHT_PROP_MAX_HP);
+            entity.setFightProperty(curHpProp,maxHp * .4f);
+            getPlayer().sendPacket(new PacketAvatarFightPropUpdateNotify(entity.getAvatar(), curHpProp));
+            getPlayer().sendPacket(new PacketAvatarLifeStateChangeNotify(entity.getAvatar()));
+        });
 
         // Teleport player and set player position
-        try {
-            this.getPlayer().sendPacket(new PacketPlayerEnterSceneNotify(this.getPlayer(), EnterType.ENTER_TYPE_SELF, EnterReason.Revival, player.getSceneId(), getRespawnPosition()));
-            player.getPosition().set(getRespawnPosition());
-        }catch (Exception e) {
-            this.getPlayer().sendPacket(new PacketPlayerEnterSceneNotify(this.getPlayer(), EnterType.ENTER_TYPE_SELF, EnterReason.Revival, 3, GameConstants.START_POSITION));
-            player.getPosition().set(GameConstants.START_POSITION);  // If something goes wrong, the resurrection is here
-        }
-
-        // Packets
-        this.getPlayer().sendPacket(new BasePacket(PacketOpcodes.WorldPlayerReviveRsp));
+        Position respawnPos = getRespawnPosition();
+        getPlayer().sendPacket(new PacketPlayerEnterSceneNotify(
+            getPlayer(),
+            EnterType.ENTER_TYPE_SELF,
+            EnterReason.Revival,
+            respawnPos == GameConstants.START_POSITION ? 3 : player.getSceneId(),
+            respawnPos));
+        getPlayer().getPosition().set(respawnPos);
     }
+
     public Position getRespawnPosition() {
-        var deathPos = this.getPlayer().getPosition();
-        int sceneId = this.getPlayer().getSceneId();
+        int sceneId = getPlayer().getSceneId();
 
         // Get the closest trans point to where the player died.
-        var respawnPoint = this.getPlayer().getUnlockedScenePoints(sceneId).stream()
+        return getPlayer().getUnlockedScenePoints(sceneId).stream()
             .map(pointId -> GameData.getScenePointEntryById(sceneId, pointId))
             .filter(point -> point.getPointData().getType().equals("SceneTransPoint"))
-            .min((Comparator.comparingDouble(pos -> Utils.getDist(pos.getPointData().getTranPos(), deathPos))));
-
-        return respawnPoint.get().getPointData().getTranPos();
+            .min(Comparator.comparingDouble(pos ->
+                Utils.getDist(pos.getPointData().getTranPos(),
+                getPlayer().getPosition())))
+            .map(scenePointEntry -> scenePointEntry.getPointData().getTranPos())
+            .orElse(GameConstants.START_POSITION);
     }
     public void saveAvatars() {
         // Save all avatars from active team
-        for (EntityAvatar entity : this.getActiveTeam()) {
-            entity.getAvatar().save();
-        }
+        saveAvatars(getActiveTeam());
+    }
+    public void saveAvatars(@NotNull Collection<EntityAvatar> activeTeam) {
+        activeTeam.forEach(entity -> entity.getAvatar().save());
     }
 
     public void onPlayerLogin() {  // Hack for now to fix resonances on login
-        this.updateTeamResonances();
+        updateTeamResonances();
     }
 
-    public synchronized void addNewCustomTeam() {
+    public synchronized boolean addNewCustomTeam() {
         // Sanity check - max number of teams.
-        if (this.teams.size() == GameConstants.MAX_TEAMS) {
-            player.sendPacket(new PacketAddCustomTeamRsp(Retcode.RET_FAIL));
-            return;
-        }
+        if (getTeams().size() == GameConstants.MAX_TEAMS) return false;
 
         // The id of the new custom team is the lowest id in [5,MAX_TEAMS] that is not yet taken.
-        int id = -1;
-        for (int i = 5; i <= GameConstants.MAX_TEAMS; i++) {
-            if (!this.teams.keySet().contains(i)) {
-                id = i;
-                break;
-            }
-        }
-
         // Create the new team.
-        this.teams.put(id, new TeamInfo());
+        getTeams().put(IntStream.rangeClosed(5, GameConstants.MAX_TEAMS)
+            .filter(i -> !getTeams().containsKey(i))
+            .findFirst()
+            .orElse(-1), new TeamInfo());
 
-        // Send packets.
-        player.sendPacket(new PacketCustomTeamListNotify(player));
-        player.sendPacket(new PacketAddCustomTeamRsp());
+        return true;
     }
 
-    public synchronized void removeCustomTeam(int id) {
-        // Check if the target id exists.
-        if (!this.teams.containsKey(id)) {
-            player.sendPacket(new PacketRemoveCustomTeamRsp(Retcode.RET_FAIL, id));
-        }
-
+    public synchronized boolean removeCustomTeam(int id) {
         // Remove team.
-        this.teams.remove(id);
-
-        // Send packets.
-        player.sendPacket(new PacketCustomTeamListNotify(player));
-        player.sendPacket(new PacketRemoveCustomTeamRsp(id));
+        return getTeams().remove(id) != null;
     }
 }

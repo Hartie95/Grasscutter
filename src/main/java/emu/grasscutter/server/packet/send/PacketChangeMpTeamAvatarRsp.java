@@ -6,18 +6,31 @@ import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.packet.PacketOpcodes;
 import emu.grasscutter.net.proto.ChangeMpTeamAvatarRspOuterClass.ChangeMpTeamAvatarRsp;
 
+import java.util.List;
+
 public class PacketChangeMpTeamAvatarRsp extends BasePacket {
-	
+
 	public PacketChangeMpTeamAvatarRsp(Player player, TeamInfo teamInfo) {
 		super(PacketOpcodes.ChangeMpTeamAvatarRsp);
-		
+
 		ChangeMpTeamAvatarRsp.Builder proto = ChangeMpTeamAvatarRsp.newBuilder()
 				.setCurAvatarGuid(player.getTeamManager().getCurrentCharacterGuid());
-		
+
 		for (int avatarId : teamInfo.getAvatars()) {
 			proto.addAvatarGuidList(player.getAvatars().getAvatarById(avatarId).getGuid());
 		}
-		
+
 		this.setData(proto);
 	}
+
+    public PacketChangeMpTeamAvatarRsp(int retVal, List<Long> guidList, long guid) {
+        super(PacketOpcodes.ChangeMpTeamAvatarRsp);
+
+        ChangeMpTeamAvatarRsp.Builder proto = ChangeMpTeamAvatarRsp.newBuilder()
+            .setCurAvatarGuid(guid)
+            .addAllAvatarGuidList(guidList)
+            .setRetcode(retVal);
+
+        this.setData(proto);
+    }
 }

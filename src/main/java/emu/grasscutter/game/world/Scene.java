@@ -40,6 +40,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
@@ -197,7 +198,8 @@ public class Scene {
         player.setScene(null);
 
         // Remove player avatars
-        this.removePlayerAvatars(player);
+        // (Don't have to do this because setupPlayerAvatars will handle it in the new scene)
+         this.removePlayerAvatars(player);
 
         // Remove player gadgets
         for (EntityBaseGadget gadget : player.getTeamManager().getGadgets()) {
@@ -212,34 +214,16 @@ public class Scene {
         this.saveGroups();
     }
 
-    private void setupPlayerAvatars(Player player) {
+    private void setupPlayerAvatars(@NotNull Player player) {
         // Clear entities from old team
         player.getTeamManager().getActiveTeam().clear();
-
-        // Add new entities for player
-        TeamInfo teamInfo = player.getTeamManager().getCurrentTeamInfo();
-        for (int avatarId : teamInfo.getAvatars()) {
-            Avatar avatar = player.getAvatars().getAvatarById(avatarId);
-            if (avatar == null) {
-                if (player.getTeamManager().isUseTrialTeam()) {
-                    avatar = player.getTeamManager().getTrialAvatars().get(avatarId);
-                }
-                if (avatar == null) continue;
-            }
-            player.getTeamManager().getActiveTeam().add(new EntityAvatar(player.getScene(), avatar));
-        }
-
-        // Limit character index in case its out of bounds
-        if (player.getTeamManager().getCurrentCharacterIndex() >= player.getTeamManager().getActiveTeam().size() || player.getTeamManager().getCurrentCharacterIndex() < 0) {
-            player.getTeamManager().setCurrentCharacterIndex(player.getTeamManager().getCurrentCharacterIndex() - 1);
-        }
+        player.getTeamManager().updateTeamEntities(false);
     }
 
     private synchronized void removePlayerAvatars(Player player) {
-        var team = player.getTeamManager().getActiveTeam();
-        // removeEntities(team, VisionType.VISION_TYPE_REMOVE);  // List<SubType> isn't cool apparently :(
-        team.forEach(e -> removeEntity(e, VisionType.VISION_TYPE_REMOVE));
-        team.clear();
+        // TODO This can be a problem where trial avatar is removed when finishing dungeon
+        // the character will get stuck, this statement somehow goes before removing trial avatar for quest
+        removeEntities(player.getTeamManager().getActiveTeam(), VisionType.VISION_TYPE_REMOVE);
     }
 
     public void spawnPlayer(Player player) {
@@ -321,9 +305,9 @@ public class Scene {
         }
     }
 
-    public synchronized void removeEntities(List<GameEntity> entity, VisionType visionType) {
+    public synchronized void removeEntities(List<? extends GameEntity> entity, VisionType visionType) {
         var toRemove = entity.stream()
-            .filter(e -> e != null)
+            .filter(Objects::nonNull)
             .map(this::removeEntityDirectly)
             .filter(Objects::nonNull)
             .toList();

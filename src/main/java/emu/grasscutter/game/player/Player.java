@@ -82,6 +82,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.DayOfWeek;
 import java.time.Instant;
@@ -857,7 +858,10 @@ public class Player {
         TrialAvatar trialAvatar = new TrialAvatar(trialAvatarBasicParam, trialAvatarId, reason, questMainId);
         if (trialAvatar.getAvatarData() == null || !hasSentLoginPackets()) return false;
 
-        trialAvatar.setOwner(this);
+        // add trial avatar to storage
+        boolean result = this.getAvatars().addAvatar(trialAvatar);
+        if (!result) return false;
+
         trialAvatar.equipTrialItems();
         // Recalc stats
         trialAvatar.recalcStats();
@@ -869,32 +873,45 @@ public class Player {
         return true;
     }
 
-    public boolean addTrialAvatarForQuest(int trialAvatarId, int questMainId) {
+    public synchronized boolean addTrialAvatarForQuest(int trialAvatarId, int questMainId) {
         getTeamManager().setupTrialAvatarTeamForQuest();
         if (!addTrialAvatar(
             trialAvatarId,
             GrantReason.GRANT_REASON_BY_QUEST,
             questMainId)) return false;
-        getTeamManager().trialAvatarTeamPostUpdate();
-        // Packet, mimic official server behaviour, neccessary to stop player from modifying team
+        getTeamManager().updateTeamEntities(true);
+        // Packet, mimic official server behaviour, necessary to stop player from modifying team
         sendPacket(new PacketAvatarTeamUpdateNotify(this));
         return true;
     }
 
-    public void addTrialAvatarsForActivity(List<Integer> trialAvatarIds) {
+    public void addTrialAvatarsForActivity(@NotNull List<Integer> trialAvatarIds) {
         getTeamManager().setupTrialAvatarTeamForActivity();
         trialAvatarIds.forEach(trialAvatarId -> addTrialAvatar(
             trialAvatarId,
             GrantReason.GRANT_REASON_BY_TRIAL_AVATAR_ACTIVITY,
             0));
-        getTeamManager().trialAvatarTeamPostUpdate(0);
+        getTeamManager().updateTeamEntities(true);
     }
 
     public boolean removeTrialAvatarForQuest(int trialAvatarId) {
         if (!getTeamManager().isUseTrialTeam()) return false;
 
-        sendPacket(new PacketAvatarDelNotify(List.of(getTeamManager().getTrialAvatarGuid(trialAvatarId))));
-        getTeamManager().removeTrialAvatarTeamForQuest(trialAvatarId);
+        List<Integer> trialAvatarBasicParam = getTrialAvatarParam(trialAvatarId);
+        if (trialAvatarBasicParam.isEmpty()) return false;
+
+        long trialAvatarGuid = getTeamManager().getEntityGuids().get(trialAvatarBasicParam.get(0));
+
+        // send remove packets
+        sendPacket(new PacketAvatarDelNotify(List.of(trialAvatarGuid)));
+
+        // remove trial avatar from storage
+        this.getAvatars().removeAvatarByGuid(trialAvatarGuid);
+
+        // remove trial avatar entities
+        getTeamManager().removeTrialAvatarTeam();
+
+        // allows player to modify team again
         sendPacket(new PacketAvatarTeamUpdateNotify());
         return true;
     }
@@ -902,9 +919,15 @@ public class Player {
     public void removeTrialAvatarForActivity() {
         if (!getTeamManager().isUseTrialTeam()) return;
 
+        // send remove packets
         sendPacket(new PacketAvatarDelNotify(getTeamManager().getActiveTeam().stream()
             .map(x -> x.getAvatar().getGuid()).toList()));
-        getTeamManager().removeTrialAvatarTeamForActivity();
+
+        // remove trial avatar from storage
+        getTeamManager().getEntityGuids().values().forEach(guid -> this.getAvatars().removeAvatarByGuid(guid));
+
+        // remove trial avatar entities
+        getTeamManager().removeTrialAvatarTeam();
     }
 
     public void addFlycloak(int flycloakId) {

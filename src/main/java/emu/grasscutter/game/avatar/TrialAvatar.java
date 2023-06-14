@@ -16,6 +16,7 @@ import emu.grasscutter.server.packet.send.PacketAvatarEquipChangeNotify;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,7 +32,7 @@ public class TrialAvatar extends Avatar{
     // 1 = normal, 2 = trial avatar
     @Getter private final int avatarType = 2;
 
-    public TrialAvatar(List<Integer> trialAvatarParam, int trialAvatarId, GrantReason grantReason, int fromParentQuestId) {
+    public TrialAvatar(@NotNull List<Integer> trialAvatarParam, int trialAvatarId, @NotNull GrantReason grantReason, int fromParentQuestId) {
         super(trialAvatarParam.get(0));
         this.setLevel(trialAvatarParam.get(1));
         this.setPromoteLevel(getMinPromoteLevel(trialAvatarParam.get(1)));
@@ -113,7 +114,7 @@ public class TrialAvatar extends Avatar{
 
         // add Trial Artifacts
         getTrialReliquary().forEach(id -> {
-            TrialReliquaryData reliquaryData = GameData.getTrialReliquaryDataMap().get(id);
+            TrialReliquaryData reliquaryData = GameData.getTrialReliquaryDataMap().get(id.intValue());
             if (reliquaryData == null) return;
 
             GameItem relic = new GameItem(reliquaryData.getReliquaryId());
@@ -163,10 +164,5 @@ public class TrialAvatar extends Avatar{
         return super.protoBuilder()
             .setAvatarType(getAvatarType())
             .setTrialAvatarInfo(this.trialAvatarInfoProto());
-    }
-
-    @Override
-    public void save() {
-        // Don't need to save any of the trial avatar
     }
 }

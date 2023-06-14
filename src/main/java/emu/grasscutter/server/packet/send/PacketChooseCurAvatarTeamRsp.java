@@ -5,14 +5,15 @@ import emu.grasscutter.net.packet.PacketOpcodes;
 import emu.grasscutter.net.proto.ChooseCurAvatarTeamRspOuterClass.ChooseCurAvatarTeamRsp;
 
 public class PacketChooseCurAvatarTeamRsp extends BasePacket {
-	
-	public PacketChooseCurAvatarTeamRsp(int teamId) {
+
+	public PacketChooseCurAvatarTeamRsp(int retVal, int teamId) {
 		super(PacketOpcodes.ChooseCurAvatarTeamRsp);
 
 		ChooseCurAvatarTeamRsp proto = ChooseCurAvatarTeamRsp.newBuilder()
-				.setCurTeamId(teamId)
-				.build();
-		
+            .setCurTeamId(teamId)
+            .setRetcode(retVal)
+            .build();
+
 		this.setData(proto);
 	}
 }

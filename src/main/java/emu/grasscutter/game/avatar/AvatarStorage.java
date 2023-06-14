@@ -17,10 +17,11 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import lombok.Getter;
 
 public class AvatarStorage extends BasePlayerManager implements Iterable<Avatar> {
     private final Int2ObjectMap<Avatar> avatars;
-    private final Long2ObjectMap<Avatar> avatarsGuid;
+    @Getter private final Long2ObjectMap<Avatar> avatarsGuid;
 
     public AvatarStorage(Player player) {
         super(player);
@@ -49,7 +50,12 @@ public class AvatarStorage extends BasePlayerManager implements Iterable<Avatar>
     }
 
     public boolean addAvatar(Avatar avatar) {
-        if (avatar.getAvatarData() == null || this.hasAvatar(avatar.getAvatarId())) {
+        // Only both avatar id and guid existed would not pass the key
+        // i.e. both id and guid existed = normal character in bag
+        // id existed but not guid (before adding) = trial avatars
+        if (avatar.getAvatarData() == null ||
+            (this.hasAvatar(avatar.getAvatarId())
+            && this.getAvatarsGuid().containsKey(avatar.getGuid()))) {
             return false;
         }
 
@@ -57,11 +63,24 @@ public class AvatarStorage extends BasePlayerManager implements Iterable<Avatar>
         avatar.setOwner(getPlayer());
 
         // Put into maps
-        this.avatars.put(avatar.getAvatarId(), avatar);
+        if (!(avatar instanceof TrialAvatar)) {
+            // Don't need to replace with new avatar using
+            // avatar id if it is trial avatars
+            this.avatars.put(avatar.getAvatarId(), avatar);
+        }
         this.avatarsGuid.put(avatar.getGuid(), avatar);
 
         avatar.save();
 
+        return true;
+    }
+
+    public boolean removeAvatarByGuid(long guid) {
+        // the only ones removable are trial avatars, which only guid are used in adding
+        if (this.getAvatarsGuid().containsKey(guid)) {
+            return false;
+        }
+        this.avatarsGuid.remove(guid);
         return true;
     }
 
