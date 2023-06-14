@@ -829,6 +829,7 @@ public class Avatar {
     }
 
     public void save() {
+        if (this instanceof TrialAvatar) return;
         DatabaseHelper.saveAvatar(this);
     }
 
