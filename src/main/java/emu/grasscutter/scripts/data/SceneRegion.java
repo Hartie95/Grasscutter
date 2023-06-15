@@ -4,24 +4,25 @@ import emu.grasscutter.scripts.constants.ScriptRegionShape;
 import emu.grasscutter.utils.Position;
 import lombok.Setter;
 
+import java.util.List;
+
 
 @Setter
-public class SceneRegion {
-    public int config_id;
+public class SceneRegion extends SceneObject{
     public int shape;
-    public Position pos;
     // for CUBIC
     public Position size;
     // for SPHERE
     public int radius;
+    public float height;
+    public List<Position> point_array;
 
-    public transient SceneGroup group;
     public boolean contains(Position position) {
         switch (shape) {
             case ScriptRegionShape.CUBIC:
-                return (Math.abs(pos.getX() - position.getX()) <= size.getX()) &&
-                       (Math.abs(pos.getY() - position.getY()) <= size.getY()) &&
-                       (Math.abs(pos.getZ() - position.getZ()) <= size.getZ());
+                return (Math.abs(pos.getX() - position.getX()) <= size.getX()/2f) &&
+                       (Math.abs(pos.getY() - position.getY()) <= size.getY()/2f) &&
+                       (Math.abs(pos.getZ() - position.getZ()) <= size.getZ()/2f);
             case ScriptRegionShape.SPHERE:
                 var x = Math.pow(pos.getX() - position.getX(), 2);
                 var y = Math.pow(pos.getY() - position.getY(), 2);

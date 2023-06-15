@@ -14,6 +14,7 @@ import emu.grasscutter.utils.Crypto;
 import emu.grasscutter.utils.Utils;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import lombok.val;
 
 import javax.crypto.Cipher;
 import java.io.ByteArrayOutputStream;
@@ -30,7 +31,7 @@ import static emu.grasscutter.net.proto.QueryRegionListHttpRspOuterClass.QueryRe
  */
 public final class RegionHandler implements Router {
     private static final Map<String, RegionData> regions = new ConcurrentHashMap<>();
-    private static String regionListResponse;
+    private static final Map<RegionType, String> regionListResponses = new EnumMap<>(RegionType.class);
 
     public RegionHandler() {
         try { // Read & initialize region data.
@@ -38,6 +39,11 @@ public final class RegionHandler implements Router {
         } catch (Exception exception) {
             Grasscutter.getLogger().error("Failed to initialize region data.", exception);
         }
+    }
+
+    enum RegionType {
+        OS,
+        CN
     }
 
     /**
@@ -88,33 +94,64 @@ public final class RegionHandler implements Router {
         byte[] customConfig = "{\"sdkenv\":\"2\",\"checkdevice\":\"false\",\"loadPatch\":\"false\",\"showexception\":\"false\",\"regionConfig\":\"pm|fk|add\",\"downloadMode\":\"0\",\"debugmenu\":\"true\",\"debuglog\":\"true\"}".getBytes();
         Crypto.xor(customConfig, Crypto.DISPATCH_KEY); // XOR the config with the key.
 
+        byte[] customConfigCn = "{\"sdkenv\":\"2\",\"checkdevice\":\"false\",\"loadPatch\":\"false\",\"showexception\":\"false\",\"regionConfig\":\"pm|fk|add\",\"downloadMode\":\"0\",\"debugmenu\":\"true\",\"debuglog\":\"true\"}".getBytes();
+        Crypto.xor(customConfigCn, Crypto.DISPATCH_KEY); // XOR the config with the key.
+
         // Create an updated region list.
-        QueryRegionListHttpRsp updatedRegionList = QueryRegionListHttpRsp.newBuilder()
+        val updatedRegionList = QueryRegionListHttpRsp.newBuilder()
                 .addAllRegionList(servers)
                 .setClientSecretKey(ByteString.copyFrom(Crypto.DISPATCH_SEED))
                 .setClientCustomConfigEncrypted(ByteString.copyFrom(customConfig))
-                .setEnableLoginPc(true).build();
+                .setEnableLoginPc(true);
 
         // Set the region list response.
-        regionListResponse = Utils.base64Encode(updatedRegionList.toByteString().toByteArray());
+        regionListResponses.put(RegionType.OS, Utils.base64Encode(updatedRegionList.build().toByteString().toByteArray()));
+
+        updatedRegionList.setClientCustomConfigEncrypted(ByteString.copyFrom(customConfigCn));
+        regionListResponses.put(RegionType.CN, Utils.base64Encode(updatedRegionList.build().toByteString().toByteArray()));
     }
 
     @Override public void applyRoutes(Javalin javalin) {
         javalin.get("/query_region_list", RegionHandler::queryRegionList);
-        javalin.get("/query_cur_region/{region}", RegionHandler::queryCurrentRegion );
+        javalin.get("/query_cur_region/{region}", RegionHandler::queryCurrentRegion);
     }
+
+    private static final String VERSION_KEY = "version";
+    private static final String PLATFORM_KEY = "platform";
 
     /**
      * @route /query_region_list
      */
     private static void queryRegionList(Context ctx) {
+
+        // use OS as default fallback
+        RegionType targetRegion = RegionType.OS;
+
+        // Respond with event result.
+        if (ctx.queryParamMap().containsKey(VERSION_KEY) && ctx.queryParamMap().containsKey(PLATFORM_KEY)) {
+            String versionName = ctx.queryParam(VERSION_KEY);
+            String versionCode = versionName!=null ?  versionName.replaceAll("[/.0-9]*", "") : "";
+            String platformName = ctx.queryParam(PLATFORM_KEY);
+
+            // Determine the region list to use based on the version and platform.
+            if ("CNRELiOS".equals(versionCode) || "CNRELWin".equals(versionCode)
+                || "CNRELAndroid".equals(versionCode)) {
+                targetRegion = RegionType.CN;
+            } else if ("OSRELiOS".equals(versionCode) || "OSRELWin".equals(versionCode)
+                || "OSRELAndroid".equals(versionCode)) {
+                // Use the OS region list.
+                targetRegion = RegionType.OS;
+            }
+        }
+
         // Invoke event.
-        QueryAllRegionsEvent event = new QueryAllRegionsEvent(regionListResponse); event.call();
+        QueryAllRegionsEvent event = new QueryAllRegionsEvent(regionListResponses.get(targetRegion));
+        event.call();
         // Respond with event result.
         ctx.result(event.getRegionList());
 
         // Log to console.
-        Grasscutter.getLogger().info(String.format("[Dispatch] Client %s request: query_region_list", ctx.ip()));
+        Grasscutter.getLogger().info("[Dispatch] Client {} request: query_region_list for region {}", ctx.ip(), targetRegion.name());
     }
 
     /**

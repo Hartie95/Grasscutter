@@ -155,11 +155,10 @@ public final class QuestCommand implements CommandHandler {
         return targetPlayer.getQuestManager().startMainQuest(mainQuestId);
     }
     private boolean finishSubQuest(Player targetPlayer, int questId){
-        GameQuest quest = targetPlayer.getQuestManager().addQuest(questId);
-        return quest != null;
+        return targetPlayer.getQuestManager().finishQuest(questId, true);
     }
     private boolean finishMainQuest(Player targetPlayer, int mainQuestId){
-        return targetPlayer.getQuestManager().startMainQuest(mainQuestId);
+        return targetPlayer.getQuestManager().finishMainQuest(mainQuestId, true);
     }
 
     private String getMainQuestStatus(Player targetPlayer, int mainQuestId){

@@ -32,6 +32,8 @@ public class JsonAdapters {
                     return new DynamicFloat(reader.nextString());
                 case NUMBER:
                     return new DynamicFloat((float) reader.nextDouble());
+                case BOOLEAN:
+                    return new DynamicFloat(reader.nextBoolean());
                 case BEGIN_ARRAY:
                     reader.beginArray();
                     val opStack = new ArrayList<DynamicFloat.StackOp>();
@@ -39,6 +41,7 @@ public class JsonAdapters {
                         opStack.add(switch (reader.peek()) {
                             case STRING -> new DynamicFloat.StackOp(reader.nextString());
                             case NUMBER -> new DynamicFloat.StackOp((float) reader.nextDouble());
+                            case BOOLEAN -> new DynamicFloat.StackOp(reader.nextBoolean());
                             default -> throw new IOException("Invalid DynamicFloat definition - " + reader.peek().name());
                         });
                     }

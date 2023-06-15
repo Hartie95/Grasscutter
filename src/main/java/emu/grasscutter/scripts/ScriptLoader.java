@@ -76,6 +76,7 @@ public class ScriptLoader {
         addEnumByOrdinal(ctx, SealBattleType.values(), "SealBattleType");
         addEnumByOrdinal(ctx, FatherChallengeProperty.values(), "FatherChallengeProperty");
         addEnumByOrdinal(ctx, ChallengeEventMarkType.values(), "ChallengeEventMarkType");
+        addEnumByOrdinal(ctx, VisionLevelType.values(), "VisionLevelType");
 
         ctx.globals.set("EventType", CoerceJavaToLua.coerce(new EventType())); // TODO - make static class to avoid instantiating a new class every scene
         ctx.globals.set("GadgetState", CoerceJavaToLua.coerce(new ScriptGadgetState()));

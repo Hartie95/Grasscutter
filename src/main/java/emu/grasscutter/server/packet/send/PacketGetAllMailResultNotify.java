@@ -3,19 +3,26 @@ package emu.grasscutter.server.packet.send;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.packet.PacketOpcodes;
-import emu.grasscutter.net.proto.GetAllMailRspOuterClass.GetAllMailRsp;
+import emu.grasscutter.net.proto.GetAllMailResultNotifyOuterClass.GetAllMailResultNotify;
+import emu.grasscutter.utils.Utils;
 import lombok.val;
 
 import java.time.Instant;
 import java.util.List;
 
-public class PacketGetAllMailRsp extends BasePacket {
+/**
+ * Used since 3.0 for mail requests.
+ */
+public class PacketGetAllMailResultNotify extends BasePacket {
 
-    public PacketGetAllMailRsp(Player player, boolean isGiftMail) {
-        super(PacketOpcodes.GetAllMailRsp);
+    public PacketGetAllMailResultNotify(Player player, boolean isGiftMail) {
+        super(PacketOpcodes.GetAllMailResultNotify);
 
-        val packet = GetAllMailRsp.newBuilder()
-            .setIsCollected(isGiftMail);
+        val packet = GetAllMailResultNotify.newBuilder()
+            .setTransaction(player.getUid() + "-" + Utils.getCurrentSeconds() + "-" + 0)
+            .setIsCollected(isGiftMail)
+            .setPageIndex(1)
+            .setTotalPageCount(1);
 
         val inbox = player.getAllMail();
         if (!isGiftMail && inbox.size() > 0) {
@@ -28,8 +35,7 @@ public class PacketGetAllMailRsp extends BasePacket {
             // TODO: Implement the gift mailbox.
             packet.addAllMailList(List.of());
         }
-        // When enabled this will send a notification to the user telling them their inbox is full, and they should delete old messages when opening the mailbox.
-        packet.setIsTruncated(inbox.size() > 1000);
-        this.setData(packet);
+
+        this.setData(packet.build());
     }
 }

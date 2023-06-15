@@ -11,6 +11,8 @@ public class SceneObject {
     public int config_id;
     public int area_id;
     public int vision_level = 0;
+    public int mark_flag;
+    public String drop_tag;
 
     public Position pos;
     public Position rot;
