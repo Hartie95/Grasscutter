@@ -712,7 +712,7 @@ public class ResourceLoader {
 
     private static void loadTrialAvatarCustomData() {
         try {
-            String pathName = "CustomResources/TrialAvatarExcels/";
+            String pathName = "TrialAvatar/";
             try {
                 JsonUtils.loadToList(
                     getResourcePath(pathName + "TrialAvatarActivityDataExcelConfigData.json"),
@@ -735,9 +735,8 @@ public class ResourceLoader {
             Grasscutter.getLogger().debug("Loaded trial activity schedule custom data.");
             try {
                 JsonUtils.loadToList(
-                    getResourcePath(pathName + "TrialAvatarData.json"),
+                    getResourcePath(pathName + "TrialAvatarCustomConfigData.json"),
                     TrialAvatarCustomData.class).forEach(instance -> {
-                        instance.onLoad();
                         GameData.getTrialAvatarCustomData()
                             .put(instance.getTrialAvatarId(), instance);
                     });

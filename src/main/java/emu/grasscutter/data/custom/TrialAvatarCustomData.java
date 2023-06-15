@@ -1,16 +1,16 @@
 package emu.grasscutter.data.custom;
 
+import emu.grasscutter.data.common.BaseTrialAvatarData;
+import emu.grasscutter.data.common.BaseTrialAvatarTemplateData;
 import lombok.*;
 import java.util.List;
 
 @Data
-public class TrialAvatarCustomData {
+public class TrialAvatarCustomData implements BaseTrialAvatarData, BaseTrialAvatarTemplateData {
     private int trialAvatarId;
-    private List<String> trialAvatarParamList;
-    private int coreProudSkillLevel;
-    private int skillDepotId;
-
-    public void onLoad() {
-        this.trialAvatarParamList = trialAvatarParamList.stream().filter(x -> !x.isBlank()).toList();
-    }
+    private List<Integer> trialAvatarParamList;
+    private List<Integer> trialAvatarWeaponList;
+    private List<Integer> trialReliquaryList;
+    private int trialSkillDepotId;
+    private int trialAvatarSkillLevel;
 }

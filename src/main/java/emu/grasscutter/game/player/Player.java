@@ -6,7 +6,6 @@ import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.config.ConfigLevelEntity;
 import emu.grasscutter.data.binout.config.fields.ConfigAbilityData;
-import emu.grasscutter.data.custom.TrialAvatarCustomData;
 import emu.grasscutter.data.excels.*;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.Account;
@@ -89,7 +88,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.stream.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -833,26 +831,8 @@ public class Player {
         addAvatar(new Avatar(avatarId), true);
     }
 
-    public List<Integer> getTrialAvatarParam (int trialAvatarId) {
-        val trialCustomDataMap = GameData.getTrialAvatarCustomData();
-        if (trialCustomDataMap.isEmpty()) { // use default data if custom data not available
-            TrialAvatarData trialDefaultData = GameData.getTrialAvatarDataMap().get(trialAvatarId);
-            if (trialDefaultData == null) return List.of();
-
-            return trialDefaultData.getTrialAvatarParamList();
-        }
-
-        TrialAvatarCustomData trialCustomData = GameData.getTrialAvatarCustomData().get(trialAvatarId);
-        // use custom data
-        if (trialCustomData == null) return List.of();
-
-        val trialCustomParams = trialCustomData.getTrialAvatarParamList();
-        return trialCustomParams.isEmpty() ? List.of() :
-            Stream.of(trialCustomParams.get(0).split(";")).map(Integer::parseInt).toList();
-    }
-
     public boolean addTrialAvatar(int trialAvatarId, GrantReason reason, int questMainId){
-        List<Integer> trialAvatarBasicParam = getTrialAvatarParam(trialAvatarId);
+        List<Integer> trialAvatarBasicParam = TrialAvatar.getTrialAvatarParam(trialAvatarId);
         if (trialAvatarBasicParam.isEmpty()) return false;
 
         TrialAvatar trialAvatar = new TrialAvatar(trialAvatarBasicParam, trialAvatarId, reason, questMainId);
@@ -895,7 +875,7 @@ public class Player {
     public boolean removeTrialAvatarForQuest(int trialAvatarId) {
         if (!getTeamManager().isUseTrialTeam()) return false;
 
-        List<Integer> trialAvatarBasicParam = getTrialAvatarParam(trialAvatarId);
+        List<Integer> trialAvatarBasicParam = TrialAvatar.getTrialAvatarParam(trialAvatarId);
         if (trialAvatarBasicParam.isEmpty()) return false;
 
         long trialAvatarGuid = getTeamManager().getEntityGuids().get(trialAvatarBasicParam.get(0));

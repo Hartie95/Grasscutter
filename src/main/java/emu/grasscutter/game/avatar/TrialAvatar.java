@@ -1,9 +1,10 @@
 package emu.grasscutter.game.avatar;
 
+import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
-import emu.grasscutter.data.custom.TrialAvatarCustomData;
+import emu.grasscutter.data.common.BaseTrialAvatarData;
+import emu.grasscutter.data.common.BaseTrialAvatarTemplateData;
 import emu.grasscutter.data.excels.AvatarCostumeData;
-import emu.grasscutter.data.excels.TrialAvatarTemplateData;
 import emu.grasscutter.data.excels.TrialReliquaryData;
 import emu.grasscutter.game.inventory.EquipType;
 import emu.grasscutter.game.inventory.GameItem;
@@ -21,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 
 public class TrialAvatar extends Avatar{
     // trial avatar property
@@ -44,6 +44,16 @@ public class TrialAvatar extends Avatar{
         this.setTrialItems();
     }
 
+    public static boolean useCustomData() {
+        return !(GameData.getTrialAvatarCustomData() == null || GameData.getTrialAvatarCustomData().isEmpty());
+    }
+
+    public static List<Integer> getTrialAvatarParam(int trialAvatarId) {
+        val trialData = TrialAvatar.useCustomData() ? GameData.getTrialAvatarCustomData() : GameData.getTrialAvatarDataMap();
+        BaseTrialAvatarData trialAvatarData = trialData.get(trialAvatarId);
+        return (trialAvatarData == null) ? List.of() : trialAvatarData.getTrialAvatarParamList();
+    }
+
     private int getTrialAvatarTemplateLevel(){
         return GameData.getTrialAvatarTemplateDataMap().keySet().stream()
             .min(Comparator.comparingInt(value -> Math.abs(value - getLevel())))
@@ -51,18 +61,10 @@ public class TrialAvatar extends Avatar{
     }
 
     public int getTrialSkillLevel() {
-        val trialCustomData = GameData.getTrialAvatarCustomData();
-        if (trialCustomData.isEmpty()) { // use default data if custom data not available
-            int trialAvatarTemplateLevel = getTrialAvatarTemplateLevel(); // round trial level to fit template levels
-
-            TrialAvatarTemplateData templateData = GameData.getTrialAvatarTemplateDataMap().get(trialAvatarTemplateLevel);
-            return templateData == null ? 1 : templateData.getTrialAvatarSkillLevel();
-        }
-
-        TrialAvatarCustomData trialAvatarCustomData = trialCustomData.get(getTrialAvatarId());
-        if (trialAvatarCustomData == null) return 1;
-
-        return trialAvatarCustomData.getCoreProudSkillLevel(); // enhanced version of weapon
+        val trialData = useCustomData() ? GameData.getTrialAvatarCustomData() : GameData.getTrialAvatarTemplateDataMap();
+        int skillOrId = useCustomData() ? getTrialAvatarId() : getTrialAvatarTemplateLevel();
+        BaseTrialAvatarTemplateData trialAvatarData = trialData.get(skillOrId);
+        return (trialAvatarData == null) ? 1 : trialAvatarData.getTrialAvatarSkillLevel();
     }
 
     public void setTrialSkillLevel() {
@@ -70,40 +72,21 @@ public class TrialAvatar extends Avatar{
     }
 
     public int getTrialWeaponId() {
-        val trialCustomData = GameData.getTrialAvatarCustomData();
-        int initialWeapon = getAvatarData().getInitialWeapon();
+        val trialData = useCustomData() ? GameData.getTrialAvatarCustomData() : GameData.getTrialAvatarDataMap();
+        BaseTrialAvatarData trialAvatarData = trialData.get(getTrialAvatarId());
 
-        if (trialCustomData.isEmpty()) { // use default data if custom data not available
-            if (GameData.getTrialAvatarDataMap().get(getTrialAvatarId()) == null
-                || GameData.getItemDataMap().get(initialWeapon+100) == null)
-                return initialWeapon;
-
-            return initialWeapon+100; // enhanced version of weapon
-        }
-
-        // use custom data
-        TrialAvatarCustomData trialAvatarCustomData= trialCustomData.get(getTrialAvatarId());
-        if (trialAvatarCustomData == null) return 0;
-
-        val trialCustomParams = trialAvatarCustomData.getTrialAvatarParamList();
-        return trialCustomParams.size() < 2 ? initialWeapon :
-            Integer.parseInt(trialCustomParams.get(1).split(";")[0]);
+        return (trialAvatarData == null || trialAvatarData.getTrialAvatarWeaponList().size() < 1) ?
+            getAvatarData().getInitialWeapon() + 100 : trialAvatarData.getTrialAvatarWeaponList().get(0);
     }
 
     public List<Integer> getTrialReliquary() {
-        if (GameData.getTrialAvatarCustomData().isEmpty()) {
-            // try using custom data
-            if (GameData.getTrialAvatarCustomData().get(getTrialAvatarId()) != null) {
-                val trialCustomParams = GameData.getTrialAvatarCustomData().get(getTrialAvatarId()).getTrialAvatarParamList();
-                if (trialCustomParams.size() > 2) {
-                    return Stream.of(trialCustomParams.get(2).split(";")).map(Integer::parseInt).toList();
-                }
-            }
-        }
-        int trialAvatarTemplateLevel = getTrialAvatarTemplateLevel();
+        val trialData = useCustomData() ? GameData.getTrialAvatarCustomData() : GameData.getTrialAvatarTemplateDataMap();
+        int skillOrId = useCustomData() ? getTrialAvatarId() : getTrialAvatarTemplateLevel();
+        BaseTrialAvatarTemplateData trialAvatarData = trialData.get(skillOrId);
 
-        TrialAvatarTemplateData templateData = GameData.getTrialAvatarTemplateDataMap().get(trialAvatarTemplateLevel);
-        return templateData == null ? List.of() : templateData.getTrialReliquaryList();
+        return (trialAvatarData == null || trialAvatarData.getTrialReliquaryList().isEmpty()) ?
+            GameData.getTrialAvatarTemplateDataMap().get(getTrialAvatarTemplateLevel()).getTrialReliquaryList() :
+            trialAvatarData.getTrialReliquaryList();
     }
 
     public void setTrialItems(){
@@ -111,6 +94,7 @@ public class TrialAvatar extends Avatar{
         GameItem weapon = new GameItem(getTrialWeaponId());
         weapon.setLevel(getLevel());
         weapon.setExp(0);
+        Grasscutter.getLogger().info("Min promote level: {}", getMinPromoteLevel(getLevel()));
         weapon.setPromoteLevel(getMinPromoteLevel(getLevel()));
         getEquips().put(weapon.getEquipSlot(), weapon);
 
