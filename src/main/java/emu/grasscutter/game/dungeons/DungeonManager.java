@@ -14,6 +14,7 @@ import emu.grasscutter.game.props.WatcherTriggerType;
 import emu.grasscutter.game.quest.enums.LogicType;
 import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.game.world.Scene;
+import emu.grasscutter.net.proto.TrialAvatarGrantRecordOuterClass.TrialAvatarGrantRecord.GrantReason;
 import emu.grasscutter.scripts.constants.EventType;
 import emu.grasscutter.scripts.data.ScriptArgs;
 import emu.grasscutter.server.packet.send.PacketDungeonWayPointNotify;
@@ -230,7 +231,15 @@ public class DungeonManager {
                 // DungeonPlayType.DUNGEON_PLAY_TYPE_TRIAL_AVATAR handled by activity handler
                 // TODO DungeonPlayType.DUNGEON_PLAY_TYPE_MIST_TRIAL
             }
-            case DUNGEON_ELEMENT_CHALLENGE -> {} // TODO
+            case DUNGEON_ELEMENT_CHALLENGE -> {
+                val elementDungeonData = GameData.getDungeonElementChallengeDataMap().get(getDungeonData().getId());
+                if (elementDungeonData == null) return;
+
+                if (player.addTrialAvatarsForDungeon(elementDungeonData.getTrialAvatarId(),
+                    GrantReason.GRANT_REASON_BY_DUNGEON_ELEMENT_CHALLENGE, 0)) {
+                    player.getTeamManager().updateTeamEntities(true);
+                }
+            } // TODO
         }
     }
 
