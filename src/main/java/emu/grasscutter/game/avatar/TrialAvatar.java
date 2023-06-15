@@ -18,6 +18,7 @@ import lombok.Setter;
 import lombok.val;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -44,8 +45,9 @@ public class TrialAvatar extends Avatar{
     }
 
     private int getTrialAvatarTemplateLevel(){
-        return getLevel() <= 9 ? 1 :
-            (int) (Math.floor(getLevel() / 10f) * 10); // round trial level to fit template levels
+        return GameData.getTrialAvatarTemplateDataMap().keySet().stream()
+            .min(Comparator.comparingInt(value -> Math.abs(value - getLevel())))
+            .stream().findFirst().orElse(0);
     }
 
     public int getTrialSkillLevel() {
@@ -57,7 +59,7 @@ public class TrialAvatar extends Avatar{
             return templateData == null ? 1 : templateData.getTrialAvatarSkillLevel();
         }
 
-        TrialAvatarCustomData trialAvatarCustomData= trialCustomData.get(getTrialAvatarId());
+        TrialAvatarCustomData trialAvatarCustomData = trialCustomData.get(getTrialAvatarId());
         if (trialAvatarCustomData == null) return 1;
 
         return trialAvatarCustomData.getCoreProudSkillLevel(); // enhanced version of weapon

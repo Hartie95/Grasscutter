@@ -873,10 +873,10 @@ public class Player {
         return true;
     }
 
-    public synchronized boolean addTrialAvatarForQuest(int trialAvatarId, int questMainId) {
+    public boolean addTrialAvatarForQuest(int trialAvatarId, int questMainId) {
         getTeamManager().setupTrialAvatarTeamForQuest();
-        if (!addTrialAvatar(
-            trialAvatarId,
+        if (!addTrialAvatarsForDungeon(
+            List.of(trialAvatarId),
             GrantReason.GRANT_REASON_BY_QUEST,
             questMainId)) return false;
         getTeamManager().updateTeamEntities(true);
@@ -885,13 +885,11 @@ public class Player {
         return true;
     }
 
-    public void addTrialAvatarsForActivity(@NotNull List<Integer> trialAvatarIds) {
-        getTeamManager().setupTrialAvatarTeamForActivity();
-        trialAvatarIds.forEach(trialAvatarId -> addTrialAvatar(
-            trialAvatarId,
-            GrantReason.GRANT_REASON_BY_TRIAL_AVATAR_ACTIVITY,
-            0));
-        getTeamManager().updateTeamEntities(true);
+    public boolean addTrialAvatarsForDungeon(@NotNull List<Integer> trialAvatarIds, GrantReason reason, int questMainId) {
+        getTeamManager().setupTrialAvatarTeamForDungeon();
+
+        return trialAvatarIds.stream().allMatch(trialAvatarId ->
+            addTrialAvatar(trialAvatarId, reason, questMainId));
     }
 
     public boolean removeTrialAvatarForQuest(int trialAvatarId) {
@@ -916,7 +914,7 @@ public class Player {
         return true;
     }
 
-    public void removeTrialAvatarForActivity() {
+    public void removeTrialAvatarForDungeon() {
         if (!getTeamManager().isUseTrialTeam()) return;
 
         // send remove packets

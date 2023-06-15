@@ -147,13 +147,13 @@ public class DungeonSystem extends BaseGameSystem {
             if(!dungeonManager.isFinishedSuccessfully()){
                 dungeonManager.quitDungeon();
             }
-
-            dungeonManager.unsetTrialTeam(player);
         }
         // clean temp team if it has
         player.getTeamManager().cleanTemporaryTeam();
         player.getTowerManager().clearEntry();
 
+        // clear trial avatar team if exist
+        player.removeTrialAvatarForDungeon();
 
         // Transfer player back to world
         player.getWorld().transferPlayerToScene(player, prevScene, prevPos);

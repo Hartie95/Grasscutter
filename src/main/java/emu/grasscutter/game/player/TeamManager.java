@@ -315,10 +315,10 @@ public class TeamManager extends BasePlayerDataManager {
 
     public synchronized void setupTrialAvatarTeamForQuest() {
         getTrialAvatarTeam().copyFrom(getCurrentTeamInfo());
-        setupTrialAvatarTeamForActivity();
+//        setupTrialAvatarTeamForActivity();
     }
 
-    public synchronized void setupTrialAvatarTeamForActivity() {
+    public synchronized void setupTrialAvatarTeamForDungeon() {
         setPreviousIndex(getCurrentCharacterIndex());
         setUseTrialTeam(true);
     }
@@ -340,6 +340,7 @@ public class TeamManager extends BasePlayerDataManager {
 
     public void setupTemporaryTeam(@NotNull List<List<Long>> guidListList) {
         getTemporaryTeam().clear();
+        setPreviousIndex(getCurrentCharacterIndex());
         // Sanity checks
         // Set team data and convert to avatar ids
         getTemporaryTeam().addAll(guidListList.stream()
@@ -353,6 +354,7 @@ public class TeamManager extends BasePlayerDataManager {
 
     public void useTemporaryTeam(int index) {
         setTemporaryTeamIndex(index);
+        setCurrentCharacterIndex(0);
         updateTeamEntities(true);
     }
 
@@ -363,6 +365,8 @@ public class TeamManager extends BasePlayerDataManager {
         }
 
         setTemporaryTeamIndex(-1);
+        setCurrentCharacterIndex(getPreviousIndex());
+        setPreviousIndex(-1);
         getTemporaryTeam().clear();
         updateTeamEntities(true);
     }
