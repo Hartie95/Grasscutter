@@ -8,7 +8,7 @@ import emu.grasscutter.server.game.GameSession;
 import emu.grasscutter.server.packet.send.PacketChangeHomeBgmNotify;
 import emu.grasscutter.server.packet.send.PacketChangeHomeBgmRsp;
 
-@Opcodes(PacketOpcodes.Unk2700_BEDLIGJANCJ_ClientReq)
+@Opcodes(PacketOpcodes.HomeChangeBgmReq)
 public class HandlerChangeHomeBgmReq extends PacketHandler {
     @Override
     public void handle(GameSession session, byte[] header, byte[] payload) throws Exception {

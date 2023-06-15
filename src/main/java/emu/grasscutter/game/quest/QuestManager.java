@@ -143,6 +143,7 @@ public class QuestManager extends BasePlayerManager {
         this.lastDayCheck = currentDays;
         this.lastHourCheck = currentHours;
         player.getActiveQuestTimers().forEach(mainQuestId -> {
+            queueEvent(QuestCond.QUEST_COND_IS_DAYTIME);
             if(checkHours) {
                 queueEvent(QuestCond.QUEST_COND_TIME_VAR_GT_EQ, mainQuestId);
                 queueEvent(QuestContent.QUEST_CONTENT_TIME_VAR_GT_EQ, mainQuestId);
@@ -279,6 +280,24 @@ public class QuestManager extends BasePlayerManager {
         checkQuestAlreadyFullfilled(quest);
 
         return quest;
+    }
+
+    public boolean finishQuest(int questId, boolean isManual) {
+        val quest = getQuestById(questId);
+        if (quest == null || quest.getState() == QuestState.QUEST_STATE_FINISHED) {
+            return false;
+        }
+        quest.finish(isManual);
+        return true;
+    }
+
+    public boolean finishMainQuest(int questId, boolean isManual) {
+        val quest = getMainQuestById(questId);
+        if (quest == null || quest.getState() == ParentQuestState.PARENT_QUEST_STATE_FINISHED) {
+            return false;
+        }
+        quest.finish(isManual);
+        return true;
     }
 
     public boolean startMainQuest(int mainQuestId) {

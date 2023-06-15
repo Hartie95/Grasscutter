@@ -11,20 +11,27 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import emu.grasscutter.net.proto.EquipParamOuterClass.EquipParam;
+import emu.grasscutter.net.proto.MailCollectStateOuterClass.MailCollectState;
+import emu.grasscutter.net.proto.MailDataOuterClass.MailData;
+import emu.grasscutter.net.proto.MailItemOuterClass;
+import emu.grasscutter.net.proto.MailTextContentOuterClass.MailTextContent;
+import lombok.Getter;
+import lombok.Setter;
 import org.bson.types.ObjectId;
 
 @Entity(value = "mail", useDiscriminator = false)
 public class Mail {
-	@Id private ObjectId id;
-	@Indexed private int ownerUid;
-    public MailContent mailContent;
-    public List<MailItem> itemList;
-    public long sendTime;
-    public long expireTime;
-    public int importance;
-    public boolean isRead;
-    public boolean isAttachmentGot;
-    public int stateValue;
+	@Getter @Id private ObjectId id;
+    @Getter @Setter @Indexed private int ownerUid;
+    @Getter public MailContent mailContent;
+    @Getter public List<MailItem> itemList;
+    @Getter public long sendTime;
+    @Getter public long expireTime;
+    @Getter public int importance;
+    @Getter public boolean isRead;
+    @Getter public boolean isAttachmentGot;
+    @Getter public int stateValue;
     @Transient private boolean shouldDelete;
 
     public Mail() {
@@ -50,17 +57,19 @@ public class Mail {
         this.stateValue = state; // Different mailboxes, 1 = Default, 3 = Gift-box.
     }
 
-    public ObjectId getId() {
-		return id;
-	}
-
-	public int getOwnerUid() {
-		return ownerUid;
-	}
-
-	public void setOwnerUid(int ownerUid) {
-		this.ownerUid = ownerUid;
-	}
+    public MailData toProto(Player player) {
+        return MailData.newBuilder()
+            .setMailId(player.getMailId(this))
+            .setMailTextContent(this.mailContent.toProto())
+            .addAllItemList(this.itemList.stream().map(MailItem::toProto).toList())
+            .setSendTime((int) this.sendTime)
+            .setExpireTime((int) this.expireTime)
+            .setImportance(this.importance)
+            .setIsRead(this.isRead)
+            .setIsAttachmentGot(this.isAttachmentGot)
+            .setCollectState(MailCollectState.MAIL_COLLECT_STATE_NOT_COLLECTIBLE)
+            .build();
+    }
 
 	@Entity
     public static class MailContent {
@@ -87,6 +96,14 @@ public class Mail {
             this.content = content;
             this.sender = sender;
         }
+
+        public MailTextContent toProto() {
+            return MailTextContent.newBuilder()
+                .setTitle(this.title)
+                .setContent(this.content)
+                .setSender(this.sender)
+                .build();
+        }
     }
 
     @Entity
@@ -111,6 +128,16 @@ public class Mail {
             this.itemId = itemId;
             this.itemCount = itemCount;
             this.itemLevel = itemLevel;
+        }
+
+        public MailItemOuterClass.MailItem toProto() {
+            return MailItemOuterClass.MailItem.newBuilder().setEquipParam(EquipParam.newBuilder()
+                    .setItemId(this.itemId)
+                    .setItemNum(this.itemCount)
+                    .setItemLevel(this.itemLevel)
+                    .setPromoteLevel(0)//mock
+                    .build())
+                .build();
         }
     }
 

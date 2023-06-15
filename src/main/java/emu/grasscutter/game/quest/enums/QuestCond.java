@@ -29,7 +29,7 @@ public enum QuestCond implements QuestTrigger {
     QUEST_COND_SCENE_AREA_UNLOCKED (18), // missing, only NPC groups/talks
     QUEST_COND_ITEM_GIVING_ACTIVED (19), // missing
     QUEST_COND_ITEM_GIVING_FINISHED (20), // missing
-    QUEST_COND_IS_DAYTIME (21), // only NPC groups
+    QUEST_COND_IS_DAYTIME (21),
     QUEST_COND_CURRENT_AVATAR (22), // missing
     QUEST_COND_CURRENT_AREA (23), // missing
     QUEST_COND_QUEST_VAR_EQUAL (24),

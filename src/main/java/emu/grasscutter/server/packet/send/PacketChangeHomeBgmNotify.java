@@ -6,7 +6,7 @@ import emu.grasscutter.net.proto.Unk2700FJEHHCPCBLGServerNotify;
 
 public class PacketChangeHomeBgmNotify extends BasePacket {
     public PacketChangeHomeBgmNotify(int homeBgmId) {
-        super(PacketOpcodes.Unk2700_FJEHHCPCBLG_ServerNotify);
+        super(PacketOpcodes.HomeChangeBgmNotify);
 
         var notify = Unk2700FJEHHCPCBLGServerNotify.Unk2700_FJEHHCPCBLG_ServerNotify.newBuilder()
             .setUnk2700BJHAMKKECEI(homeBgmId)

@@ -568,12 +568,13 @@ public class ScriptLib {
 				printTable(table));
 		var configId = table.get("config_id").toint();
 		var delayTime = table.get("delay_time").toint();
+        val group = getCurrentGroup();
 
-		if(getCurrentGroup().isEmpty()){
+		if(group.isEmpty()){
 			return 1;
 		}
 
-		getSceneScriptManager().spawnMonstersByConfigId(getCurrentGroup().get(), configId, delayTime);
+		getSceneScriptManager().spawnMonstersByConfigId(group.get(), configId, delayTime);
 		return 0;
 	}
 
@@ -685,6 +686,17 @@ public class ScriptLib {
         }
 
         return entity.getEntityType();
+    }
+
+    public int GetHostQuestState(int questId){
+        val player = getSceneScriptManager().getScene().getWorld().getHost();
+
+        val quest = player.getQuestManager().getQuestById(questId);
+        if(quest == null){
+            return QuestState.QUEST_STATE_NONE.getValue();
+        }
+
+        return quest.getState().getValue();
     }
 
     public int GetQuestState(int entityId, int questId){
@@ -1190,6 +1202,12 @@ public class ScriptLib {
     public int SetWeatherAreaState(int var1, int var2){
         logger.warn("[LUA] Call unimplemented SetWeatherAreaState with {} {}", var1, var2);
         getSceneScriptManager().getScene().getPlayers().forEach(p -> p.setWeather(var1, ClimateType.getTypeByValue(var2)));
+        return 0;
+    }
+
+    public int EnterWeatherArea(int weatherAreaId){
+        logger.warn("[LUA] Call unimplemented EnterWeatherArea with {}", weatherAreaId);
+        //TODO implement
         return 0;
     }
 

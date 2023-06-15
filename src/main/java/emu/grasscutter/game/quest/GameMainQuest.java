@@ -26,6 +26,7 @@ import lombok.Getter;
 import lombok.val;
 import org.bson.types.ObjectId;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 @Entity(value = "quests", useDiscriminator = false)
@@ -73,7 +74,12 @@ public class GameMainQuest {
     }
 
     private void addAllChildQuests() {
-        val subQuests = Arrays.stream(GameData.getMainQuestDataMap().get(this.parentQuestId).getSubQuests()).toList();
+        val mainQuestData = getMainQuestData();
+        if(mainQuestData== null) {
+            Grasscutter.getLogger().error("mainQuestData is null for parentQuestId {}", parentQuestId);
+            return;
+        }
+        val subQuests = Arrays.stream(mainQuestData.getSubQuests()).toList();
         for (SubQuestData subQuestData : subQuests) {
             this.childQuests.put(subQuestData.getSubId(), new GameQuest(this, subQuestData));
         }
@@ -119,7 +125,13 @@ public class GameMainQuest {
         return this.getChildQuests().values().stream().filter(p -> p.getQuestData().getOrder() == order).toList().get(0);
     }
 
-    public void finish() {
+    //TODO maybe just store it in the GameMainQuest object?
+    @Nullable
+    public MainQuestData getMainQuestData() {
+        return GameData.getMainQuestDataMap().get(this.parentQuestId);
+    }
+
+    public void finish(boolean isManualFinish) {
         // Avoid recursion from child finish() in GameQuest
         // when auto finishing all child quests with QUEST_STATE_UNFINISHED (below)
         if (this.isFinished) {
@@ -131,7 +143,7 @@ public class GameMainQuest {
         this.state = ParentQuestState.PARENT_QUEST_STATE_FINISHED;
 
          /*
-            We also need to check for unfinished childQuests in this MainQuest
+            On force finish we also need to check for unfinished childQuests in this MainQuest
             force them to complete and send a packet about this to the user,
             because at some points there are special "invisible" child quests that control
             some situations.
@@ -142,13 +154,16 @@ public class GameMainQuest {
             new MainQuest 355 but if 35312 is not completed after the completion
             of the main quest 353 - the character will not be able to leave place
             (return again and again)
+            TODO don't finish quests with reroll exec in finish
             */
-        this
-            .getChildQuests()
-            .values()
-            .stream()
-            .filter(p -> p.state != QuestState.QUEST_STATE_FINISHED)
-            .forEach(GameQuest::finish);
+        if(isManualFinish) {
+            this
+                .getChildQuests()
+                .values()
+                .stream()
+                .filter(p -> p.state != QuestState.QUEST_STATE_FINISHED)
+                .forEach(GameQuest::finish);
+        }
 
         this.getOwner().getSession().send(new PacketFinishedParentQuestUpdateNotify(this));
         this.getOwner().getSession().send(new PacketCodexDataUpdateNotify(this));
@@ -156,8 +171,8 @@ public class GameMainQuest {
         this.save();
 
         // Add rewards
-        MainQuestData mainQuestData = GameData.getMainQuestDataMap().get(this.getParentQuestId());
-        if(mainQuestData.getRewardIdList()!=null) {
+        val mainQuestData = getMainQuestData();
+        if(mainQuestData!= null && mainQuestData.getRewardIdList()!=null) {
             for (int rewardId : mainQuestData.getRewardIdList()) {
                 RewardData rewardData = GameData.getRewardDataMap().get(rewardId);
 
