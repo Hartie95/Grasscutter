@@ -80,13 +80,6 @@ public class TrialAvatarActivityHandler extends ActivityHandler {
             getTrialActivityDungeonId(trialAvatarIndexId))) return false;
 
         setSelectedTrialAvatarIndex(trialAvatarIndexId);
-        if (player.addTrialAvatarsForDungeon(
-            getBattleAvatarsList(),
-            GrantReason.GRANT_REASON_BY_TRIAL_AVATAR_ACTIVITY,
-            0)) {
-            // somehow setting this to false works
-            player.getTeamManager().updateTeamEntities(false);
-        }
         return true;
     }
 
