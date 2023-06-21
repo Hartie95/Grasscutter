@@ -5,11 +5,13 @@ import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.common.ItemParamData;
 import emu.grasscutter.data.excels.DungeonData;
 import emu.grasscutter.data.excels.DungeonPassConfigData;
+import emu.grasscutter.game.activity.trialavatar.TrialAvatarActivityHandler;
 import emu.grasscutter.game.dungeons.dungeon_results.BaseDungeonResult;
 import emu.grasscutter.game.dungeons.enums.DungeonPassConditionType;
 import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.ActionReason;
+import emu.grasscutter.game.props.ActivityType;
 import emu.grasscutter.game.props.WatcherTriggerType;
 import emu.grasscutter.game.quest.enums.LogicType;
 import emu.grasscutter.game.quest.enums.QuestContent;
@@ -228,18 +230,26 @@ public class DungeonManager {
         switch (getDungeonData().getType()) {
 //            case DUNGEON_PLOT is handled by quest execs
             case DUNGEON_ACTIVITY -> {
-                // DungeonPlayType.DUNGEON_PLAY_TYPE_TRIAL_AVATAR handled by activity handler
-                // TODO DungeonPlayType.DUNGEON_PLAY_TYPE_MIST_TRIAL
+                switch (getDungeonData().getPlayType()) {
+                    case DUNGEON_PLAY_TYPE_TRIAL_AVATAR -> {
+                        player.getActivityManager().getActivityHandlerAs(
+                            ActivityType.NEW_ACTIVITY_TRIAL_AVATAR, TrialAvatarActivityHandler.class)
+                        .ifPresent(handler -> player.addTrialAvatarsForDungeon(
+                            handler.getBattleAvatarsList(), GrantReason.GRANT_REASON_BY_TRIAL_AVATAR_ACTIVITY, 0));
+                    }
+                    case DUNGEON_PLAY_TYPE_MIST_TRIAL -> {} // TODO
+                }
             }
             case DUNGEON_ELEMENT_CHALLENGE -> {
-                val elementDungeonData = GameData.getDungeonElementChallengeDataMap().get(getDungeonData().getId());
-                if (elementDungeonData == null) return;
-
-                if (player.addTrialAvatarsForDungeon(elementDungeonData.getTrialAvatarId(),
-                    GrantReason.GRANT_REASON_BY_DUNGEON_ELEMENT_CHALLENGE, 0)) {
-                    player.getTeamManager().updateTeamEntities(true);
-                }
-            } // TODO
+                Optional.ofNullable(GameData.getDungeonElementChallengeDataMap().get(getDungeonData().getId()))
+                    .ifPresent(elementDungeonData -> {
+                        player.addTrialAvatarsForDungeon(elementDungeonData.getTrialAvatarId(),
+                            GrantReason.GRANT_REASON_BY_DUNGEON_ELEMENT_CHALLENGE, 0);
+                    });
+            }
+        }
+        if (player.getTeamManager().isUseTrialTeam()){
+            player.getTeamManager().updateTeamEntities(false);
         }
     }
 

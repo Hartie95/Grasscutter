@@ -16,7 +16,6 @@ import emu.grasscutter.game.entity.*;
 import emu.grasscutter.game.entity.gadget.GadgetWorktop;
 import emu.grasscutter.game.managers.blossom.BlossomManager;
 import emu.grasscutter.game.player.Player;
-import emu.grasscutter.game.player.TeamInfo;
 import emu.grasscutter.game.props.*;
 import emu.grasscutter.game.quest.QuestGroupSuite;
 import emu.grasscutter.game.world.data.TeleportProperties;
@@ -29,7 +28,6 @@ import emu.grasscutter.scripts.SceneIndexManager;
 import emu.grasscutter.scripts.SceneScriptManager;
 import emu.grasscutter.scripts.constants.EventType;
 import emu.grasscutter.scripts.data.SceneBlock;
-import emu.grasscutter.scripts.data.SceneGadget;
 import emu.grasscutter.scripts.data.SceneGroup;
 import emu.grasscutter.scripts.data.ScriptArgs;
 import emu.grasscutter.server.event.player.PlayerTeleportEvent;
@@ -198,7 +196,6 @@ public class Scene {
         player.setScene(null);
 
         // Remove player avatars
-        // (Don't have to do this because setupPlayerAvatars will handle it in the new scene)
          this.removePlayerAvatars(player);
 
         // Remove player gadgets
@@ -216,14 +213,16 @@ public class Scene {
 
     private void setupPlayerAvatars(@NotNull Player player) {
         // Clear entities from old team
-        player.getTeamManager().getActiveTeam().clear();
-        player.getTeamManager().updateTeamEntities(false);
+        List<EntityAvatar> activeTeam = player.getTeamManager().getActiveTeam();
+        activeTeam.clear();
+        Optional.ofNullable(player.getTeamManager().getCurrentTeamInfo())
+            .ifPresent(info -> info.getAvatars().forEach(avatarId -> activeTeam.add(
+                new EntityAvatar(player.getScene(), player.getAvatars().getAvatarById(avatarId))
+            )));
     }
 
-    private synchronized void removePlayerAvatars(Player player) {
-        // TODO This can be a problem where trial avatar is removed when finishing dungeon
-        // the character will get stuck, this statement somehow goes before removing trial avatar for quest
-        removeEntities(player.getTeamManager().getActiveTeam(), VisionType.VISION_TYPE_REMOVE);
+    private synchronized void removePlayerAvatars(@NotNull Player player) {
+        removeEntities(player.getTeamManager().getActiveTeam(), VisionType.VISION_TYPE_MISS);
     }
 
     public void spawnPlayer(Player player) {
@@ -347,6 +346,11 @@ public class Scene {
         }
 
         // Sanity check
+        if (target instanceof EntityMonster monsterTarget) {
+            monsterTarget.damage(result.getDamage(), result.getAttackerId(), attackType,
+                ElementReactionType.getTypeByValue(result.getAmplifyReactionType()));
+            return;
+        }
         target.damage(result.getDamage(), result.getAttackerId(), attackType);
     }
 

@@ -856,21 +856,20 @@ public class Player {
 
     public boolean addTrialAvatarForQuest(int trialAvatarId, int questMainId) {
         getTeamManager().setupTrialAvatarTeamForQuest();
-        if (!addTrialAvatarsForDungeon(
-            List.of(trialAvatarId),
+        if (!addTrialAvatar(
+            trialAvatarId,
             GrantReason.GRANT_REASON_BY_QUEST,
             questMainId)) return false;
-        getTeamManager().updateTeamEntities(true);
         // Packet, mimic official server behaviour, necessary to stop player from modifying team
         sendPacket(new PacketAvatarTeamUpdateNotify(this));
+
+        getTeamManager().updateTeamEntities(false);
         return true;
     }
 
-    public boolean addTrialAvatarsForDungeon(@NotNull List<Integer> trialAvatarIds, GrantReason reason, int questMainId) {
+    public void addTrialAvatarsForDungeon(@NotNull List<Integer> trialAvatarIds, GrantReason reason, int questMainId) {
         getTeamManager().setupTrialAvatarTeamForDungeon();
-
-        return trialAvatarIds.stream().allMatch(trialAvatarId ->
-            addTrialAvatar(trialAvatarId, reason, questMainId));
+        trialAvatarIds.forEach(trialAvatarId -> addTrialAvatar(trialAvatarId, reason, questMainId));
     }
 
     public boolean removeTrialAvatarForQuest(int trialAvatarId) {
@@ -879,10 +878,10 @@ public class Player {
         List<Integer> trialAvatarBasicParam = TrialAvatar.getTrialAvatarParam(trialAvatarId);
         if (trialAvatarBasicParam.isEmpty()) return false;
 
-        long trialAvatarGuid = getTeamManager().getEntityGuids().get(trialAvatarBasicParam.get(0));
+        // allows player to modify team again
+        sendPacket(new PacketAvatarTeamUpdateNotify());
 
-        // send remove packets
-        sendPacket(new PacketAvatarDelNotify(List.of(trialAvatarGuid)));
+        long trialAvatarGuid = getTeamManager().getEntityGuids().get(trialAvatarBasicParam.get(0));
 
         // remove trial avatar from storage
         this.getAvatars().removeAvatarByGuid(trialAvatarGuid);
@@ -890,23 +889,23 @@ public class Player {
         // remove trial avatar entities
         getTeamManager().removeTrialAvatarTeam();
 
-        // allows player to modify team again
-        sendPacket(new PacketAvatarTeamUpdateNotify());
+        // send remove packets
+        sendPacket(new PacketAvatarDelNotify(List.of(trialAvatarGuid)));
         return true;
     }
 
     public void removeTrialAvatarForDungeon() {
         if (!getTeamManager().isUseTrialTeam()) return;
-
-        // send remove packets
-        sendPacket(new PacketAvatarDelNotify(getTeamManager().getActiveTeam().stream()
-            .map(x -> x.getAvatar().getGuid()).toList()));
+        List<Long> tempGuids = getTeamManager().getEntityGuids().values().stream().toList();
 
         // remove trial avatar from storage
-        getTeamManager().getEntityGuids().values().forEach(guid -> this.getAvatars().removeAvatarByGuid(guid));
+        tempGuids.forEach(guid -> this.getAvatars().removeAvatarByGuid(guid));
 
         // remove trial avatar entities
         getTeamManager().removeTrialAvatarTeam();
+
+        // send remove packets
+        sendPacket(new PacketAvatarDelNotify(tempGuids));
     }
 
     public void addFlycloak(int flycloakId) {

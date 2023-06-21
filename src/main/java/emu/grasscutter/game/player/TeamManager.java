@@ -199,7 +199,7 @@ public class TeamManager extends BasePlayerDataManager {
      * Removes any entities that are not in the new team and adds any new entities.
      * Also updates the selected character index and team properties.
      */
-     public synchronized void updateTeamEntities(boolean shouldReplace) {
+    public synchronized void updateTeamEntities(boolean shouldReplace) {
         // Sanity check - Should never happen
         if (getCurrentTeamInfo().getAvatars().isEmpty()) return;
 
@@ -213,29 +213,29 @@ public class TeamManager extends BasePlayerDataManager {
         getActiveTeam().clear();
 
         // Add back entities into team
-         getCurrentTeamInfo().getAvatars().forEach(avatarId -> {
-             val avatarStorage = getPlayer().getAvatars();
-             long avatarGuid = getEntityGuids().getOrDefault(
-                 avatarId, avatarStorage.getAvatarById(avatarId).getGuid());
+        getCurrentTeamInfo().getAvatars().forEach(avatarId -> {
+            val avatarStorage = getPlayer().getAvatars();
+            long avatarGuid = getEntityGuids().getOrDefault(
+                avatarId, avatarStorage.getAvatarById(avatarId).getGuid());
 
-             getActiveTeam().add(existingAvatars.containsKey(avatarGuid) ?
-                 existingAvatars.remove(avatarGuid) :
-                 new EntityAvatar(getPlayer().getScene(), avatarStorage.getAvatarByGuid(avatarGuid)));
-         });
+            getActiveTeam().add(existingAvatars.containsKey(avatarGuid) ?
+                existingAvatars.remove(avatarGuid) :
+                new EntityAvatar(getPlayer().getScene(), avatarStorage.getAvatarByGuid(avatarGuid)));
+        });
 
         // Set new selected character index
-         int prevSelectedIndex;
-         if (getEntityGuids().isEmpty()) {
-             prevSelectedIndex = getPreviousIndex() > 0 ? getPreviousIndex() : getActiveTeam().indexOf(currentEntity);
-         } else {
-             // it means that there is trial avatar and the first of multiple (if any) of them
-             // will be used as index
-             prevSelectedIndex = getCurrentTeamInfo().getAvatars().indexOf(
-                 getEntityGuids().keySet().iterator().next()
-             );
-         }
+        int prevSelectedIndex;
+        if (getEntityGuids().isEmpty()) {
+            prevSelectedIndex = getPreviousIndex() > 0 ? getPreviousIndex() : getActiveTeam().indexOf(currentEntity);
+        } else {
+            // it means that there is trial avatar and the first of multiple (if any) of them
+            // will be used as index
+            prevSelectedIndex = getCurrentTeamInfo().getAvatars().indexOf(
+                getEntityGuids().keySet().iterator().next()
+            );
+        }
 
-         setCurrentCharacterIndex(prevSelectedIndex < 0 ? getCurrentCharacterIndex() : prevSelectedIndex);
+        setCurrentCharacterIndex(prevSelectedIndex < 0 ? getCurrentCharacterIndex() : prevSelectedIndex);
 
         // Update team resonances
         updateTeamResonances();
@@ -315,7 +315,7 @@ public class TeamManager extends BasePlayerDataManager {
 
     public synchronized void setupTrialAvatarTeamForQuest() {
         getTrialAvatarTeam().copyFrom(getCurrentTeamInfo());
-//        setupTrialAvatarTeamForActivity();
+        setupTrialAvatarTeamForDungeon();
     }
 
     public synchronized void setupTrialAvatarTeamForDungeon() {
@@ -327,14 +327,16 @@ public class TeamManager extends BasePlayerDataManager {
         getCurrentTeamInfo().getAvatars().removeIf(x -> x == trialAvatar.getAvatarId());
         getCurrentTeamInfo().addAvatar(trialAvatar);
         getEntityGuids().put(trialAvatar.getAvatarId(), trialAvatar.getGuid());
-        getActiveTeam().add(new EntityAvatar(getPlayer().getScene(), trialAvatar));
+        EntityAvatar trialEntity = new EntityAvatar(getPlayer().getScene(), trialAvatar);
+        getActiveTeam().add(trialEntity);
+        getPlayer().getScene().getEntities().put(trialEntity.getId(), trialEntity);
     }
 
     public synchronized void removeTrialAvatarTeam() {
         setUseTrialTeam(false);
         setTrialAvatarTeam(new TeamInfo());
         getEntityGuids().clear();
-        updateTeamEntities(true);
+        updateTeamEntities(false);
         setPreviousIndex(-1);
     }
 
