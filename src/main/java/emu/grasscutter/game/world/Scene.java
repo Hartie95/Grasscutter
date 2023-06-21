@@ -346,11 +346,11 @@ public class Scene {
         }
 
         // Sanity check
-        if (target instanceof EntityMonster monsterTarget) {
-            monsterTarget.damage(result.getDamage(), result.getAttackerId(), attackType,
-                ElementReactionType.getTypeByValue(result.getAmplifyReactionType()));
-            return;
-        }
+//        if (target instanceof EntityMonster monsterTarget) {
+//            monsterTarget.damage(result.getDamage(), result.getAttackerId(), attackType,
+//                ElementReactionType.getTypeByValue(result.getAmplifyReactionType()));
+//            return;
+//        }
         target.damage(result.getDamage(), result.getAttackerId(), attackType);
     }
 
