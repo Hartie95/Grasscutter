@@ -25,26 +25,29 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class WorldChallenge {
     private final Scene scene;
     private final SceneGroup group;
-    private final int challengeId;
     private final int challengeIndex;
+    private final int challengeId;
+    private final int fatherIndex;
     private final List<Integer> paramList;
     private final int timeLimit;
     private final List<ChallengeTrigger> challengeTriggers;
     private boolean progress;
     private boolean success;
-    private long startedAt;
+    private int startedAt;
     private int finishedTime;
     private final int goal;
     private final AtomicInteger score;
 
+    // indices: [currentChallengeIndex, currentChallengeId, fatherChallengeIndex]
     public WorldChallenge(Scene scene, SceneGroup group,
-                          int challengeId, int challengeIndex, List<Integer> paramList,
-                          int timeLimit, int goal,
+                          List<Integer> indices,
+                          List<Integer> paramList, int timeLimit, int goal,
                           List<ChallengeTrigger> challengeTriggers){
         this.scene = scene;
         this.group = group;
-        this.challengeId = challengeId;
-        this.challengeIndex = challengeIndex;
+        this.challengeIndex = indices.get(0);
+        this.challengeId = indices.get(1);
+        this.fatherIndex = indices.get(2);
         this.paramList = paramList;
         this.timeLimit = timeLimit;
         this.challengeTriggers = challengeTriggers;
@@ -55,23 +58,20 @@ public class WorldChallenge {
         return this.progress;
     }
     public void onCheckTimeOut(){
-        if(!inProgress()){
+        if(!inProgress() || getTimeLimit() <= 0){
             return;
         }
-        if(timeLimit <= 0){
-            return;
-        }
-        challengeTriggers.forEach(t -> t.onCheckTimeout(this));
+        getChallengeTriggers().forEach(t -> t.onCheckTimeout(this));
     }
     public void start(){
         if(inProgress()){
             Grasscutter.getLogger().info("Could not start a in progress challenge.");
             return;
         }
-        this.progress = true;
-        this.startedAt = getScene().getSceneTimeSeconds();
+        setProgress(true);
+        setStartedAt(getScene().getSceneTimeSeconds());
         getScene().broadcastPacket(new PacketDungeonChallengeBeginNotify(this));
-        challengeTriggers.forEach(t -> t.onBegin(this));
+        getChallengeTriggers().forEach(t -> t.onBegin(this));
     }
 
     public void done(){
@@ -83,20 +83,20 @@ public class WorldChallenge {
             getScene().getPlayers().forEach(p -> p.getActivityManager().triggerWatcher(
                 WatcherTriggerType.TRIGGER_FINISH_CHALLENGE,
                 String.valueOf(getScene().getDungeonManager().getDungeonData().getId()),
-                String.valueOf(getGroup().id),
+                String.valueOf(getGroupId()),
                 String.valueOf(getChallengeId())
             ));
         }
 
-        this.getScene().getScriptManager().callEvent(
+        getScene().getScriptManager().callEvent(
                 // TODO record the time in PARAM2 and used in action
                 new ScriptArgs(getGroupId(), EventType.EVENT_CHALLENGE_SUCCESS)
-                    .setParam2(finishedTime)
+                    .setParam2(getFinishedTime())
                     .setEventSource(Integer.toString(getChallengeIndex())
                     ));
-        this.getScene().triggerDungeonEvent(DungeonPassConditionType.DUNGEON_COND_FINISH_CHALLENGE, getChallengeId(), getChallengeIndex());
+        getScene().triggerDungeonEvent(DungeonPassConditionType.DUNGEON_COND_FINISH_CHALLENGE, getChallengeId(), getChallengeIndex());
 
-        challengeTriggers.forEach(t -> t.onFinish(this));
+        getChallengeTriggers().forEach(t -> t.onFinish(this));
     }
 
     public void fail(){
@@ -106,59 +106,51 @@ public class WorldChallenge {
         finish(false);
         this.getScene().getScriptManager().callEvent(new ScriptArgs(getGroupId(), EventType.EVENT_CHALLENGE_FAIL)
             .setEventSource(Integer.toString(getChallengeIndex())));
-        challengeTriggers.forEach(t -> t.onFinish(this));
+        getChallengeTriggers().forEach(t -> t.onFinish(this));
     }
 
-    private void finish(boolean success){
-        this.progress = false;
-        this.success = success;
-        this.finishedTime = (int)(getScene().getSceneTimeSeconds() - this.startedAt);
+    protected void finish(boolean success){
+        setProgress(false);
+        setSuccess(success);
+        setFinishedTime(getScene().getSceneTimeSeconds() - getStartedAt());
         getScene().broadcastPacket(new PacketDungeonChallengeFinishNotify(this));
     }
 
     public int increaseScore(){
-        return score.incrementAndGet();
+        return getScore().incrementAndGet();
     }
     public void onMonsterDeath(EntityMonster monster){
-        if(!inProgress()){
+        if(!inProgress() || monster.getGroupId() != getGroupId()){
             return;
         }
-        if(monster.getGroupId() != getGroup().id){
-            return;
-        }
-        this.challengeTriggers.forEach(t -> t.onMonsterDeath(this, monster));
+        getChallengeTriggers().forEach(t -> t.onMonsterDeath(this, monster));
     }
+
     public void onGadgetDeath(EntityGadget gadget){
-        if(!inProgress()){
+        if(!inProgress() || gadget.getGroupId() != getGroupId()){
             return;
         }
-        if(gadget.getGroupId() != getGroup().id){
-            return;
-        }
-        this.challengeTriggers.forEach(t -> t.onGadgetDeath(this, gadget));
+        getChallengeTriggers().forEach(t -> t.onGadgetDeath(this, gadget));
     }
     public void onGroupTriggerDeath(SceneTrigger trigger){
         if(!inProgress()){
             return;
         }
         val triggerGroup = trigger.getCurrentGroup();
-        if(triggerGroup==null || triggerGroup.id != getGroup().id){
+        if(triggerGroup == null || triggerGroup.id != getGroupId()){
             return;
         }
-        this.challengeTriggers.forEach(t -> t.onGroupTrigger(this, trigger));
+        getChallengeTriggers().forEach(t -> t.onGroupTrigger(this, trigger));
     }
 
     public void onGadgetDamage(EntityGadget gadget){
-        if(!inProgress()){
+        if(!inProgress() || gadget.getGroupId() != getGroupId()){
             return;
         }
-        if(gadget.getGroupId() != getGroup().id){
-            return;
-        }
-        this.challengeTriggers.forEach(t -> t.onGadgetDamage(this, gadget));
+        getChallengeTriggers().forEach(t -> t.onGadgetDamage(this, gadget));
     }
 
     public int getGroupId(){
-        return group.id;
+        return getGroup().id;
     }
 }

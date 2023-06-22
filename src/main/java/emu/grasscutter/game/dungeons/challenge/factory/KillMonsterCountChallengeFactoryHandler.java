@@ -16,17 +16,18 @@ public class KillMonsterCountChallengeFactoryHandler implements ChallengeFactory
         return challengeType == ChallengeType.CHALLENGE_KILL_COUNT;
     }
 
+    // indices: [currentChallengeIndex, currentChallengeId, fatherChallengeIndex]
+    // params: [groupId, goal, unused1, unused2]
     @Override
-    public WorldChallenge build(int challengeIndex, int challengeId, int groupId, int goal, int param5, int param6, Scene scene, SceneGroup group) {
-        val realGroup = scene.getScriptManager().getGroupById(groupId);
+    public WorldChallenge build(List<Integer> indices, List<Integer> params, Scene scene, SceneGroup group) {
+        val realGroup = scene.getScriptManager().getGroupById(params.get(0));
         return new WorldChallenge(
-                scene, realGroup,
-                challengeId, // Id
-                challengeIndex, // Index
-                List.of(goal, groupId),
-                0, // Limit
-                goal,  // Goal
-                List.of(new KillMonsterCountTrigger())
-                );
+            scene, realGroup,
+            indices,
+            List.of(params.get(1)),
+            0, // Limit
+            params.get(1),  // Goal
+            List.of(new KillMonsterCountTrigger(1))
+        );
     }
 }

@@ -14,12 +14,13 @@ public class DungeonChallenge extends WorldChallenge {
      */
     private boolean stage;
 
+    // indices: [currentChallengeIndex, currentChallengeId, fatherChallengeIndex]
     public DungeonChallenge(Scene scene, SceneGroup group,
-                            int challengeId, int challengeIndex,
+                            List<Integer> indices,
                             List<Integer> paramList,
                             int timeLimit, int goal,
                             List<ChallengeTrigger> challengeTriggers) {
-        super(scene, group, challengeId, challengeIndex, paramList, timeLimit, goal, challengeTriggers);
+        super(scene, group, indices, paramList, timeLimit, goal, challengeTriggers);
     }
 
     public boolean isStage() {

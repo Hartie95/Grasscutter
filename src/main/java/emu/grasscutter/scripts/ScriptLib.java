@@ -4,6 +4,7 @@ import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.game.activity.ActivityManager;
 import emu.grasscutter.game.dungeons.challenge.DungeonChallenge;
+import emu.grasscutter.game.dungeons.challenge.FatherChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.FatherChallengeProperty;
 import emu.grasscutter.game.dungeons.challenge.factory.ChallengeFactory;
 import emu.grasscutter.game.entity.*;
@@ -325,19 +326,15 @@ public class ScriptLib {
 		return 0;
 	}
 	// param3 (probably time limit for timed dungeons)
-	public int ActiveChallenge(int challengeId, int challengeIndex, int timeLimitOrGroupId, int groupId, int objectiveKills, int param5) {
+	public int ActiveChallenge(int challengeIndex, int challengeId, int timeLimitOrGroupId, int groupId, int objectiveKills, int param5) {
 		logger.debug("[LUA] Call ActiveChallenge with {},{},{},{},{},{}",
 				challengeId,challengeIndex,timeLimitOrGroupId,groupId,objectiveKills,param5);
 
 		var challenge = ChallengeFactory.getChallenge(
-				challengeId,
-				challengeIndex,
-				timeLimitOrGroupId,
-				groupId,
-				objectiveKills,
-				param5,
+                List.of(challengeIndex, challengeId, 0),
+                List.of(timeLimitOrGroupId, groupId, objectiveKills, param5),
 				getSceneScriptManager().getScene(),
-				getCurrentGroup().get()
+                getCurrentGroup().isPresent() ? getCurrentGroup().get() : null
 				);
 
 		if(challenge == null){
@@ -346,7 +343,8 @@ public class ScriptLib {
 
 		if(challenge instanceof DungeonChallenge dungeonChallenge){
 			// set if tower first stage (6-1)
-			dungeonChallenge.setStage(getSceneScriptManager().getVariables(groupId).getOrDefault("stage", -1) == 0);
+			dungeonChallenge.setStage(Objects.requireNonNull(
+                getSceneScriptManager().getVariables(groupId)).getOrDefault("stage", -1) == 0);
 		}
 
 		getSceneScriptManager().getScene().setChallenge(challenge);
@@ -823,15 +821,31 @@ public class ScriptLib {
         return 0;
     }
 
-    public int CreateFatherChallenge(int var1, int var2, int var3, LuaTable var4){
-        logger.warn("[LUA] Call unimplemented CreateFatherChallenge with {} {} {} {}", var1, var2, var3, var4);
-        //TODO implement var4 object has int success, int fail, bool fail_on_wipe
+    public int CreateFatherChallenge(int challengeIndex, int challengeId, int timeLimit, LuaTable conditionTable){
+        logger.debug("[LUA] Call unimplemented CreateFatherChallenge with {} {} {} {}",
+            challengeIndex, challengeId, timeLimit, conditionTable);
+
+        val challenge = ChallengeFactory.getChallenge(
+            List.of(challengeIndex, challengeId, challengeIndex),
+            List.of(conditionTable.get("success").toint(), conditionTable.get("fail").toint(), timeLimit),
+            getSceneScriptManager().getScene(),
+            getCurrentGroup().isPresent() ? getCurrentGroup().get() : null
+        );
+
+        if (challenge == null) return 1;
+
+        getSceneScriptManager().getScene().setChallenge(challenge);
         return 0;
     }
-    public int StartFatherChallenge(int var1){
-        logger.warn("[LUA] Call unimplemented StartFatherChallenge with {}", var1);
+    public int StartFatherChallenge(int challengeIndex){
+        logger.debug("[LUA] Call unimplemented StartFatherChallenge with {}", challengeIndex);
         //TODO implement
-        return 0;
+        val challenge = getSceneScriptManager().getScene().getChallenge();
+        if (challenge != null && challenge.getChallengeIndex() == challengeIndex) {
+            challenge.start();
+            return 0;
+        }
+        return 1;
     }
     public int ModifyFatherChallengeProperty(int challengeId, int propertyTypeIndex, int value){
         val propertyType = FatherChallengeProperty.values()[propertyTypeIndex];
@@ -839,9 +853,26 @@ public class ScriptLib {
         //TODO implement
         return 0;
     }
-    public int AttachChildChallenge(int var1, int var2, int var3, int[] var4, LuaTable var5, LuaTable var6){
-        logger.warn("[LUA] Call unimplemented AttachChildChallenge with {} {} {} {} {} {}", var1, var2, var3, var4, var5, var6);
-        //TODO implement var6 object has int success, int fail, bool fail_on_wipe
+    public int AttachChildChallenge(int fatherChallengeIndex, int childChallengeIndex, int childChallengeId, int[] conditionArray, LuaTable var5, LuaTable conditionTable){
+        logger.debug("[LUA] Call unimplemented AttachChildChallenge with {} {} {} {} {} {}",
+            fatherChallengeIndex, childChallengeIndex, childChallengeId, conditionArray, var5, conditionTable);
+
+        List<Integer> conditionList = new ArrayList<>(Arrays.stream(conditionArray).boxed().toList());
+        conditionList.add(conditionTable.get("success").toint());
+        conditionList.add(conditionTable.get("fail").toint());
+
+        val challenge = ChallengeFactory.getChallenge(
+            List.of(childChallengeIndex, childChallengeId, fatherChallengeIndex),
+            conditionList,
+            getSceneScriptManager().getScene(),
+            getCurrentGroup().isPresent() ? getCurrentGroup().get() : null
+        );
+
+        val sceneChallenge = getSceneScriptManager().getScene().getChallenge();
+        if (sceneChallenge == null || sceneChallenge.getChallengeIndex() != fatherChallengeIndex
+            || challenge == null || !(sceneChallenge instanceof FatherChallenge fatherChallenge)) return 1;
+
+        fatherChallenge.attachChild(challenge);
         return 0;
     }
     public int CreateEffigyChallengeMonster(int var1, int[] var2){
@@ -929,7 +960,7 @@ public class ScriptLib {
         return 0;
     }
     public int EndTimeAxis(String var1){
-        logger.warn("[LUA] Call unimplemented EndTimeAxis with {} {} {}", var1);
+        logger.warn("[LUA] Call unimplemented EndTimeAxis with {}", var1);
         //TODO implement var1 == name?
         return 0;
     }
@@ -1103,7 +1134,7 @@ public class ScriptLib {
     }
 
     public int PlayCutSceneWithParam(int cutsceneId, int var2, LuaTable var3){
-        logger.warn("[LUA] Call unimplemented PlayCutScene with {} {}", cutsceneId, var2, var3);
+        logger.warn("[LUA] Call unimplemented PlayCutScene with {} {} {}", cutsceneId, var2, var3);
         //TODO implement
         return 0;
     }
