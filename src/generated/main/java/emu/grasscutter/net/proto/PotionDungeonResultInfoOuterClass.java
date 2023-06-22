@@ -31,16 +31,16 @@ public final class PotionDungeonResultInfoOuterClass {
     int getLeftTime();
 
     /**
-     * <code>uint32 Unk2700_FHEHGDABALE = 14;</code>
-     * @return The unk2700FHEHGDABALE.
+     * <code>uint32 difficulty_level = 14;</code>
+     * @return The difficultyLevel.
      */
-    int getUnk2700FHEHGDABALE();
+    int getDifficultyLevel();
 
     /**
-     * <code>uint32 Unk2700_HKFEBBCMBHL = 11;</code>
-     * @return The unk2700HKFEBBCMBHL.
+     * <code>uint32 mode_id = 11;</code>
+     * @return The modeId.
      */
-    int getUnk2700HKFEBBCMBHL();
+    int getModeId();
 
     /**
      * <code>uint32 level_id = 4;</code>
@@ -121,12 +121,12 @@ public final class PotionDungeonResultInfoOuterClass {
             }
             case 88: {
 
-              unk2700HKFEBBCMBHL_ = input.readUInt32();
+              modeId_ = input.readUInt32();
               break;
             }
             case 112: {
 
-              unk2700FHEHGDABALE_ = input.readUInt32();
+              difficultyLevel_ = input.readUInt32();
               break;
             }
             default: {
@@ -183,26 +183,26 @@ public final class PotionDungeonResultInfoOuterClass {
       return leftTime_;
     }
 
-    public static final int UNK2700_FHEHGDABALE_FIELD_NUMBER = 14;
-    private int unk2700FHEHGDABALE_;
+    public static final int DIFFICULTY_LEVEL_FIELD_NUMBER = 14;
+    private int difficultyLevel_;
     /**
-     * <code>uint32 Unk2700_FHEHGDABALE = 14;</code>
-     * @return The unk2700FHEHGDABALE.
+     * <code>uint32 difficulty_level = 14;</code>
+     * @return The difficultyLevel.
      */
     @java.lang.Override
-    public int getUnk2700FHEHGDABALE() {
-      return unk2700FHEHGDABALE_;
+    public int getDifficultyLevel() {
+      return difficultyLevel_;
     }
 
-    public static final int UNK2700_HKFEBBCMBHL_FIELD_NUMBER = 11;
-    private int unk2700HKFEBBCMBHL_;
+    public static final int MODE_ID_FIELD_NUMBER = 11;
+    private int modeId_;
     /**
-     * <code>uint32 Unk2700_HKFEBBCMBHL = 11;</code>
-     * @return The unk2700HKFEBBCMBHL.
+     * <code>uint32 mode_id = 11;</code>
+     * @return The modeId.
      */
     @java.lang.Override
-    public int getUnk2700HKFEBBCMBHL() {
-      return unk2700HKFEBBCMBHL_;
+    public int getModeId() {
+      return modeId_;
     }
 
     public static final int LEVEL_ID_FIELD_NUMBER = 4;
@@ -253,11 +253,11 @@ public final class PotionDungeonResultInfoOuterClass {
       if (leftTime_ != 0) {
         output.writeUInt32(9, leftTime_);
       }
-      if (unk2700HKFEBBCMBHL_ != 0) {
-        output.writeUInt32(11, unk2700HKFEBBCMBHL_);
+      if (modeId_ != 0) {
+        output.writeUInt32(11, modeId_);
       }
-      if (unk2700FHEHGDABALE_ != 0) {
-        output.writeUInt32(14, unk2700FHEHGDABALE_);
+      if (difficultyLevel_ != 0) {
+        output.writeUInt32(14, difficultyLevel_);
       }
       unknownFields.writeTo(output);
     }
@@ -284,13 +284,13 @@ public final class PotionDungeonResultInfoOuterClass {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(9, leftTime_);
       }
-      if (unk2700HKFEBBCMBHL_ != 0) {
+      if (modeId_ != 0) {
         size += com.google.protobuf.CodedOutputStream
-          .computeUInt32Size(11, unk2700HKFEBBCMBHL_);
+          .computeUInt32Size(11, modeId_);
       }
-      if (unk2700FHEHGDABALE_ != 0) {
+      if (difficultyLevel_ != 0) {
         size += com.google.protobuf.CodedOutputStream
-          .computeUInt32Size(14, unk2700FHEHGDABALE_);
+          .computeUInt32Size(14, difficultyLevel_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -311,10 +311,10 @@ public final class PotionDungeonResultInfoOuterClass {
           != other.getFinalScore()) return false;
       if (getLeftTime()
           != other.getLeftTime()) return false;
-      if (getUnk2700FHEHGDABALE()
-          != other.getUnk2700FHEHGDABALE()) return false;
-      if (getUnk2700HKFEBBCMBHL()
-          != other.getUnk2700HKFEBBCMBHL()) return false;
+      if (getDifficultyLevel()
+          != other.getDifficultyLevel()) return false;
+      if (getModeId()
+          != other.getModeId()) return false;
       if (getLevelId()
           != other.getLevelId()) return false;
       if (getStageId()
@@ -334,10 +334,10 @@ public final class PotionDungeonResultInfoOuterClass {
       hash = (53 * hash) + getFinalScore();
       hash = (37 * hash) + LEFT_TIME_FIELD_NUMBER;
       hash = (53 * hash) + getLeftTime();
-      hash = (37 * hash) + UNK2700_FHEHGDABALE_FIELD_NUMBER;
-      hash = (53 * hash) + getUnk2700FHEHGDABALE();
-      hash = (37 * hash) + UNK2700_HKFEBBCMBHL_FIELD_NUMBER;
-      hash = (53 * hash) + getUnk2700HKFEBBCMBHL();
+      hash = (37 * hash) + DIFFICULTY_LEVEL_FIELD_NUMBER;
+      hash = (53 * hash) + getDifficultyLevel();
+      hash = (37 * hash) + MODE_ID_FIELD_NUMBER;
+      hash = (53 * hash) + getModeId();
       hash = (37 * hash) + LEVEL_ID_FIELD_NUMBER;
       hash = (53 * hash) + getLevelId();
       hash = (37 * hash) + STAGE_ID_FIELD_NUMBER;
@@ -479,9 +479,9 @@ public final class PotionDungeonResultInfoOuterClass {
 
         leftTime_ = 0;
 
-        unk2700FHEHGDABALE_ = 0;
+        difficultyLevel_ = 0;
 
-        unk2700HKFEBBCMBHL_ = 0;
+        modeId_ = 0;
 
         levelId_ = 0;
 
@@ -515,8 +515,8 @@ public final class PotionDungeonResultInfoOuterClass {
         emu.grasscutter.net.proto.PotionDungeonResultInfoOuterClass.PotionDungeonResultInfo result = new emu.grasscutter.net.proto.PotionDungeonResultInfoOuterClass.PotionDungeonResultInfo(this);
         result.finalScore_ = finalScore_;
         result.leftTime_ = leftTime_;
-        result.unk2700FHEHGDABALE_ = unk2700FHEHGDABALE_;
-        result.unk2700HKFEBBCMBHL_ = unk2700HKFEBBCMBHL_;
+        result.difficultyLevel_ = difficultyLevel_;
+        result.modeId_ = modeId_;
         result.levelId_ = levelId_;
         result.stageId_ = stageId_;
         onBuilt();
@@ -573,11 +573,11 @@ public final class PotionDungeonResultInfoOuterClass {
         if (other.getLeftTime() != 0) {
           setLeftTime(other.getLeftTime());
         }
-        if (other.getUnk2700FHEHGDABALE() != 0) {
-          setUnk2700FHEHGDABALE(other.getUnk2700FHEHGDABALE());
+        if (other.getDifficultyLevel() != 0) {
+          setDifficultyLevel(other.getDifficultyLevel());
         }
-        if (other.getUnk2700HKFEBBCMBHL() != 0) {
-          setUnk2700HKFEBBCMBHL(other.getUnk2700HKFEBBCMBHL());
+        if (other.getModeId() != 0) {
+          setModeId(other.getModeId());
         }
         if (other.getLevelId() != 0) {
           setLevelId(other.getLevelId());
@@ -629,7 +629,7 @@ public final class PotionDungeonResultInfoOuterClass {
        * @return This builder for chaining.
        */
       public Builder setFinalScore(int value) {
-        
+
         finalScore_ = value;
         onChanged();
         return this;
@@ -639,7 +639,7 @@ public final class PotionDungeonResultInfoOuterClass {
        * @return This builder for chaining.
        */
       public Builder clearFinalScore() {
-        
+
         finalScore_ = 0;
         onChanged();
         return this;
@@ -660,7 +660,7 @@ public final class PotionDungeonResultInfoOuterClass {
        * @return This builder for chaining.
        */
       public Builder setLeftTime(int value) {
-        
+
         leftTime_ = value;
         onChanged();
         return this;
@@ -670,70 +670,70 @@ public final class PotionDungeonResultInfoOuterClass {
        * @return This builder for chaining.
        */
       public Builder clearLeftTime() {
-        
+
         leftTime_ = 0;
         onChanged();
         return this;
       }
 
-      private int unk2700FHEHGDABALE_ ;
+      private int difficultyLevel_ ;
       /**
-       * <code>uint32 Unk2700_FHEHGDABALE = 14;</code>
-       * @return The unk2700FHEHGDABALE.
+       * <code>uint32 difficulty_level = 14;</code>
+       * @return The difficultyLevel.
        */
       @java.lang.Override
-      public int getUnk2700FHEHGDABALE() {
-        return unk2700FHEHGDABALE_;
+      public int getDifficultyLevel() {
+        return difficultyLevel_;
       }
       /**
-       * <code>uint32 Unk2700_FHEHGDABALE = 14;</code>
-       * @param value The unk2700FHEHGDABALE to set.
+       * <code>uint32 difficulty_level = 14;</code>
+       * @param value The difficultyLevel to set.
        * @return This builder for chaining.
        */
-      public Builder setUnk2700FHEHGDABALE(int value) {
-        
-        unk2700FHEHGDABALE_ = value;
+      public Builder setDifficultyLevel(int value) {
+
+        difficultyLevel_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>uint32 Unk2700_FHEHGDABALE = 14;</code>
+       * <code>uint32 difficulty_level = 14;</code>
        * @return This builder for chaining.
        */
-      public Builder clearUnk2700FHEHGDABALE() {
-        
-        unk2700FHEHGDABALE_ = 0;
+      public Builder clearDifficultyLevel() {
+
+        difficultyLevel_ = 0;
         onChanged();
         return this;
       }
 
-      private int unk2700HKFEBBCMBHL_ ;
+      private int modeId_ ;
       /**
-       * <code>uint32 Unk2700_HKFEBBCMBHL = 11;</code>
-       * @return The unk2700HKFEBBCMBHL.
+       * <code>uint32 mode_id = 11;</code>
+       * @return The modeId.
        */
       @java.lang.Override
-      public int getUnk2700HKFEBBCMBHL() {
-        return unk2700HKFEBBCMBHL_;
+      public int getModeId() {
+        return modeId_;
       }
       /**
-       * <code>uint32 Unk2700_HKFEBBCMBHL = 11;</code>
-       * @param value The unk2700HKFEBBCMBHL to set.
+       * <code>uint32 mode_id = 11;</code>
+       * @param value The modeId to set.
        * @return This builder for chaining.
        */
-      public Builder setUnk2700HKFEBBCMBHL(int value) {
-        
-        unk2700HKFEBBCMBHL_ = value;
+      public Builder setModeId(int value) {
+
+        modeId_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>uint32 Unk2700_HKFEBBCMBHL = 11;</code>
+       * <code>uint32 mode_id = 11;</code>
        * @return This builder for chaining.
        */
-      public Builder clearUnk2700HKFEBBCMBHL() {
-        
-        unk2700HKFEBBCMBHL_ = 0;
+      public Builder clearModeId() {
+
+        modeId_ = 0;
         onChanged();
         return this;
       }
@@ -753,7 +753,7 @@ public final class PotionDungeonResultInfoOuterClass {
        * @return This builder for chaining.
        */
       public Builder setLevelId(int value) {
-        
+
         levelId_ = value;
         onChanged();
         return this;
@@ -763,7 +763,7 @@ public final class PotionDungeonResultInfoOuterClass {
        * @return This builder for chaining.
        */
       public Builder clearLevelId() {
-        
+
         levelId_ = 0;
         onChanged();
         return this;
@@ -784,7 +784,7 @@ public final class PotionDungeonResultInfoOuterClass {
        * @return This builder for chaining.
        */
       public Builder setStageId(int value) {
-        
+
         stageId_ = value;
         onChanged();
         return this;
@@ -794,7 +794,7 @@ public final class PotionDungeonResultInfoOuterClass {
        * @return This builder for chaining.
        */
       public Builder clearStageId() {
-        
+
         stageId_ = 0;
         onChanged();
         return this;
@@ -854,7 +854,7 @@ public final class PotionDungeonResultInfoOuterClass {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_PotionDungeonResultInfo_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_PotionDungeonResultInfo_fieldAccessorTable;
 
@@ -866,12 +866,12 @@ public final class PotionDungeonResultInfoOuterClass {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\035PotionDungeonResultInfo.proto\"\237\001\n\027Poti" +
+      "\n\035PotionDungeonResultInfo.proto\"\220\001\n\027Poti" +
       "onDungeonResultInfo\022\023\n\013final_score\030\010 \001(\r" +
-      "\022\021\n\tleft_time\030\t \001(\r\022\033\n\023Unk2700_FHEHGDABA" +
-      "LE\030\016 \001(\r\022\033\n\023Unk2700_HKFEBBCMBHL\030\013 \001(\r\022\020\n" +
-      "\010level_id\030\004 \001(\r\022\020\n\010stage_id\030\002 \001(\rB\033\n\031emu" +
-      ".grasscutter.net.protob\006proto3"
+      "\022\021\n\tleft_time\030\t \001(\r\022\030\n\020difficulty_level\030" +
+      "\016 \001(\r\022\017\n\007mode_id\030\013 \001(\r\022\020\n\010level_id\030\004 \001(\r" +
+      "\022\020\n\010stage_id\030\002 \001(\rB\033\n\031emu.grasscutter.ne" +
+      "t.protob\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -882,7 +882,7 @@ public final class PotionDungeonResultInfoOuterClass {
     internal_static_PotionDungeonResultInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_PotionDungeonResultInfo_descriptor,
-        new java.lang.String[] { "FinalScore", "LeftTime", "Unk2700FHEHGDABALE", "Unk2700HKFEBBCMBHL", "LevelId", "StageId", });
+        new java.lang.String[] { "FinalScore", "LeftTime", "DifficultyLevel", "ModeId", "LevelId", "StageId", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)
