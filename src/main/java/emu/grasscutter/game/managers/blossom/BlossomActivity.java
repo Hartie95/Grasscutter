@@ -46,12 +46,11 @@ public class BlossomActivity {
         ArrayList<ChallengeTrigger> challengeTriggers = new ArrayList<>();
         this.challenge = new WorldChallenge(entityGadget.getScene(),
             tempSceneGroup,
-            1,
-            1,
+            List.of(1, 1, 0),
             List.of(goal, timeout),
             timeout,
             goal, challengeTriggers);
-        challengeTriggers.add(new KillMonsterCountTrigger());
+        challengeTriggers.add(new KillMonsterCountTrigger(1));
         //this.challengeTriggers.add(new InTimeTrigger());
     }
     public WorldChallenge getChallenge() {

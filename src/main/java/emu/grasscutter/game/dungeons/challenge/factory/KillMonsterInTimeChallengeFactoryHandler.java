@@ -17,17 +17,19 @@ public class KillMonsterInTimeChallengeFactoryHandler  implements ChallengeFacto
         return challengeType == ChallengeType.CHALLENGE_KILL_MONSTER_IN_TIME;
     }
 
+    // indices: [currentChallengeIndex, currentChallengeId, fatherChallengeIndex]
+    // params: [timeLimit, groupId, targetCfgId, unused1]
+
     @Override
-    public WorldChallenge build(int challengeIndex, int challengeId, int timeLimit, int groupId, int targetCfgId, int param6, Scene scene, SceneGroup group) {
-        val realGroup = scene.getScriptManager().getGroupById(groupId);
+    public WorldChallenge build(List<Integer> indices, List<Integer> params, Scene scene, SceneGroup group) {
+        val realGroup = scene.getScriptManager().getGroupById(params.get(1));
         return new WorldChallenge(
             scene, realGroup,
-            challengeId, // Id
-            challengeIndex, // Index
-            List.of(timeLimit),
-            timeLimit, // Limit
+            indices,
+            List.of(params.get(0)),
+            params.get(0), // Limit
             0,  // Goal
-            List.of(new KillMonsterTrigger(targetCfgId), new InTimeTrigger())
+            List.of(new KillMonsterTrigger(params.get(2)), new InTimeTrigger(1))
         );
     }
 }

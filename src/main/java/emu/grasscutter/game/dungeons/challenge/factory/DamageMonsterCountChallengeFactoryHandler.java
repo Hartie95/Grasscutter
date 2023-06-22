@@ -1,34 +1,34 @@
 package emu.grasscutter.game.dungeons.challenge.factory;
 
+import emu.grasscutter.game.dungeons.challenge.ChildChallenge;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.ChallengeType;
-import emu.grasscutter.game.dungeons.challenge.trigger.ForTimeTrigger;
+import emu.grasscutter.game.dungeons.challenge.trigger.DamageMonsterCountTrigger;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.scripts.data.SceneGroup;
 
 import java.util.List;
 
-import static emu.grasscutter.game.dungeons.challenge.enums.ChallengeType.CHALLENGE_SURVIVE;
+import static emu.grasscutter.game.dungeons.challenge.enums.ChallengeType.CHALLENGE_MONSTER_DAMAGE_COUNT;
 
-public class SurviveChallengeFactoryHandler implements ChallengeFactoryHandler {
+public class DamageMonsterCountChallengeFactoryHandler implements ChallengeFactoryHandler {
     @Override
     public boolean isThisType(ChallengeType challengeType) {
-        // grp 201055005
-        // ActiveChallenge with 100, 56, 60, 0, 0, 0
-        return challengeType == CHALLENGE_SURVIVE;
+        return challengeType == CHALLENGE_MONSTER_DAMAGE_COUNT;
     }
 
     // indices: [currentChallengeIndex, currentChallengeId, fatherChallengeIndex]
-    // params: [timeToSurvive, unused1, unused2, unused3]
+    // params: [damageCount(total/goal), unused1, unused2, unused3, successCount, failCount]
     @Override
     public WorldChallenge build(List<Integer> indices, List<Integer> params, Scene scene, SceneGroup group) {
-        return new WorldChallenge(
+        return new ChildChallenge(
             scene, group,
             indices,
             List.of(params.get(0)),
-            params.get(0), // Limit
-            0,  // Goal
-            List.of(new ForTimeTrigger(1))
+            0,
+            params.get(0),
+            List.of(new DamageMonsterCountTrigger(1)),
+            params.get(4), params.get(5)
         );
     }
 }
