@@ -867,9 +867,9 @@ public class Player {
         return true;
     }
 
-    public void addTrialAvatarsForDungeon(@NotNull List<Integer> trialAvatarIds, GrantReason reason, int questMainId) {
+    public void addTrialAvatarsForDungeon(@NotNull List<Integer> trialAvatarIds, GrantReason reason) {
         getTeamManager().setupTrialAvatarTeamForDungeon();
-        trialAvatarIds.forEach(trialAvatarId -> addTrialAvatar(trialAvatarId, reason, questMainId));
+        trialAvatarIds.forEach(trialAvatarId -> addTrialAvatar(trialAvatarId, reason, 0));
     }
 
     public boolean removeTrialAvatarForQuest(int trialAvatarId) {

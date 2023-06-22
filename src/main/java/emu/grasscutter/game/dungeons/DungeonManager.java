@@ -235,7 +235,7 @@ public class DungeonManager {
                         player.getActivityManager().getActivityHandlerAs(
                             ActivityType.NEW_ACTIVITY_TRIAL_AVATAR, TrialAvatarActivityHandler.class)
                         .ifPresent(handler -> player.addTrialAvatarsForDungeon(
-                            handler.getBattleAvatarsList(), GrantReason.GRANT_REASON_BY_TRIAL_AVATAR_ACTIVITY, 0));
+                            handler.getBattleAvatarsList(), GrantReason.GRANT_REASON_BY_TRIAL_AVATAR_ACTIVITY));
                     }
                     case DUNGEON_PLAY_TYPE_MIST_TRIAL -> {} // TODO
                 }
@@ -244,7 +244,7 @@ public class DungeonManager {
                 Optional.ofNullable(GameData.getDungeonElementChallengeDataMap().get(getDungeonData().getId()))
                     .ifPresent(elementDungeonData -> {
                         player.addTrialAvatarsForDungeon(elementDungeonData.getTrialAvatarId(),
-                            GrantReason.GRANT_REASON_BY_DUNGEON_ELEMENT_CHALLENGE, 0);
+                            GrantReason.GRANT_REASON_BY_DUNGEON_ELEMENT_CHALLENGE);
                     });
             }
         }
