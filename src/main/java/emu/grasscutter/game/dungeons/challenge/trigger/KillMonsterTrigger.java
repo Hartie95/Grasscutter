@@ -2,20 +2,19 @@ package emu.grasscutter.game.dungeons.challenge.trigger;
 
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.entity.EntityMonster;
-import emu.grasscutter.server.packet.send.PacketChallengeDataNotify;
-import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-@AllArgsConstructor
 public class KillMonsterTrigger extends ChallengeTrigger{
-    private int monsterCfgId;
-    @Override
-    public void onBegin(WorldChallenge challenge) {
-        challenge.getScene().broadcastPacket(new PacketChallengeDataNotify(challenge, 1, challenge.getScore().get()));
+    @Getter private final int monsterCfgId;
+
+    public KillMonsterTrigger(int monsterCfgId){
+        super(0);
+        this.monsterCfgId = monsterCfgId;
     }
 
     @Override
     public void onMonsterDeath(WorldChallenge challenge, EntityMonster monster) {
-        if(monster.getConfigId() == monsterCfgId){
+        if(monster.getConfigId() == getMonsterCfgId()){
             challenge.done();
         }
     }
