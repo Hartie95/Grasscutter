@@ -18,17 +18,18 @@ public class SurviveChallengeFactoryHandler implements ChallengeFactoryHandler {
         return challengeType == CHALLENGE_SURVIVE;
     }
 
-    // indices: [currentChallengeIndex, currentChallengeId, fatherChallengeIndex]
-    // params: [timeToSurvive, unused1, unused2, unused3]
+    /**
+     * Build a new challenge
+     * @param params: [timeToSurvive, unused1, unused2, unused3]
+     */
     @Override
     public WorldChallenge build(List<Integer> indices, List<Integer> params, Scene scene, SceneGroup group) {
         return new WorldChallenge(
             scene, group,
             indices,
-            List.of(params.get(0)),
-            params.get(0), // Limit
-            0,  // Goal
-            List.of(new ForTimeTrigger(1))
+            List.of(params.get(0)), params.get(0), 0, // parameters, time limit, goal
+            List.of(new ForTimeTrigger(1)),
+            0, 0 // success count, fail count
         );
     }
 }

@@ -262,10 +262,10 @@ public class Scene {
     }
 
     private static <T> List<List<T>> chopped(List<T> list, final int L) {
-        List<List<T>> parts = new ArrayList<List<T>>();
+        List<List<T>> parts = new ArrayList<>();
         final int N = list.size();
         for (int i = 0; i < N; i += L) {
-            parts.add(new ArrayList<T>(
+            parts.add(new ArrayList<>(
                 list.subList(i, Math.min(N, i + L)))
             );
         }
@@ -334,23 +334,18 @@ public class Scene {
         GameEntity target = getEntityById(result.getDefenseId());
         ElementType attackType = ElementType.getTypeByValue(result.getElementType());
 
-        if (target == null) {
-            return;
-        }
+        if (target == null) return;
 
         // Godmode check
-        if (target instanceof EntityAvatar) {
-            if (((EntityAvatar) target).getPlayer().inGodmode()) {
-                return;
-            }
+        if (target instanceof EntityAvatar entityAvatar) {
+            if (entityAvatar.getPlayer().inGodmode()) return;
+
+            Optional.ofNullable(getChallenge()).ifPresent(c -> {
+                if (!(getEntityById(result.getAttackerId()) instanceof EntityMonster monster)) return;
+                c.onDamageMonsterOrShield(monster, result.getDamageShield());
+            });
         }
 
-        // Sanity check
-//        if (target instanceof EntityMonster monsterTarget) {
-//            monsterTarget.damage(result.getDamage(), result.getAttackerId(), attackType,
-//                ElementReactionType.getTypeByValue(result.getAmplifyReactionType()));
-//            return;
-//        }
         target.damage(result.getDamage(), result.getAttackerId(), attackType);
     }
 
@@ -506,11 +501,7 @@ public class Scene {
     }
 
     public int getEntityLevel(int baseLevel, int worldLevelOverride) {
-        int level = worldLevelOverride > 0 ? worldLevelOverride + baseLevel - 22 : baseLevel;
-        level = level >= 100 ? 100 : level;
-        level = level <= 0 ? 1 : level;
-
-        return level;
+        return Math.max(1, Math.min(Math.max(worldLevelOverride + baseLevel - 22, baseLevel), 100));
     }
 
     public void checkNpcGroup() {
@@ -536,8 +527,7 @@ public class Scene {
     public synchronized void checkSpawns() {
         Set<SpawnDataEntry.GridBlockId> loadedGridBlocks = new HashSet<>();
         for (Player player : this.getPlayers()) {
-            for (SpawnDataEntry.GridBlockId block : SpawnDataEntry.GridBlockId.getAdjacentGridBlockIds(player.getSceneId(), player.getPosition()))
-                loadedGridBlocks.add(block);
+            loadedGridBlocks.addAll(Arrays.asList(SpawnDataEntry.GridBlockId.getAdjacentGridBlockIds(player.getSceneId(), player.getPosition())));
         }
         if (this.loadedGridBlocks.containsAll(loadedGridBlocks)) {  // Don't recalculate static spawns if nothing has changed
             return;
@@ -565,7 +555,7 @@ public class Scene {
         List<GameEntity> toRemove = new ArrayList<>();
         var spawnedEntities = this.getSpawnedEntities();
         for (SpawnDataEntry entry : visible) {
-            // If spawn entry is in our view and hasnt been spawned/killed yet, we should spawn it
+            // If spawn entry is in our view and hasn't been spawned/killed yet, we should spawn it
             if (!spawnedEntities.contains(entry) && !this.getDeadSpawnedEntities().contains(entry)) {
                 // Entity object holder
                 GameEntity entity = null;
@@ -621,11 +611,11 @@ public class Scene {
         }
 
         if (toAdd.size() > 0) {
-            toAdd.stream().forEach(this::addEntityDirectly);
+            toAdd.forEach(this::addEntityDirectly);
             this.broadcastPacket(new PacketSceneEntityAppearNotify(toAdd, VisionType.VISION_TYPE_BORN));
         }
         if (toRemove.size() > 0) {
-            toRemove.stream().forEach(this::removeEntityDirectly);
+            toRemove.forEach(this::removeEntityDirectly);
             this.broadcastPacket(new PacketSceneEntityDisappearNotify(toRemove, VisionType.VISION_TYPE_REMOVE));
             blossomManager.recycleGadgetEntity(toRemove);
         }
@@ -664,17 +654,16 @@ public class Scene {
         playerMoved.forEach(p -> p.setLastCheckedPosition(p.getPosition().clone()));
 
         Set<Integer> visible = this.players.stream()
-            .map(player -> this.getPlayerActiveGroups(player))
+            .map(this::getPlayerActiveGroups)
             .flatMap(Collection::stream)
             .collect(Collectors.toSet());
 
-        Iterator<SceneGroup> it = this.loadedGroups.iterator();
-        while(it.hasNext()) {
-            SceneGroup group = it.next();
-            if(!visible.contains(group.id) && !group.dynamic_load) unloadGroup(scriptManager.getBlocks().get(group.block_id), group.id);
+        for (SceneGroup group : this.loadedGroups) {
+            if (!visible.contains(group.id) && !group.dynamic_load)
+                unloadGroup(scriptManager.getBlocks().get(group.block_id), group.id);
         }
 
-        List<SceneGroup> toLoad = visible.stream().filter(g -> this.loadedGroups.stream().filter(gr -> gr.id == g).count() == 0).map(g -> {
+        List<SceneGroup> toLoad = visible.stream().filter(g -> this.loadedGroups.stream().noneMatch(gr -> gr.id == g)).map(g -> {
             for(var b : scriptManager.getBlocks().values()) {
                 loadBlock(b);
                 SceneGroup group = b.groups.getOrDefault(g, null);
@@ -682,7 +671,7 @@ public class Scene {
             }
 
             return null;
-        }).filter(g -> g != null).toList();
+        }).filter(Objects::nonNull).toList();
 
         this.onLoadGroup(toLoad);
         if(!toLoad.isEmpty()) this.onRegisterGroups();
@@ -699,7 +688,7 @@ public class Scene {
         SceneGroup group = getScriptManager().getGroupById(group_id);
         if(group == null || getScriptManager().getGroupInstanceById(group_id) != null) return -1; //Group not found or already instanced
 
-        onLoadGroup(new ArrayList<>(Arrays.asList(group)));
+        onLoadGroup(new ArrayList<>(List.of(group)));
 
         if(GameData.getGroupReplacements().containsKey(group_id)) onRegisterGroups();
 
@@ -723,49 +712,51 @@ public class Scene {
             .map(group -> group.id)
             .toList();
         List<Integer> dynamicGroups = sceneGroups.stream()
-                .filter(group -> group.dynamic_load)
-                .map(group -> group.id)
-                .toList();
+            .filter(group -> group.dynamic_load)
+            .map(group -> group.id)
+            .toList();
 
         //Create the graph
         List<KahnsSort.Node> nodes = new ArrayList<>();
         List<Integer> groupList = new ArrayList<>();
-        GameData.getGroupReplacements().values().stream().filter(replacement -> dynamicGroups.contains(replacement.id)).forEach(replacement -> {
-            Grasscutter.getLogger().info("Graph ordering replacement {}", replacement);
-            replacement.replace_groups.forEach(group -> {
-                nodes.add(new KahnsSort.Node(replacement.id, group));
-                if(!groupList.contains(group)) groupList.add(group);
+        GameData.getGroupReplacements().values().stream()
+            .filter(replacement -> dynamicGroups.contains(replacement.id))
+            .forEach(replacement -> {
+                Grasscutter.getLogger().info("Graph ordering replacement {}", replacement);
+                replacement.replace_groups.forEach(group -> {
+                    nodes.add(new KahnsSort.Node(replacement.id, group));
+                    if(!groupList.contains(group)) groupList.add(group);
+                });
+                if(!groupList.contains(replacement.id)) groupList.add(replacement.id);
             });
-            if(!groupList.contains(replacement.id)) groupList.add(replacement.id);
-        });
 
-        KahnsSort.Graph graph = new KahnsSort.Graph(nodes, groupList);
-        List<Integer> dynamicGroupsOrdered = KahnsSort.doSort(graph);
+        List<Integer> dynamicGroupsOrdered = KahnsSort.doSort(new KahnsSort.Graph(nodes, groupList));
 
         //Now we can start unloading and loading groups :D
-        dynamicGroupsOrdered.forEach(group -> {
-            if(GameData.getGroupReplacements().containsKey((int)group)) { //isGroupJoinReplacement
-                GroupReplacementData data = GameData.getGroupReplacements().get((int)group);
-                SceneGroup sceneGroupReplacement = this.loadedGroups.stream().filter(g -> g.id == group).findFirst().get();
-                if(sceneGroupReplacement != null && sceneGroupReplacement.is_replaceable != null) {
-                    Iterator<Integer> it = data.replace_groups.iterator();
-                    while(it.hasNext()) {
-                        int replace_group = it.next();
-                        if(sceneGroupsIds.contains(replace_group)) {
-                            //Check if we can replace this group
-                            SceneGroup sceneGroup = sceneGroupMap.get(replace_group);
-                            if(sceneGroup != null && sceneGroup.is_replaceable != null &&
-                                ((sceneGroup.is_replaceable.value &&
-                                sceneGroup.is_replaceable.version <= sceneGroupReplacement.is_replaceable.version) || sceneGroup.is_replaceable.new_bin_only)) {
-                                unloadGroup(scriptManager.getBlocks().get(sceneGroup.block_id), replace_group);
-                                it.remove();
-                                Grasscutter.getLogger().info("Graph ordering: unloaded {}", replace_group);
-                            }
-                        }
+        Optional.ofNullable(dynamicGroupsOrdered).ifPresent(gList -> gList.forEach(group -> {
+            //isGroupJoinReplacement
+            if(!GameData.getGroupReplacements().containsKey((int) group)) return;
+
+            GroupReplacementData data = GameData.getGroupReplacements().get((int) group);
+
+            getLoadedGroups().stream().filter(g -> g.id == group).findFirst().ifPresent(sceneGroupReplacement -> {
+                if(sceneGroupReplacement.is_replaceable == null) return;
+
+                data.replace_groups.iterator().forEachRemaining(replace_group -> {
+                    if(!sceneGroupsIds.contains(replace_group)) return;
+
+                    //Check if we can replace this group
+                    SceneGroup sceneGroup = sceneGroupMap.get(replace_group);
+                    if(sceneGroup != null && sceneGroup.is_replaceable != null
+                        && ((sceneGroup.is_replaceable.value && sceneGroup.is_replaceable.version
+                            <= sceneGroupReplacement.is_replaceable.version)
+                        || sceneGroup.is_replaceable.new_bin_only)) {
+                        unloadGroup(scriptManager.getBlocks().get(sceneGroup.block_id), replace_group);
+                        Grasscutter.getLogger().info("Graph ordering: unloaded {}", replace_group);
                     }
-                }
-            }
-        });
+                });
+            });
+        }));
     }
 
     public void loadTriggerFromGroup(SceneGroup group, String triggerName) {
@@ -854,7 +845,7 @@ public class Scene {
             Grasscutter.getLogger().info("Scene {} Block {} is unloaded.", this.getId(), block.id);
         }
 
-        broadcastPacket(new PacketGroupUnloadNotify(Arrays.asList(group_id)));
+        broadcastPacket(new PacketGroupUnloadNotify(List.of(group_id)));
         scriptManager.unregisterGroup(group);
     }
 
@@ -878,12 +869,11 @@ public class Scene {
     public void onPlayerDestroyGadget(int entityId) {
         GameEntity entity = getEntities().get(entityId);
 
-        if (entity == null || !(entity instanceof EntityClientGadget)) {
+        if (!(entity instanceof EntityClientGadget gadget)) {
             return;
         }
 
         // Get and remove entity
-        EntityClientGadget gadget = (EntityClientGadget) entity;
         this.removeEntityDirectly(gadget);
 
         // Remove from owner's gadget list

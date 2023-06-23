@@ -2,11 +2,15 @@ package emu.grasscutter.game.ability;
 
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import emu.grasscutter.game.entity.EntityMonster;
+import emu.grasscutter.game.props.ElementReactionType;
+import emu.grasscutter.net.proto.AbilityMetaTriggerElementReactionOuterClass.AbilityMetaTriggerElementReaction;
 import lombok.val;
 import org.reflections.Reflections;
 
@@ -108,6 +112,7 @@ public final class AbilityManager extends BasePlayerManager {
             case ABILITY_INVOKE_ARGUMENT_META_MODIFIER_DURABILITY_CHANGE -> this.handleModifierDurabilityChange(invoke);
             case ABILITY_INVOKE_ARGUMENT_META_ADD_NEW_ABILITY -> this.handleAddNewAbility(invoke);
             case ABILITY_INVOKE_ARGUMENT_NONE -> this.handleInvoke(invoke);
+            case ABILITY_INVOKE_ARGUMENT_META_TRIGGER_ELEMENT_REACTION -> this.handleTriggerElementReaction(invoke);
             default -> {}
         }
     }
@@ -165,7 +170,7 @@ public final class AbilityManager extends BasePlayerManager {
     private boolean checkAbility(Ability ability, int hash, GameEntity entity, int instancedAbilityId){
         val abilityName = ability.getData().abilityName;
         val entityInstanceName = entity.getInstanceToName().get(instancedAbilityId);
-        return ability.getHash() == hash || abilityName!=null && entityInstanceName != null && abilityName.equals(entityInstanceName);
+        return ability.getHash() == hash || abilityName != null && abilityName.equals(entityInstanceName);
     }
 
     private void handleInvoke(AbilityInvokeEntry invoke) {
@@ -175,9 +180,6 @@ public final class AbilityManager extends BasePlayerManager {
         }
 
         AbilityInvokeEntryHead head = invoke.getHead();
-        if (head == null) {
-            return;
-        }
 
         Grasscutter.getLogger().debug("{} {} {}", head.getInstancedAbilityId(), entity.getInstanceToHash(), head.getLocalId());
 
@@ -251,9 +253,6 @@ public final class AbilityManager extends BasePlayerManager {
 
         // Sanity checks
         AbilityInvokeEntryHead head = invoke.getHead();
-        if (head == null) {
-            return;
-        }
 
         if(data.getAction() == ModifierAction.REMOVED) {
             Ability ability = target.getAbilities().get(data.getParentAbilityName().getStr());
@@ -266,7 +265,7 @@ public final class AbilityManager extends BasePlayerManager {
             }
         }
 
-        if(data.getAction() == ModifierAction.ADDED && data.getParentAbilityName() != null) {
+        if(data.getAction() == ModifierAction.ADDED) {
             String modifierString = data.getParentAbilityName().getStr();
 
             Integer hash = target.getInstanceToHash().get(head.getInstancedAbilityId());
@@ -283,8 +282,8 @@ public final class AbilityManager extends BasePlayerManager {
             return;
         }
 
-        // This is not how it works but we will keep it for now since healing abilities dont work properly anyways
-        if (data.getAction() == ModifierAction.ADDED && data.getParentAbilityName() != null) {
+        // This is not how it works, but we will keep it for now since healing abilities don't work properly anyway
+        if (data.getAction() == ModifierAction.ADDED) {
             // Handle add modifier here
             String modifierString = data.getParentAbilityName().getStr();
             AbilityModifierEntry modifier = GameData.getAbilityModifiers().get(modifierString);
@@ -367,9 +366,6 @@ public final class AbilityManager extends BasePlayerManager {
         }
 
         AbilityInvokeEntryHead head = invoke.getHead();
-        if (head == null) {
-            return;
-        }
 
         Integer hash = target.getInstanceToHash().get(head.getInstancedAbilityId());
         if(hash == null) return;
@@ -398,10 +394,44 @@ public final class AbilityManager extends BasePlayerManager {
         target.getInstanceToName().put(data.getAbility().getInstancedAbilityId(), data.getAbility().getAbilityName().getStr());
     }
 
+    /**
+     * Invoked when an entity triggered an elemental reaction.
+     * @param invoke Holds information of elemental reaction, attacker and target.
+     */
+    private void handleTriggerElementReaction(AbilityInvokeEntry invoke) throws InvalidProtocolBufferException {
+        if (getPlayer().getScene() == null) return;
+
+        AbilityMetaTriggerElementReaction data = AbilityMetaTriggerElementReaction.parseFrom(invoke.getAbilityData());
+        GameEntity attackEntity = getPlayer().getScene().getEntityById(data.getTriggerEntityId());
+        GameEntity targetEntity = getPlayer().getScene().getEntityById(invoke.getEntityId());
+        if (attackEntity == null || targetEntity == null) return;
+
+        switch (attackEntity.getClass().getSimpleName()) {
+            // client gadget can be Kaeya's ult crystals, Xiangling's ult and Ningguang's auto attack amber
+            case "EntityAvatar", "EntityClientGadget" -> {
+                ElementReactionType reactionType = ElementReactionType.getTypeByValue(data.getElementReactionType());
+                Grasscutter.getLogger().debug(
+                    "EntityAttack: {}, EntityId: {}", attackEntity, data.getTriggerEntityId());
+                Grasscutter.getLogger().debug(
+                    "EntityTarget: {}, EntityId: {}", targetEntity, invoke.getEntityId());
+                Grasscutter.getLogger().debug(
+                    "ReactionType: {}, Value: {}", reactionType, data.getElementReactionType());
+
+                // Challenge related action
+                Optional.ofNullable(getPlayer().getScene().getChallenge())
+                    .ifPresent(sceneChallenge -> {
+                        if (!(targetEntity instanceof EntityMonster entityMonster)) return;
+
+                        sceneChallenge.onElementReaction(entityMonster, reactionType);
+                    });
+            }
+            case "EntityMonster", "EntityGadget" -> {} // TODO
+        }
+    }
+
     public void addAbilityToEntity(GameEntity entity, String name) {
-        AbilityData data = GameData.getAbilityData(name);
-        if(data != null)
-            addAbilityToEntity(entity, data, name);
+        Optional.ofNullable(GameData.getAbilityData(name))
+            .ifPresent(data -> addAbilityToEntity(entity, data, name));
     }
 
     public void addAbilityToEntity(GameEntity entity, AbilityData abilityData, String id) {

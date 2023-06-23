@@ -4,7 +4,7 @@ import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.game.activity.ActivityManager;
 import emu.grasscutter.game.dungeons.challenge.DungeonChallenge;
-import emu.grasscutter.game.dungeons.challenge.FatherChallenge;
+import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.FatherChallengeProperty;
 import emu.grasscutter.game.dungeons.challenge.factory.ChallengeFactory;
 import emu.grasscutter.game.entity.*;
@@ -822,10 +822,10 @@ public class ScriptLib {
     }
 
     public int CreateFatherChallenge(int challengeIndex, int challengeId, int timeLimit, LuaTable conditionTable){
-        logger.debug("[LUA] Call unimplemented CreateFatherChallenge with {} {} {} {}",
+        logger.debug("[LUA] Call CreateFatherChallenge with {} {} {} {}",
             challengeIndex, challengeId, timeLimit, conditionTable);
 
-        val challenge = ChallengeFactory.getChallenge(
+        WorldChallenge challenge = ChallengeFactory.getChallenge(
             List.of(challengeIndex, challengeId, challengeIndex),
             List.of(conditionTable.get("success").toint(), conditionTable.get("fail").toint(), timeLimit),
             getSceneScriptManager().getScene(),
@@ -838,7 +838,7 @@ public class ScriptLib {
         return 0;
     }
     public int StartFatherChallenge(int challengeIndex){
-        logger.debug("[LUA] Call unimplemented StartFatherChallenge with {}", challengeIndex);
+        logger.debug("[LUA] Call StartFatherChallenge with {}", challengeIndex);
         //TODO implement
         val challenge = getSceneScriptManager().getScene().getChallenge();
         if (challenge != null && challenge.getChallengeIndex() == challengeIndex) {
@@ -854,25 +854,25 @@ public class ScriptLib {
         return 0;
     }
     public int AttachChildChallenge(int fatherChallengeIndex, int childChallengeIndex, int childChallengeId, int[] conditionArray, LuaTable var5, LuaTable conditionTable){
-        logger.debug("[LUA] Call unimplemented AttachChildChallenge with {} {} {} {} {} {}",
+        logger.debug("[LUA] Call AttachChildChallenge with {} {} {} {} {} {}",
             fatherChallengeIndex, childChallengeIndex, childChallengeId, conditionArray, var5, conditionTable);
 
         List<Integer> conditionList = new ArrayList<>(Arrays.stream(conditionArray).boxed().toList());
         conditionList.add(conditionTable.get("success").toint());
         conditionList.add(conditionTable.get("fail").toint());
 
-        val challenge = ChallengeFactory.getChallenge(
+        WorldChallenge challenge = ChallengeFactory.getChallenge(
             List.of(childChallengeIndex, childChallengeId, fatherChallengeIndex),
             conditionList,
             getSceneScriptManager().getScene(),
             getCurrentGroup().isPresent() ? getCurrentGroup().get() : null
         );
 
-        val sceneChallenge = getSceneScriptManager().getScene().getChallenge();
-        if (sceneChallenge == null || sceneChallenge.getChallengeIndex() != fatherChallengeIndex
-            || challenge == null || !(sceneChallenge instanceof FatherChallenge fatherChallenge)) return 1;
+        WorldChallenge sceneChallenge = getSceneScriptManager().getScene().getChallenge();
+        if (sceneChallenge == null || challenge == null
+            || sceneChallenge.getChallengeIndex() != fatherChallengeIndex) return 1;
 
-        fatherChallenge.attachChild(challenge);
+        sceneChallenge.attachChild(challenge);
         return 0;
     }
     public int CreateEffigyChallengeMonster(int var1, int[] var2){

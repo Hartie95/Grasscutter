@@ -33,7 +33,11 @@ public enum ElementReactionType {
     SwirlElectricAccu(23),
     SwirlIceAccu(24),
     StickRock(25),
-    StickWater(26);
+    StickWater(26),
+    CrystalliseFire(27),
+    CrystalliseWater(28),
+    CrystalliseElectric(29),
+    CrystalliseIce(30);
 
     private final int value;
     private static final Int2ObjectMap<ElementReactionType> map = new Int2ObjectOpenHashMap<>();

@@ -21,17 +21,18 @@ public class TriggerInTimeChallengeFactoryHandler implements ChallengeFactoryHan
         return challengeType == CHALLENGE_TRIGGER_IN_TIME;
     }
 
-    // indices: [currentChallengeIndex, currentChallengeId, fatherChallengeIndex]
-    // params: [timeLimit, param4, triggerTag, triggerCount]
+    /**
+     * Build a new challenge
+     * @param params: [timeLimit, unused1, triggerTag, triggerCount]
+     */
     @Override
     public WorldChallenge build(List<Integer> indices, List<Integer> params, Scene scene, SceneGroup group) {
         return new WorldChallenge(
             scene, group,
             indices,
-            List.of(params.get(0), params.get(3)),
-            params.get(0), // Limit
-            params.get(3),  // Goal
-            List.of(new InTimeTrigger(1), new TriggerGroupTriggerTrigger(2, Integer.toString(params.get(2))))
+            List.of(params.get(0), params.get(3)), params.get(0), params.get(3), // parameters, time limit, goal
+            List.of(new InTimeTrigger(1), new TriggerGroupTriggerTrigger(2, Integer.toString(params.get(2)))),
+            0, 0 // success count, fail count
         );
     }
 }
