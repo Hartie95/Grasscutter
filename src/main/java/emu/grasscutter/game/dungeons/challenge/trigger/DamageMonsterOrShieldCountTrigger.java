@@ -1,17 +1,11 @@
 package emu.grasscutter.game.dungeons.challenge.trigger;
 
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
-import emu.grasscutter.game.entity.EntityMonster;
-import emu.grasscutter.game.props.ElementReactionType;
 import emu.grasscutter.server.packet.send.PacketChallengeDataNotify;
-import lombok.Getter;
 
-public class ElementReactionCountTrigger extends ChallengeTrigger{
-    @Getter private final ElementReactionType goalReactionType;
-
-    public ElementReactionCountTrigger(int paramIndex, int reactionType) {
+public class DamageMonsterOrShieldCountTrigger extends ChallengeTrigger{
+    public DamageMonsterOrShieldCountTrigger(int paramIndex) {
         super(paramIndex);
-        this.goalReactionType = ElementReactionType.getTypeByValue(reactionType);
     }
 
     @Override
@@ -21,15 +15,15 @@ public class ElementReactionCountTrigger extends ChallengeTrigger{
     }
 
     @Override
-    public void onElementReactionCount(WorldChallenge challenge, EntityMonster monster, ElementReactionType reactionType) {
+    public void onDamageMonsterOrShield(WorldChallenge challenge, float damage) {
         int oldScore = challenge.getScore().get();
-        int newScore = reactionType == getGoalReactionType() ? challenge.increaseScore() : oldScore;
+        int newScore = challenge.getScore().addAndGet((int) damage);
 
         if (oldScore != newScore) {
             challenge.getScene().broadcastPacket(new PacketChallengeDataNotify(challenge, getParamIndex(), newScore));
         }
 
-        if (newScore >= challenge.getGoal()) {
+        if(newScore >= challenge.getGoal()){
             challenge.done();
         }
     }

@@ -19,19 +19,19 @@ public class KillAndGuardChallengeFactoryHandler implements ChallengeFactoryHand
         return challengeType == CHALLENGE_KILL_COUNT_GUARD_HP;
     }
 
-    // indices: [currentChallengeIndex, currentChallengeId, fatherChallengeIndex]
-    // params: [groupId, monstersToKill, gadgetCFGId, unused]
-
+    /**
+     * Build a new challenge
+     * @param params: [groupId, monstersToKill, gadgetCFGId, unused1]
+     */
     @Override /*TODO check param4 == monstersToKill*/
     public WorldChallenge build(List<Integer> indices, List<Integer> params, Scene scene, SceneGroup group) {
         val realGroup = scene.getScriptManager().getGroupById(params.get(0));
         return new WorldChallenge(
             scene, realGroup,
             indices,
-            List.of(params.get(1), 100),
-            0, // Limit
-            params.get(1),  // Goal
-            List.of(new KillMonsterCountTrigger(1), new GuardTrigger(2, params.get(2)))
+            List.of(params.get(1), 100), 0, params.get(1), // parameters, time limit, goal
+            List.of(new KillMonsterCountTrigger(1), new GuardTrigger(2, params.get(2))),
+            0, 0 // success count, fail count
         );
     }
 }

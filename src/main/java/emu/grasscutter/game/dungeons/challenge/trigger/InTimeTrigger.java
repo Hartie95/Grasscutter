@@ -10,14 +10,21 @@ public class InTimeTrigger extends ChallengeTrigger{
 
     @Override
     public void onBegin(WorldChallenge challenge) {
+        if (getParamIndex() < 1) return; // when challenge is FreezeInTime
+
         challenge.getScene().broadcastPacket(new PacketChallengeDataNotify(
             challenge, getParamIndex(), challenge.getStartedAt() + challenge.getTimeLimit()));
     }
 
     @Override
     public void onCheckTimeout(WorldChallenge challenge) {
-        if(challenge.getScene().getSceneTimeSeconds() - challenge.getStartedAt() > challenge.getTimeLimit()){
-            challenge.fail();
+        if(challenge.getScene().getSceneTimeSeconds() - challenge.getStartedAt() <= challenge.getTimeLimit()) return;
+
+        if (getParamIndex() < 1) {// when challenge is FreezeInTime
+            challenge.getScore().set(0);
+            challenge.setStartedAt(challenge.getScene().getSceneTimeSeconds());
+            return;
         }
+        challenge.fail();
     }
 }

@@ -19,18 +19,19 @@ public class KillMonsterTimeChallengeFactoryHandler implements ChallengeFactoryH
             challengeType == ChallengeType.CHALLENGE_KILL_COUNT_FAST;
     }
 
-    // indices: [currentChallengeIndex, currentChallengeId, fatherChallengeIndex]
-    // params: [timeLimit, groupId, targetCount, unused1]
+    /**
+     * Build a new challenge
+     * @param params: [timeLimit, groupId, targetCount, unused1]
+     */
     @Override
     public WorldChallenge build(List<Integer> indices, List<Integer> params, Scene scene, SceneGroup group) {
         val realGroup = scene.getScriptManager().getGroupById(params.get(1));
         return new WorldChallenge(
             scene, realGroup,
             indices,
-            List.of(params.get(2), params.get(0)),
-            params.get(0), // Limit
-            params.get(2),  // Goal
-            List.of(new KillMonsterCountTrigger(1), new InTimeTrigger(2))
+            List.of(params.get(2), params.get(0)), params.get(0), params.get(2), // parameters, time limit, goal
+            List.of(new KillMonsterCountTrigger(1), new InTimeTrigger(2)),
+            0, 0 // success count, fail count
         );
     }
 }
