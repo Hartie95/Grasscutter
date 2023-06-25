@@ -547,7 +547,9 @@ public class ResourceLoader {
         try (val stream = Files.list(getResourcePath("ScriptSceneData/"))) {
             stream.forEach(path -> {
                 try {
-                    GameData.getScriptSceneDataMap().put(path.getFileName().toString(), JsonUtils.loadToClass(path, ScriptSceneData.class));
+                    val scriptObject = JsonUtils.loadToClass(path, ScriptSceneData.class);
+                    scriptObject.getScriptObjectList().values().forEach(ScriptSceneData.ScriptObject::onLoad);
+                    GameData.getScriptSceneDataMap().put(path.getFileName().toString(), scriptObject);
                 } catch (IOException e) {
                     logger.warn("Error loading ScriptSceneData from {}", path, e);
                     return;
