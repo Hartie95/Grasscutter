@@ -18,9 +18,20 @@ public class ScriptSceneData {
         @SerializedName("dummy_points")
         private Map<String, List<Float>> dummyPoints;
 
+        private Object gadgets;
         private Object groups;
+        private Object suites;
 
         public void onLoad() {
+            if (this.gadgets instanceof List) {
+                this.gadgets = ((List<?>) this.gadgets).stream()
+                    .map(g -> JsonUtils.decode(JsonUtils.encode(g), SceneGadgetData.class))
+                    .filter(Objects::nonNull)
+                    .toList();
+                return;
+            }
+            this.gadgets = List.of();
+
             if (this.groups instanceof List) {
                 this.groups = ((List<?>) this.groups).stream()
                     .map(g -> JsonUtils.decode(JsonUtils.encode(g), SceneBlockData.class))
@@ -29,38 +40,54 @@ public class ScriptSceneData {
                 return;
             }
             this.groups = List.of();
+
+            if (this.suites instanceof List) {
+                this.suites = ((List<?>) this.suites).stream()
+                    .map(g -> JsonUtils.decode(JsonUtils.encode(g), SceneSuiteData.class))
+                    .filter(Objects::nonNull)
+                    .filter(s -> s.getMonsters() != null)
+                    .toList();
+                return;
+            }
+            this.suites = List.of();
+        }
+
+        @Data
+        public static class SceneGadgetData {
+            List<Float> pos;
+            @SerializedName("area_id")
+            private int areaId;
+            @SerializedName("config_id")
+            private int configId;
+            @SerializedName("gadget_id")
+            private int gadgetId;
+            private int level;
+            List<Float> rot;
+            @SerializedName("is_blossom_chest")
+            private boolean blossomChest;
+
+            public String toString() {
+                return "pos: (" + getPos() + "), rot: (" + getRot() +
+                    "), areaId: " + getAreaId() + ", configId: " + getConfigId() + ", gadgetId: " + getGadgetId();
+            }
+        }
+
+        @Data
+        public static class SceneBlockData {
+            private int id;
+            private List<Float> pos;
+            private int area;
+            public String toString() {
+                return "Id: " + getId() + ", pos: (" + getPos() + "), areaId: " + getArea();
+            }
+        }
+
+        @Data
+        public static class SceneSuiteData {
+            private List<Integer> monsters;
+            public String toString() {
+                return "MonsterIds: " + getMonsters();
+            }
         }
     }
-
-    @Data
-    public static class SceneBlockData{
-        private int id;
-        private List<Float> pos;
-        private int area;
-//        @SerializedName("business.type")
-//        private int businessType;
-//        @SerializedName("dynamic_load")
-//        private boolean dynamicLoad;
-//        @SerializedName("is_replaceable.new_bin_only")
-//        private boolean replaceableNewBinOnly;
-//        @SerializedName("is_replaceable.value")
-//        private boolean replaceableValue;
-//        @SerializedName("is_replaceable.version")
-//        private int replaceableVersion;
-        @SerializedName("refresh_id")
-        private int refreshId;
-//        @SerializedName("vision_type")
-//        private int visionType;
-//        @SerializedName("activity_revise_level_grow_id")
-//        private int activityReviseLevelGrowId;
-//        @SerializedName("life_cycle")
-//        private List<List<List<LifeCycleData>>> lifeCycle;
-//
-//        @Data
-//        public static class LifeCycleData{
-//            private String direction;
-//            private int param;
-//        }
-    }
-
 }

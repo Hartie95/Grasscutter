@@ -4,8 +4,6 @@ import dev.morphia.annotations.*;
 import emu.grasscutter.GameConstants;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
-import emu.grasscutter.data.binout.config.ConfigLevelEntity;
-import emu.grasscutter.data.binout.config.fields.ConfigAbilityData;
 import emu.grasscutter.data.excels.*;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.Account;
@@ -17,7 +15,6 @@ import emu.grasscutter.game.avatar.AvatarStorage;
 import emu.grasscutter.game.avatar.TrialAvatar;
 import emu.grasscutter.game.battlepass.BattlePassManager;
 import emu.grasscutter.game.entity.EntityAvatar;
-import emu.grasscutter.game.entity.GameEntity;
 import emu.grasscutter.game.expedition.ExpeditionInfo;
 import emu.grasscutter.game.friends.FriendsList;
 import emu.grasscutter.game.friends.PlayerProfile;
@@ -27,6 +24,7 @@ import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.inventory.Inventory;
 import emu.grasscutter.game.mail.Mail;
 import emu.grasscutter.game.mail.MailHandler;
+import emu.grasscutter.game.managers.blossom.BlossomManager;
 import emu.grasscutter.game.managers.cooking.ActiveCookCompoundData;
 import emu.grasscutter.game.managers.cooking.CookingCompoundManager;
 import emu.grasscutter.game.managers.cooking.CookingManager;
@@ -58,12 +56,12 @@ import emu.grasscutter.net.proto.MpSettingTypeOuterClass.MpSettingType;
 import emu.grasscutter.net.proto.OnlinePlayerInfoOuterClass.OnlinePlayerInfo;
 import emu.grasscutter.net.proto.PlayerApplyEnterMpResultNotifyOuterClass;
 import emu.grasscutter.net.proto.PlayerLocationInfoOuterClass.PlayerLocationInfo;
-import emu.grasscutter.net.proto.PlayerWorldLocationInfoOuterClass;
+import emu.grasscutter.net.proto.PlayerWorldLocationInfoOuterClass.PlayerWorldLocationInfo;
 import emu.grasscutter.net.proto.ProfilePictureOuterClass.ProfilePicture;
 import emu.grasscutter.net.proto.PropChangeReasonOuterClass.PropChangeReason;
-import emu.grasscutter.net.proto.ShowAvatarInfoOuterClass;
+import emu.grasscutter.net.proto.ShowAvatarInfoOuterClass.ShowAvatarInfo;
 import emu.grasscutter.net.proto.SocialDetailOuterClass.SocialDetail;
-import emu.grasscutter.net.proto.SocialShowAvatarInfoOuterClass;
+import emu.grasscutter.net.proto.SocialShowAvatarInfoOuterClass.SocialShowAvatarInfo;
 import emu.grasscutter.net.proto.TrialAvatarGrantRecordOuterClass.TrialAvatarGrantRecord.GrantReason;
 import emu.grasscutter.scripts.data.SceneRegion;
 import emu.grasscutter.server.event.player.PlayerJoinEvent;
@@ -80,7 +78,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.val;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.DayOfWeek;
@@ -90,6 +87,7 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static emu.grasscutter.config.Configuration.GAME_OPTIONS;
 
@@ -104,14 +102,14 @@ public class Player {
     @Getter private String signature;
     @Getter private int headImage;
     @Getter private int nameCardId = 210001;
-    @Getter private Position position;
-    @Getter private Position rotation;
+    @Getter private final Position position;
+    @Getter private final Position rotation;
     @Getter private PlayerBirthday birthday;
     @Getter private PlayerCodex codex;
     @Getter @Setter private boolean showAvatars;
     @Getter @Setter private List<Integer> showAvatarList;
     @Getter @Setter private List<Integer> showNameCardList;
-    @Getter private Map<Integer, Integer> properties;
+    @Getter private final Map<Integer, Integer> properties;
     @Getter @Setter private int currentRealmId;
     @Getter @Setter private int widgetId;
     @Getter @Setter private int sceneId;
@@ -120,22 +118,22 @@ public class Player {
     @Setter private boolean godmode;  // Getter is inGodmode
     private boolean stamina;  // Getter is getUnlimitedStamina, Setter is setUnlimitedStamina
 
-    @Getter private Set<Integer> nameCardList;
-    @Getter private Set<Integer> flyCloakList;
-    @Getter private Set<Integer> costumeList;
-    @Getter private Set<Integer> personalLineList;
+    @Getter private final Set<Integer> nameCardList;
+    @Getter private final Set<Integer> flyCloakList;
+    @Getter private final Set<Integer> costumeList;
+    @Getter private final Set<Integer> personalLineList;
     @Getter @Setter private Set<Integer> rewardedLevels;
     @Getter @Setter private Set<Integer> realmList;
-    @Getter private Set<Integer> unlockedForgingBlueprints;
-    @Getter private Set<Integer> unlockedCombines;
-    @Getter private Set<Integer> unlockedFurniture;
-    @Getter private Set<Integer> unlockedFurnitureSuite;
-    @Getter private Map<Long, ExpeditionInfo> expeditionInfo;
-    @Getter private Map<Integer, Integer> unlockedRecipies;
-    @Getter private List<ActiveForgeData> activeForges;
-    @Getter private Map<Integer, ActiveCookCompoundData> activeCookCompounds;
-    @Getter private Map<Integer, Integer> questGlobalVariables;
-    @Getter private Map<Integer, Integer> openStates;
+    @Getter private final Set<Integer> unlockedForgingBlueprints;
+    @Getter private final Set<Integer> unlockedCombines;
+    @Getter private final Set<Integer> unlockedFurniture;
+    @Getter private final Set<Integer> unlockedFurnitureSuite;
+    @Getter private final Map<Long, ExpeditionInfo> expeditionInfo;
+    @Getter private final Map<Integer, Integer> unlockedRecipies;
+    @Getter private final List<ActiveForgeData> activeForges;
+    @Getter private final Map<Integer, ActiveCookCompoundData> activeCookCompounds;
+    @Getter private final Map<Integer, Integer> questGlobalVariables;
+    @Getter private final Map<Integer, Integer> openStates;
     @Getter @Setter private Map<Integer, Set<Integer>> unlockedSceneAreas;
     @Getter @Setter private Map<Integer, Set<Integer>> unlockedScenePoints;
     @Getter @Setter private List<Integer> chatEmojiIdList;
@@ -148,14 +146,14 @@ public class Player {
     @Transient @Getter private ClimateType climate = ClimateType.CLIMATE_SUNNY;
 
     // Player managers go here
-    @Getter private transient AvatarStorage avatars;
-    @Getter private transient Inventory inventory;
-    @Getter private transient FriendsList friendsList;
-    @Getter private transient MailHandler mailHandler;
+    @Getter private transient final AvatarStorage avatars;
+    @Getter private transient final Inventory inventory;
+    @Getter private transient final FriendsList friendsList;
+    @Getter private transient final MailHandler mailHandler;
     @Getter @Setter private transient MessageHandler messageHandler;
-    @Getter private transient AbilityManager abilityManager;
+    @Getter private transient final AbilityManager abilityManager;
     @Getter @Setter private transient QuestManager questManager;
-    @Getter private transient TowerManager towerManager;
+    @Getter private transient final TowerManager towerManager;
     @Getter private transient SotSManager sotsManager;
     @Getter private transient MapMarksManager mapMarksManager;
     @Getter private transient StaminaManager staminaManager;
@@ -168,8 +166,9 @@ public class Player {
     @Getter private transient CookingManager cookingManager;
     @Getter private transient CookingCompoundManager cookingCompoundManager;
     @Getter private transient ActivityManager activityManager;
-    @Getter private transient PlayerBuffManager buffManager;
+    @Getter private transient final PlayerBuffManager buffManager;
     @Getter private transient PlayerProgressManager progressManager;
+    @Getter private transient final BlossomManager blossomManager;
 
     @Getter @Setter private transient Position lastCheckedPosition = null;
 
@@ -177,9 +176,9 @@ public class Player {
     private PlayerProfile playerProfile;  // Getter has null-check
     @Getter private TeamManager teamManager;
     private TowerData towerData;  // Getter has null-check
-    @Getter private PlayerGachaInfo gachaInfo;
+    @Getter private final PlayerGachaInfo gachaInfo;
     private PlayerCollectionRecords collectionRecordStore;  // Getter has null-check
-    @Getter private ArrayList<ShopLimit> shopLimit;
+    @Getter private final ArrayList<ShopLimit> shopLimit;
 
     @Getter private transient GameHome home;
 
@@ -205,11 +204,10 @@ public class Player {
     @Getter @Setter private int nextResinRefresh;
     @Getter @Setter private int resinBuyCount;
     @Getter @Setter private int lastDailyReset;
-    @Getter private transient MpSettingType mpSetting = MpSettingType.MP_SETTING_TYPE_ENTER_AFTER_APPLY;  // TODO
+    @Getter private transient final MpSettingType mpSetting = MpSettingType.MP_SETTING_TYPE_ENTER_AFTER_APPLY;  // TODO
     @Getter private long playerGameTime = 540;
-
-    @Getter private PlayerProgress playerProgress;
-    @Getter private Set<Integer> activeQuestTimers;
+    @Getter private final PlayerProgress playerProgress;
+    @Getter private final Set<Integer> activeQuestTimers;
 
     @Deprecated
     @SuppressWarnings({"rawtypes", "unchecked"}) // Morphia only!
@@ -280,7 +278,8 @@ public class Player {
         this.progressManager = new PlayerProgressManager(this);
         this.furnitureManager = new FurnitureManager(this);
         this.cookingManager = new CookingManager(this);
-        this.cookingCompoundManager=new CookingCompoundManager(this);
+        this.cookingCompoundManager = new CookingCompoundManager(this);
+        this.blossomManager = new BlossomManager(this);
     }
 
     // On player creation
@@ -319,14 +318,14 @@ public class Player {
     }
 
     public void updatePlayerGameTime(long gameTime){
-        if(playerGameTime == gameTime) return;
+        if(getPlayerGameTime() == gameTime) return;
 
         this.playerGameTime = gameTime;
-        this.save();
+        save();
     }
 
     public int getUid() {
-        return id;
+        return this.id;
     }
 
     public void setUid(int id) {
@@ -334,8 +333,7 @@ public class Player {
     }
 
     public long getNextGameGuid() {
-        long nextId = ++this.nextGuid;
-        return ((long) this.getUid() << 32) + nextId;
+        return ((long) getUid() << 32) + ++this.nextGuid;
     }
 
     public Account getAccount() {
@@ -345,11 +343,11 @@ public class Player {
     }
 
     public boolean isOnline() {
-        return this.getSession() != null && this.getSession().isActive();
+        return getSession() != null && getSession().isActive();
     }
 
     public GameServer getServer() {
-        return this.getSession().getServer();
+        return getSession().getServer();
     }
 
     public synchronized World getWorld() {
@@ -361,7 +359,7 @@ public class Player {
     }
 
     public synchronized Scene getScene() {
-        return scene;
+        return this.scene;
     }
 
     public synchronized void setScene(Scene scene) {
@@ -406,119 +404,104 @@ public class Player {
     }
 
     public void addRealmList(int realmId) {
-        if (this.realmList == null) {
-            this.realmList = new HashSet<>();
-        } else if (this.realmList.contains(realmId)) {
-            return;
-        }
-        this.realmList.add(realmId);
+        this.realmList = Optional.ofNullable(this.realmList)
+            .orElseGet(HashSet::new);
+
+        getRealmList().add(realmId);
     }
 
     public int getExpeditionLimit() {
         final int CONST_VALUE_EXPEDITION_INIT_LIMIT = 2;  // TODO: pull from ConstValueExcelConfigData.json
-        int expeditionLimit = CONST_VALUE_EXPEDITION_INIT_LIMIT;
-        var levelMap = GameData.getPlayerLevelDataMap();
-        for (int i = 1; i <= this.getLevel(); i++) {  // 1-indexed
-            var data = levelMap.get(i);
-            if (data != null)
-                expeditionLimit += data.getExpeditionLimitAdd();
-        }
-        return expeditionLimit;
+        return (int) GameData.getPlayerLevelDataMap().values().stream()
+            .filter(data -> getLevel() >= data.getLevel()
+                && data.getExpeditionLimitAdd() == 1)
+            .count() + CONST_VALUE_EXPEDITION_INIT_LIMIT;
     }
 
     public Set<Integer> getUnlockedSceneAreas(int sceneId) {
-        return this.unlockedSceneAreas.computeIfAbsent(sceneId, i -> new CopyOnWriteArraySet<>());
+        return getUnlockedSceneAreas().computeIfAbsent(sceneId, i -> new CopyOnWriteArraySet<>());
     }
 
     public Set<Integer> getUnlockedScenePoints(int sceneId) {
-        return this.unlockedScenePoints.computeIfAbsent(sceneId, i -> new CopyOnWriteArraySet<>());
+        return getUnlockedScenePoints().computeIfAbsent(sceneId, i -> new CopyOnWriteArraySet<>());
     }
 
     public int getLevel() {
-        return this.getProperty(PlayerProperty.PROP_PLAYER_LEVEL);
+        return getProperty(PlayerProperty.PROP_PLAYER_LEVEL);
     }
 
     public boolean setLevel(int level) {
-        if (this.getLevel() == level) {
-            return true;
-        }
+        if (getLevel() == level || !setProperty(PlayerProperty.PROP_PLAYER_LEVEL, level)) return false;
 
-        if (this.setProperty(PlayerProperty.PROP_PLAYER_LEVEL, level)) {
-            // Update world level and profile.
-            this.updateWorldLevel();
-            this.updateProfile();
+        // Update world level and profile.
+        updateWorldLevel();
+        updateProfile();
 
-            // Handle open state unlocks from level-up.
-            this.getProgressManager().tryUnlockOpenStates();
-            this.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_PLAYER_LEVEL_UP, level);
-            this.getQuestManager().queueEvent(QuestCond.QUEST_COND_PLAYER_LEVEL_EQUAL_GREATER, level);
-
-            return true;
-        }
-        return false;
+        // Handle open state unlocks from level-up.
+        getProgressManager().tryUnlockOpenStates();
+        getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_PLAYER_LEVEL_UP, level);
+        getQuestManager().queueEvent(QuestCond.QUEST_COND_PLAYER_LEVEL_EQUAL_GREATER, level);
+        return true;
     }
 
     public int getExp() {
-        return this.getProperty(PlayerProperty.PROP_PLAYER_EXP);
+        return getProperty(PlayerProperty.PROP_PLAYER_EXP);
     }
 
     public int getWorldLevel() {
-        return this.getProperty(PlayerProperty.PROP_PLAYER_WORLD_LEVEL);
+        return getProperty(PlayerProperty.PROP_PLAYER_WORLD_LEVEL);
     }
 
     public boolean setWorldLevel(int level) {
-        if (this.setProperty(PlayerProperty.PROP_PLAYER_WORLD_LEVEL, level)) {
-            if (this.world.getHost() == this)  // Don't update World's WL if we are in someone else's world
-                this.world.setWorldLevel(level);
-            this.updateProfile();
-            return true;
-        }
-        return false;
+        if (!setProperty(PlayerProperty.PROP_PLAYER_WORLD_LEVEL, level)) return false;
+
+        // Don't update World's WL if we are in someone else's world
+        if (getWorld().getHost() == this) getWorld().setWorldLevel(level);
+
+        this.updateProfile();
+        return true;
     }
 
     public int getForgePoints() {
-        return this.getProperty(PlayerProperty.PROP_PLAYER_FORGE_POINT);
+        return getProperty(PlayerProperty.PROP_PLAYER_FORGE_POINT);
     }
 
     public boolean setForgePoints(int value) {
-        if (value == this.getForgePoints()) {
-            return true;
-        }
-
-        return this.setProperty(PlayerProperty.PROP_PLAYER_FORGE_POINT, value);
+        return value == getForgePoints() || setProperty(PlayerProperty.PROP_PLAYER_FORGE_POINT, value);
     }
 
     public int getPrimogems() {
-        return this.getProperty(PlayerProperty.PROP_PLAYER_HCOIN);
+        return getProperty(PlayerProperty.PROP_PLAYER_HCOIN);
     }
 
     public boolean setPrimogems(int primogem) {
-        return this.setProperty(PlayerProperty.PROP_PLAYER_HCOIN, primogem);
+        return setProperty(PlayerProperty.PROP_PLAYER_HCOIN, primogem);
     }
 
     public int getMora() {
-        return this.getProperty(PlayerProperty.PROP_PLAYER_SCOIN);
+        return getProperty(PlayerProperty.PROP_PLAYER_SCOIN);
     }
 
     public boolean setMora(int mora) {
-        return this.setProperty(PlayerProperty.PROP_PLAYER_SCOIN, mora);
+        return setProperty(PlayerProperty.PROP_PLAYER_SCOIN, mora);
     }
 
     public int getCrystals() {
-        return this.getProperty(PlayerProperty.PROP_PLAYER_MCOIN);
+        return getProperty(PlayerProperty.PROP_PLAYER_MCOIN);
     }
 
     public boolean setCrystals(int crystals) {
-        return this.setProperty(PlayerProperty.PROP_PLAYER_MCOIN, crystals);
+        return setProperty(PlayerProperty.PROP_PLAYER_MCOIN, crystals);
     }
 
     public int getHomeCoin() {
-        return this.getProperty(PlayerProperty.PROP_PLAYER_HOME_COIN);
+        return getProperty(PlayerProperty.PROP_PLAYER_HOME_COIN);
     }
 
     public boolean setHomeCoin(int coin) {
-        return this.setProperty(PlayerProperty.PROP_PLAYER_HOME_COIN, coin);
+        return setProperty(PlayerProperty.PROP_PLAYER_HOME_COIN, coin);
     }
+
     private int getExpRequired(int level) {
         PlayerLevelData levelData = GameData.getPlayerLevelDataMap().get(level);
         return levelData != null ? levelData.getExp() : 0;
@@ -547,30 +530,18 @@ public class Player {
             reqExp = getExpRequired(level);
 
             // Set level each time to allow level-up specific logic to run.
-            this.setLevel(level);
+            setLevel(level);
         }
 
         // Set exp
-        this.setProperty(PlayerProperty.PROP_PLAYER_EXP, exp);
+        setProperty(PlayerProperty.PROP_PLAYER_EXP, exp);
     }
 
     private void updateWorldLevel() {
-        int currentWorldLevel = this.getWorldLevel();
-        int currentLevel = this.getLevel();
+        int newWorldLevel = Math.max(0, Math.min(((getLevel() - 15) / 5), 8));
 
-        int newWorldLevel =
-            (currentLevel >= 55) ? 8 :
-            (currentLevel >= 50) ? 7 :
-            (currentLevel >= 45) ? 6 :
-            (currentLevel >= 40) ? 5 :
-            (currentLevel >= 35) ? 4 :
-            (currentLevel >= 30) ? 3 :
-            (currentLevel >= 25) ? 2 :
-            (currentLevel >= 20) ? 1 :
-            0;
-
-        if (newWorldLevel != currentWorldLevel) {
-            this.setWorldLevel(newWorldLevel);
+        if (newWorldLevel != getWorldLevel()) {
+            setWorldLevel(newWorldLevel);
         }
     }
 
@@ -579,48 +550,45 @@ public class Player {
     }
 
     public boolean isFirstLoginEnterScene() {
-        return !this.hasSentLoginPackets;
+        return !hasSentLoginPackets();
     }
 
     public TowerData getTowerData() {
-        if (towerData == null) {
-            // because of mistake, null may be saved as storage at some machine, this if can be removed in future
-            towerData = new TowerData();
+        if (this.towerData == null) {
+            // because of mistake, null may be saved as storage at some machine, this can be removed in future
+            this.towerData = new TowerData();
         }
-        return towerData;
+        return this.towerData;
     }
 
 
     // TODO remove?
     public void onEnterRegion(SceneRegion region) {
-        val enterRegionName = "ENTER_REGION_"+ region.config_id;
+        String enterRegionName = "ENTER_REGION_"+ region.config_id;
         getQuestManager().forEachActiveQuest(quest -> {
-            val triggerData = quest.getTriggerByName(enterRegionName);
-            if (triggerData != null && triggerData.getGroupId() == region.getGroupId()) {
-                // If trigger hasn't been fired yet
-                if (!Boolean.TRUE.equals(quest.getTriggers().put(enterRegionName, true))) {
-                    //getSession().send(new PacketServerCondMeetQuestListUpdateNotify());
-                    getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_TRIGGER_FIRE,
-                        triggerData.getId(),0);
-                }
-            }
-        });
+            TriggerExcelConfigData triggerData = quest.getTriggerByName(enterRegionName);
+            if (triggerData == null || triggerData.getGroupId() != region.getGroupId()) return;
 
+            // If trigger hasn't been fired yet
+            if (Boolean.TRUE.equals(quest.getTriggers().put(enterRegionName, true))) return;
+
+            //getSession().send(new PacketServerCondMeetQuestListUpdateNotify());
+            getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_TRIGGER_FIRE, triggerData.getId(), 0);
+        });
     }
 
     // TODO remove?
     public void onLeaveRegion(SceneRegion region) {
-        val leaveRegionName = "LEAVE_REGION_"+ region.config_id;
+        String leaveRegionName = "LEAVE_REGION_"+ region.config_id;
         getQuestManager().forEachActiveQuest(quest -> {
-            val triggerData = quest.getTriggerByName(leaveRegionName);
-            if (triggerData != null && triggerData.getGroupId() == region.getGroupId()) {
-                // If trigger hasn't been fired yet
-                if (!Boolean.TRUE.equals(quest.getTriggers().put(leaveRegionName, true))) {
-                    getSession().send(new PacketServerCondMeetQuestListUpdateNotify());
-                    getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_TRIGGER_FIRE,
-                        triggerData.getId(),0);
-                }
-            }
+            TriggerExcelConfigData triggerData = quest.getTriggerByName(leaveRegionName);
+            if (triggerData == null || triggerData.getGroupId() != region.getGroupId()) return;
+
+            // If trigger hasn't been fired yet
+            if (Boolean.TRUE.equals(quest.getTriggers().put(leaveRegionName, true))) return;
+
+            getSession().send(new PacketServerCondMeetQuestListUpdateNotify());
+            getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_TRIGGER_FIRE, triggerData.getId(),0);
         });
     }
 
@@ -628,11 +596,11 @@ public class Player {
         if (this.playerProfile == null) {
             this.playerProfile = new PlayerProfile(this);
         }
-        return playerProfile;
+        return this.playerProfile;
     }
 
     public boolean setProperty(PlayerProperty prop, boolean value) {
-        return setPropertyWithSanityCheck(prop, value ? 1:0, true);
+        return setPropertyWithSanityCheck(prop, value ? 1 : 0, true);
     }
     public boolean setProperty(PlayerProperty prop, int value) {
         return setPropertyWithSanityCheck(prop, value, true);
@@ -650,7 +618,7 @@ public class Player {
     }
 
     public synchronized Int2ObjectMap<CoopRequest> getCoopRequests() {
-        return coopRequests;
+        return this.coopRequests;
     }
 
     public void setNameCardId(int nameCardId) {
@@ -659,37 +627,36 @@ public class Player {
     }
 
     public void setMainCharacterId(int mainCharacterId) {
-        if (this.mainCharacterId != 0) {
-            return;
+        if (this.mainCharacterId == 0) {
+            this.mainCharacterId = mainCharacterId;
         }
-        this.mainCharacterId = mainCharacterId;
     }
 
     public int getClientTime() {
-        return session.getClientTime();
+        return getSession().getClientTime();
     }
 
     public long getLastPingTime() {
-        return session.getLastPingTime();
+        return getSession().getLastPingTime();
     }
 
     public void setPaused(boolean newPauseState) {
-        boolean oldPauseState = this.paused;
+        boolean oldPauseState = isPaused();
         this.paused = newPauseState;
 
         if (newPauseState && !oldPauseState) {
-            this.onPause();
+            onPause();
         } else if (oldPauseState && !newPauseState) {
-            this.onUnpause();
+            onUnpause();
         }
     }
 
     public boolean isInMultiplayer() {
-        return this.getWorld() != null && this.getWorld().isMultiplayer();
+        return getWorld() != null && getWorld().isMultiplayer();
     }
 
     public boolean inMoonCard() {
-        return moonCard;
+        return this.moonCard;
     }
 
     public void addMoonCardDays(int days) {
@@ -698,52 +665,47 @@ public class Player {
 
     public int getMoonCardRemainDays() {
         Calendar remainCalendar = Calendar.getInstance();
-        remainCalendar.setTime(moonCardStartTime);
-        remainCalendar.add(Calendar.DATE, moonCardDuration);
-        Date theLastDay = remainCalendar.getTime();
-        Date now = DateHelper.onlyYearMonthDay(new Date());
-        return (int) ((theLastDay.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)); // By copilot
+        remainCalendar.setTime(getMoonCardStartTime());
+        remainCalendar.add(Calendar.DATE, getMoonCardDuration());
+
+        return (int) ((remainCalendar.getTime().getTime() -
+            DateHelper.onlyYearMonthDay(new Date()).getTime()) / (24 * 60 * 60 * 1000)); // By copilot
     }
 
     public boolean rechargeMoonCard() {
-        if (this.moonCardDuration > 150) return false;  // Can only stack up to 180 days
-        inventory.addItem(new GameItem(203, 300));
-        if (!moonCard) {
-            moonCard = true;
-            Date now = new Date();
-            moonCardStartTime = DateHelper.onlyYearMonthDay(now);
-            moonCardDuration = 30;
+        if (getMoonCardDuration() > 150) return false;  // Can only stack up to 180 days
+
+        getInventory().addItem(new GameItem(203, 300));
+        if (!inMoonCard()) {
+            setMoonCard(true);
+            setMoonCardStartTime(DateHelper.onlyYearMonthDay(new Date()));
+            setMoonCardDuration(30);
         } else {
-            moonCardDuration += 30;
+            addMoonCardDays(30);
         }
-        if (!moonCardGetTimes.contains(moonCardStartTime)) {
-            moonCardGetTimes.add(moonCardStartTime);
-        }
+        getMoonCardGetTimes().add(getMoonCardStartTime());
         return true;
     }
 
     public void getTodayMoonCard() {
-        if (!moonCard) {
+        if (!inMoonCard()) {
             return;
         }
         Date now = DateHelper.onlyYearMonthDay(new Date());
-        if (moonCardGetTimes.contains(now)) {
+        if (getMoonCardGetTimes().contains(now)) {
             return;
         }
-        Date stopTime = new Date();
         Calendar stopCalendar = Calendar.getInstance();
-        stopCalendar.setTime(stopTime);
-        stopCalendar.add(Calendar.DATE, moonCardDuration);
-        stopTime = stopCalendar.getTime();
-        if (now.after(stopTime)) {
-            moonCard = false;
+        stopCalendar.setTime(new Date());
+        stopCalendar.add(Calendar.DATE, getMoonCardDuration());
+        if (now.after(stopCalendar.getTime())) {
+            setMoonCard(false);
             return;
         }
-        moonCardGetTimes.add(now);
-        addMoonCardDays(1);
-        GameItem item = new GameItem(201, 90);
-        getInventory().addItem(item, ActionReason.BlessingRedeemReward);
-        session.send(new PacketCardProductRewardNotify(getMoonCardRemainDays()));
+        getMoonCardGetTimes().add(now);
+        setMoonCardDuration(getMoonCardDuration() - 1);
+        getInventory().addItem(new GameItem(201, 90), ActionReason.BlessingRedeemReward);
+        getSession().send(new PacketCardProductRewardNotify(getMoonCardRemainDays()));
     }
 
     public void addExpeditionInfo(long avatarGuid, int expId, int hourTime, int startTime) {
@@ -752,22 +714,19 @@ public class Player {
         exp.setHourTime(hourTime);
         exp.setState(1);
         exp.setStartTime(startTime);
-        expeditionInfo.put(avatarGuid, exp);
+        getExpeditionInfo().put(avatarGuid, exp);
     }
 
     public void removeExpeditionInfo(long avatarGuid) {
-        expeditionInfo.remove(avatarGuid);
+        getExpeditionInfo().remove(avatarGuid);
     }
 
     public ExpeditionInfo getExpeditionInfo(long avatarGuid) {
-        return expeditionInfo.get(avatarGuid);
+        return getExpeditionInfo().get(avatarGuid);
     }
 
     public ShopLimit getGoodsLimit(int goodsId) {
-        Optional<ShopLimit> shopLimit = this.shopLimit.stream().filter(x -> x.getShopGoodId() == goodsId).findFirst();
-        if (shopLimit.isEmpty())
-            return null;
-        return shopLimit.get();
+        return getShopLimit().stream().filter(x -> x.getShopGoodId() == goodsId).findFirst().orElse(null);
     }
 
     public void addShopLimit(int goodsId, int boughtCount, int nextRefreshTime) {
@@ -784,11 +743,11 @@ public class Player {
             sl.setNextRefreshTime(nextRefreshTime);
             getShopLimit().add(sl);
         }
-        this.save();
+        save();
     }
 
     public boolean getUnlimitedStamina() {
-        return stamina;
+        return this.stamina;
     }
 
     public void setUnlimitedStamina(boolean stamina) {
@@ -796,11 +755,11 @@ public class Player {
     }
 
     public boolean inGodmode() {
-        return godmode;
+        return this.godmode;
     }
 
     public boolean hasSentLoginPackets() {
-        return hasSentLoginPackets;
+        return this.hasSentLoginPackets;
     }
 
     public void addAvatar(Avatar avatar, boolean addToCurrentTeam) {
@@ -809,18 +768,16 @@ public class Player {
         if (result) {
             // Add starting weapon
             getAvatars().addStartingWeapon(avatar);
-
             // Done
-            if (hasSentLoginPackets()) {
-                // Recalc stats
-                avatar.recalcStats();
-                // Packet, show notice on left if the avatar will be added to the team
-                sendPacket(new PacketAvatarAddNotify(avatar, addToCurrentTeam && this.getTeamManager().canAddAvatarToCurrentTeam()));
-                if (addToCurrentTeam) {
-                    // If space in team, add
-                    this.getTeamManager().addAvatarToCurrentTeam(avatar);
-                }
-            }
+            if (!hasSentLoginPackets()) return;
+
+            // Recalc stats
+            avatar.recalcStats();
+            // Packet, show notice on left if the avatar will be added to the team
+            sendPacket(new PacketAvatarAddNotify(avatar, addToCurrentTeam && getTeamManager().canAddAvatarToCurrentTeam()));
+            if (!addToCurrentTeam) return;
+            // If space in team, add
+            getTeamManager().addAvatarToCurrentTeam(avatar);
         } else {
             // Failed adding avatar
         }
@@ -831,7 +788,7 @@ public class Player {
     }
 
     public void addAvatar(int avatarId) {
-        // I dont see why we cant do this lolz
+        // I don't see why we cant do this lol
         addAvatar(new Avatar(avatarId), true);
     }
 
@@ -912,82 +869,83 @@ public class Player {
     }
 
     public void addFlycloak(int flycloakId) {
-        this.getFlyCloakList().add(flycloakId);
-        this.sendPacket(new PacketAvatarGainFlycloakNotify(flycloakId));
+        getFlyCloakList().add(flycloakId);
+        sendPacket(new PacketAvatarGainFlycloakNotify(flycloakId));
     }
 
     public void addCostume(int costumeId) {
-        this.getCostumeList().add(costumeId);
-        this.sendPacket(new PacketAvatarGainCostumeNotify(costumeId));
+        getCostumeList().add(costumeId);
+        sendPacket(new PacketAvatarGainCostumeNotify(costumeId));
     }
 
     public void addPersonalLine(int personalLineId) {
-        this.getPersonalLineList().add(personalLineId);
-        session.getPlayer().getQuestManager().queueEvent(QuestCond.QUEST_COND_PERSONAL_LINE_UNLOCK, personalLineId);
+        getPersonalLineList().add(personalLineId);
+        getSession().getPlayer().getQuestManager().queueEvent(QuestCond.QUEST_COND_PERSONAL_LINE_UNLOCK, personalLineId);
     }
 
     public void addNameCard(int nameCardId) {
-        this.getNameCardList().add(nameCardId);
-        this.sendPacket(new PacketUnlockNameCardNotify(nameCardId));
+        getNameCardList().add(nameCardId);
+        sendPacket(new PacketUnlockNameCardNotify(nameCardId));
     }
 
     public void setNameCard(int nameCardId) {
-        if (!this.getNameCardList().contains(nameCardId)) {
-            return;
-        }
+        if (!getNameCardList().contains(nameCardId)) return;
 
-        this.setNameCardId(nameCardId);
-
-        this.sendPacket(new PacketSetNameCardRsp(nameCardId));
+        setNameCardId(nameCardId);
+        sendPacket(new PacketSetNameCardRsp(nameCardId));
     }
 
     public void dropMessage(Object message) {
-        if (this.messageHandler != null) {
-            this.messageHandler.append(message.toString());
-            return;
-        }
-
-        this.getServer().getChatSystem().sendPrivateMessageFromServer(getUid(), message.toString());
+        Optional.ofNullable(getMessageHandler())
+            .ifPresentOrElse(handler -> handler.append(message.toString()),
+                () -> getServer().getChatSystem().sendPrivateMessageFromServer(getUid(), message.toString()));
     }
 
+    /**
+     * Overrides player's ability with scene's special ability.
+     * Also replace active team with limited character if any.
+     * For example Dvalin fight is limited to only main character and
+     * has special missile ability.
+     *
+     * @param scene Current scene.
+     */
     public void setAvatarsAbilityForScene(Scene scene){
-        try{
-            String levelEntityConfig = scene.getSceneData().getLevelEntityConfig();
-            ConfigLevelEntity config = GameData.getConfigLevelEntityDataMap().get(levelEntityConfig);
-            if (config == null){
-                return;
-            }
-            List<Integer> avatarIds = scene.getSceneData().getSpecifiedAvatarList();
-            List<EntityAvatar> specifiedAvatarList = getTeamManager().getActiveTeam();
+        SceneData sData = scene.getSceneData();
+        if (sData == null) return;
 
-            if (avatarIds != null && avatarIds.size() > 0){
-                // certain scene could limit specifc avatars' entry
-                specifiedAvatarList.clear();
-                for (int id : avatarIds){
-                    Avatar avatar = getAvatars().getAvatarById(id);
-                    if (avatar == null){
-                        continue;
-                    }
-                    specifiedAvatarList.add(new EntityAvatar(scene, avatar));
-                }
-            }
+        Optional.ofNullable(GameData.getConfigLevelEntityDataMap().get(sData.getLevelEntityConfig()))
+            .ifPresent(config -> {
+                List<EntityAvatar> activeTeam = getTeamManager().getActiveTeam();
 
-            for (EntityAvatar entityAvatar : specifiedAvatarList){
-                AvatarData avatarData = entityAvatar.getAvatar().getAvatarData();
-                if (avatarData == null){
-                    continue;
+                // so far only main character is specified, might be a problem if scene specific other character
+                List<EntityAvatar> specifiedAvatarList = Optional.ofNullable(sData.getSpecifiedAvatarList())
+                    .orElseGet(ArrayList::new).stream()
+                    .filter(id -> id == getMainCharacterId())
+                    .map(id -> getAvatars().getAvatarById(id))
+                    .filter(Objects::nonNull)
+                    .map(avatar -> new EntityAvatar(scene, avatar))
+                    .toList();
+
+                if (!specifiedAvatarList.isEmpty()) {
+                    // clear active team and add only the specific character
+                    activeTeam.clear();
+                    activeTeam.addAll(specifiedAvatarList);
                 }
-                avatarData.rebuildAbilityEmbryo();
-                if (config.getAvatarAbilities() == null){
-                    continue; // continue and not break because has to rebuild ability for the next avatar if any
-                }
-                for (ConfigAbilityData abilities : config.getAvatarAbilities()){
-                    avatarData.getAbilities().add(Utils.abilityHash(abilities.getAbilityName()));
-                }
-            }
-        } catch (Exception e){
-            Grasscutter.getLogger().error("Error applying level entity config for scene {}", scene.getSceneData().getId(), e);
-        }
+
+                // rebuild active team with special abilities
+                activeTeam.stream()
+                    .map(EntityAvatar::getAvatar)
+                    .map(Avatar::getAvatarData)
+                    .filter(Objects::nonNull)
+                    .forEach(avatarData -> {
+                        avatarData.rebuildAbilityEmbryo();
+
+                        Optional.ofNullable(config.getAvatarAbilities())
+                            .orElseGet(ArrayList::new)
+                            .forEach(abilities -> avatarData.getAbilities()
+                                .add(Utils.abilityHash(abilities.getAbilityName())));
+                    });
+            });
     }
     /**
      * Sends a message to another player.
@@ -996,39 +954,34 @@ public class Player {
      * @param message The message to send.
      */
     public void sendMessage(Player sender, Object message) {
-        this.getServer().getChatSystem().sendPrivateMessage(sender, this.getUid(), message.toString());
+        getServer().getChatSystem().sendPrivateMessage(sender, getUid(), message.toString());
     }
 
     // ---------------------MAIL------------------------
 
-    public List<Mail> getAllMail() { return this.getMailHandler().getMail(); }
+    public List<Mail> getAllMail() { return getMailHandler().getMail(); }
 
     public void sendMail(Mail message) {
-        this.getMailHandler().sendMail(message);
+        getMailHandler().sendMail(message);
     }
 
     public boolean deleteMail(int mailId) {
-        return this.getMailHandler().deleteMail(mailId);
+        return getMailHandler().deleteMail(mailId);
     }
 
-    public Mail getMail(int index) { return this.getMailHandler().getMailById(index); }
+    public Mail getMail(int index) { return getMailHandler().getMailById(index); }
 
     public int getMailId(Mail message) {
-        return this.getMailHandler().getMailIndex(message);
+        return getMailHandler().getMailIndex(message);
     }
 
     public boolean replaceMailByIndex(int index, Mail message) {
-        return this.getMailHandler().replaceMailByIndex(index, message);
+        return getMailHandler().replaceMailByIndex(index, message);
     }
 
     public void interactWith(int gadgetEntityId, GadgetInteractReq interactReq) {
-        GameEntity target = getScene().getEntityById(gadgetEntityId);
-
-        if (target == null) {
-            return;
-        }
-
-        target.onInteract(this, interactReq);
+        Optional.ofNullable(getScene().getEntityById(gadgetEntityId))
+            .ifPresent(target -> target.onInteract(this, interactReq));
     }
 
     public void onPause() {
@@ -1040,26 +993,20 @@ public class Player {
     }
 
     public void sendPacket(BasePacket packet) {
-        this.getSession().send(packet);
+        getSession().send(packet);
     }
 
     public OnlinePlayerInfo getOnlinePlayerInfo() {
-        OnlinePlayerInfo.Builder onlineInfo = OnlinePlayerInfo.newBuilder()
-                .setUid(this.getUid())
-                .setNickname(this.getNickname())
-                .setPlayerLevel(this.getLevel())
-                .setMpSettingType(this.getMpSetting())
-                .setNameCardId(this.getNameCardId())
-                .setSignature(this.getSignature())
-                .setProfilePicture(ProfilePicture.newBuilder().setAvatarId(this.getHeadImage()));
-
-        if (this.getWorld() != null) {
-            onlineInfo.setCurPlayerNumInWorld(getWorld().getPlayerCount());
-        } else {
-            onlineInfo.setCurPlayerNumInWorld(1);
-        }
-
-        return onlineInfo.build();
+        return OnlinePlayerInfo.newBuilder()
+            .setUid(getUid())
+            .setNickname(getNickname())
+            .setPlayerLevel(getLevel())
+            .setMpSettingType(getMpSetting())
+            .setNameCardId(getNameCardId())
+            .setSignature(getSignature())
+            .setProfilePicture(ProfilePicture.newBuilder().setAvatarId(getHeadImage()))
+            .setCurPlayerNumInWorld(getWorld() != null ? getWorld().getPlayerCount() : 1)
+            .build();
     }
 
     public void setBirthday(int d, int m) {
@@ -1068,124 +1015,100 @@ public class Player {
     }
 
     public boolean hasBirthday() {
-        return this.birthday.getDay() > 0;
+        return getBirthday().getDay() > 0;
+    }
+
+    public List<SocialShowAvatarInfo> socialShowAvatarListProto(List<Integer> avatarIds) {
+        return avatarIds == null ? List.of() : avatarIds.stream()
+            .map(avatarId -> SocialShowAvatarInfo.newBuilder()
+                .setAvatarId(avatarId)
+                .setLevel(getAvatars().getAvatarById(avatarId).getLevel())
+                .setCostumeId(getAvatars().getAvatarById(avatarId).getCostume())
+                .build())
+            .toList();
     }
 
     public SocialDetail.Builder getSocialDetail() {
-        List<SocialShowAvatarInfoOuterClass.SocialShowAvatarInfo> socialShowAvatarInfoList = new ArrayList<>();
-        if (this.isOnline()) {
-            if (this.getShowAvatarList() != null) {
-                for (int avatarId : this.getShowAvatarList()) {
-                    socialShowAvatarInfoList.add(
-                            socialShowAvatarInfoList.size(),
-                            SocialShowAvatarInfoOuterClass.SocialShowAvatarInfo.newBuilder()
-                                    .setAvatarId(avatarId)
-                                    .setLevel(getAvatars().getAvatarById(avatarId).getLevel())
-                                    .setCostumeId(getAvatars().getAvatarById(avatarId).getCostume())
-                                    .build()
-                    );
-                }
-            }
-        } else {
-            List<Integer> showAvatarList = DatabaseHelper.getPlayerByUid(id).getShowAvatarList();
-            AvatarStorage avatars = DatabaseHelper.getPlayerByUid(id).getAvatars();
+        List<Integer> showAvatarList = isOnline() ? getShowAvatarList() :
+            DatabaseHelper.getPlayerByUid(getUid()).getShowAvatarList();
+
+        if (!isOnline()) {
+            AvatarStorage avatars = DatabaseHelper.getPlayerByUid(getUid()).getAvatars();
             avatars.loadFromDatabase();
-            if (showAvatarList != null) {
-                for (int avatarId : showAvatarList) {
-                    socialShowAvatarInfoList.add(
-                            socialShowAvatarInfoList.size(),
-                            SocialShowAvatarInfoOuterClass.SocialShowAvatarInfo.newBuilder()
-                                    .setAvatarId(avatarId)
-                                    .setLevel(avatars.getAvatarById(avatarId).getLevel())
-                                    .setCostumeId(avatars.getAvatarById(avatarId).getCostume())
-                                    .build()
-                    );
-                }
-            }
         }
 
-        SocialDetail.Builder social = SocialDetail.newBuilder()
-                .setUid(this.getUid())
-                .setProfilePicture(ProfilePicture.newBuilder().setAvatarId(this.getHeadImage()))
-                .setNickname(this.getNickname())
-                .setSignature(this.getSignature())
-                .setLevel(this.getLevel())
-                .setBirthday(this.getBirthday().getFilledProtoWhenNotEmpty())
-                .setWorldLevel(this.getWorldLevel())
-                .setNameCardId(this.getNameCardId())
-                .setIsShowAvatar(this.isShowAvatars())
-                .addAllShowAvatarInfoList(socialShowAvatarInfoList)
-                .addAllShowNameCardIdList(this.getShowNameCardInfoList())
-                .setFinishAchievementNum(0)
-                .setFriendEnterHomeOptionValue(this.getHome() == null ? 0 : this.getHome().getEnterHomeOption());
-        return social;
+        return SocialDetail.newBuilder()
+            .setUid(getUid())
+            .setProfilePicture(ProfilePicture.newBuilder().setAvatarId(getHeadImage()))
+            .setNickname(getNickname())
+            .setSignature(getSignature())
+            .setLevel(getLevel())
+            .setBirthday(getBirthday().getFilledProtoWhenNotEmpty())
+            .setWorldLevel(getWorldLevel())
+            .setNameCardId(getNameCardId())
+            .setIsShowAvatar(isShowAvatars())
+            .addAllShowAvatarInfoList(socialShowAvatarListProto(showAvatarList))
+            .addAllShowNameCardIdList(getShowNameCardInfoList())
+            .setFinishAchievementNum(0)
+            .setFriendEnterHomeOptionValue(getHome() == null ? 0 : getHome().getEnterHomeOption());
     }
 
-    public List<ShowAvatarInfoOuterClass.ShowAvatarInfo> getShowAvatarInfoList() {
-        List<ShowAvatarInfoOuterClass.ShowAvatarInfo> showAvatarInfoList = new ArrayList<>();
-
-        Player player;
-        boolean shouldRecalc;
-        if (this.isOnline()) {
-            player = this;
-            shouldRecalc = false;
-        } else {
-            player = DatabaseHelper.getPlayerByUid(id);
+    public List<ShowAvatarInfo> getShowAvatarInfoList() {
+        Player player = isOnline() ? this : DatabaseHelper.getPlayerByUid(getUid());
+        if (!isOnline()) {
             player.getAvatars().loadFromDatabase();
             player.getInventory().loadFromDatabase();
-            shouldRecalc = true;
         }
 
-        List<Integer> showAvatarList = player.getShowAvatarList();
-        AvatarStorage avatars = player.getAvatars();
-        if (showAvatarList != null) {
-            for (int avatarId : showAvatarList) {
-                Avatar avatar = avatars.getAvatarById(avatarId);
-                if (shouldRecalc) {
-                    avatar.recalcStats();
-                }
-                showAvatarInfoList.add(avatar.toShowAvatarInfoProto());
-            }
+        List<Avatar> showAvatarList = Optional.ofNullable(player.getShowAvatarList())
+            .orElseGet(ArrayList::new).stream()
+            .map(avatarId -> player.getAvatars().getAvatarById(avatarId))
+            .toList();
+
+        if (!isOnline()) {
+            showAvatarList.forEach(Avatar::recalcStats);
         }
-        return showAvatarInfoList;
+
+        return showAvatarList.stream().map(Avatar::toShowAvatarInfoProto).toList();
     }
 
     public List<Integer> getShowNameCardInfoList() {
-        List<Integer> info = this.getShowNameCardList();
-        return info == null ? new ArrayList<>() : info;
+        return Optional.ofNullable(getShowNameCardList())
+            .orElseGet(ArrayList::new);
     }
 
-    public PlayerWorldLocationInfoOuterClass.PlayerWorldLocationInfo getWorldPlayerLocationInfo() {
-        return PlayerWorldLocationInfoOuterClass.PlayerWorldLocationInfo.newBuilder()
-                .setSceneId(this.getSceneId())
-                .setPlayerLoc(this.getPlayerLocationInfo())
+    public PlayerWorldLocationInfo getWorldPlayerLocationInfo() {
+        return PlayerWorldLocationInfo.newBuilder()
+                .setSceneId(getSceneId())
+                .setPlayerLoc(getPlayerLocationInfo())
                 .build();
     }
 
     public PlayerLocationInfo getPlayerLocationInfo() {
         return PlayerLocationInfo.newBuilder()
-                .setUid(this.getUid())
-                .setPos(this.getPosition().toProto())
-                .setRot(this.getRotation().toProto())
+                .setUid(getUid())
+                .setPos(getPosition().toProto())
+                .setRot(getRotation().toProto())
                 .build();
     }
 
     public void loadBattlePassManager() {
-        if (this.battlePassManager != null) return;
-        this.battlePassManager = DatabaseHelper.loadBattlePass(this);
-        this.battlePassManager.getMissions().values().removeIf(mission -> mission.getData() == null);
+        if (getBattlePassManager() == null) {
+            this.battlePassManager = DatabaseHelper.loadBattlePass(this);
+            getBattlePassManager().getMissions().values().removeIf(mission -> mission.getData() == null);
+        }
     }
 
     public PlayerCollectionRecords getCollectionRecordStore() {
-        if (this.collectionRecordStore==null) {
+        if (this.collectionRecordStore == null) {
             this.collectionRecordStore = new PlayerCollectionRecords();
         }
-        return collectionRecordStore;
+        return this.collectionRecordStore;
     }
 
     public Map<String, MapMark> getMapMarks() {
         if (this.mapMarks == null) {
-            this.mapMarks = new HashMap<String, MapMark>();
+            this.mapMarks = new HashMap<>();
         }
         return mapMarks;
     }
@@ -1201,52 +1124,52 @@ public class Player {
 
     public synchronized void onTick() {
         // Check ping
-        if (this.getLastPingTime() > System.currentTimeMillis() + 60000) {
-            this.getSession().close();
+        if (getLastPingTime() > System.currentTimeMillis() + 60000) {
+            getSession().close();
             return;
         }
         // Check co-op requests
-        this.getCoopRequests().values().removeIf(this::expireCoopRequest);
+        getCoopRequests().values().removeIf(this::expireCoopRequest);
         // Handle buff
-        this.getBuffManager().onTick();
+        getBuffManager().onTick();
         // Ping
-        if (this.getWorld() != null) {
+        if (getWorld() != null) {
             // RTT notify - very important to send this often
-            this.sendPacket(new PacketWorldPlayerRTTNotify(this.getWorld()));
+            sendPacket(new PacketWorldPlayerRTTNotify(getWorld()));
 
             // Update player locations if in multiplayer every 5 seconds
             long time = System.currentTimeMillis();
-            if (this.getWorld().isMultiplayer() && this.getScene() != null && time > nextSendPlayerLocTime) {
-                this.sendPacket(new PacketWorldPlayerLocationNotify(this.getWorld()));
-                this.sendPacket(new PacketScenePlayerLocationNotify(this.getScene()));
-                this.resetSendPlayerLocTime();
+            if (getWorld().isMultiplayer() && getScene() != null && time > this.nextSendPlayerLocTime) {
+                sendPacket(new PacketWorldPlayerLocationNotify(getWorld()));
+                sendPacket(new PacketScenePlayerLocationNotify(getScene()));
+                resetSendPlayerLocTime();
             }
         }
 
         // Handle daily reset.
-        this.doDailyReset();
+        doDailyReset();
 
         // Expedition
-        var timeNow = Utils.getCurrentSeconds();
-        var needNotify = false;
-        for (ExpeditionInfo e : expeditionInfo.values()) {
-            if (e.getState() == 1) {
-                if (timeNow - e.getStartTime() >= e.getHourTime() * 60 * 60) {
-                    e.setState(2);
-                    needNotify = true;
-                }
-            }
-        }
-        if (needNotify) {
-            this.save();
-            this.sendPacket(new PacketAvatarExpeditionDataNotify(this.getExpeditionInfo()));
+        int timeNow = Utils.getCurrentSeconds();
+        AtomicBoolean needNotify = new AtomicBoolean(false);
+
+        getExpeditionInfo().values().stream()
+            .filter(e -> e.getState() == 1 && (timeNow - e.getStartTime() >= e.getHourTime() * 60 * 60))
+            .forEach(e -> {
+                e.setState(2);
+                needNotify.set(true);
+            });
+
+        if (needNotify.get()) {
+            save();
+            sendPacket(new PacketAvatarExpeditionDataNotify(getExpeditionInfo()));
         }
 
         // Send updated forge queue data, if necessary.
-        this.getForgingManager().sendPlayerForgingUpdate();
+        getForgingManager().sendPlayerForgingUpdate();
 
         // Recharge resin.
-        this.getResinManager().rechargeResin();
+        getResinManager().rechargeResin();
 
         // Quest tick handling
         getQuestManager().onTick();
@@ -1256,33 +1179,31 @@ public class Player {
         // Check if we should execute a daily reset on this tick.
         int currentTime = Utils.getCurrentSeconds();
 
-        var currentDate = LocalDate.ofInstant(Instant.ofEpochSecond(currentTime), ZoneId.systemDefault());
-        var lastResetDate = LocalDate.ofInstant(Instant.ofEpochSecond(this.getLastDailyReset()), ZoneId.systemDefault());
+        LocalDate currentDate = LocalDate.ofInstant(Instant.ofEpochSecond(currentTime), ZoneId.systemDefault());
+        LocalDate lastResetDate = LocalDate.ofInstant(Instant.ofEpochSecond(getLastDailyReset()), ZoneId.systemDefault());
 
-        if (!currentDate.isAfter(lastResetDate)) {
-            return;
-        }
+        if (!currentDate.isAfter(lastResetDate)) return;
 
         // We should - now execute all the resetting logic we need.
         // Reset forge points.
-        this.setForgePoints(300_000);
+        setForgePoints(300_000);
 
         // Reset daily BP missions.
-        this.getBattlePassManager().resetDailyMissions();
+        getBattlePassManager().resetDailyMissions();
 
         // Trigger login BP mission, so players who are online during the reset
         // don't have to relog to clear the mission.
-        this.getBattlePassManager().triggerMission(WatcherTriggerType.TRIGGER_LOGIN);
+        getBattlePassManager().triggerMission(WatcherTriggerType.TRIGGER_LOGIN);
 
         // Reset weekly BP missions.
         if (currentDate.getDayOfWeek() == DayOfWeek.MONDAY) {
-            this.getBattlePassManager().resetWeeklyMissions();
+            getBattlePassManager().resetWeeklyMissions();
         }
         // Reset resin-buying count.
-        this.setResinBuyCount(0);
+        setResinBuyCount(0);
 
         // Done. Update last reset time.
-        this.setLastDailyReset(currentTime);
+        setLastDailyReset(currentTime);
     }
 
     public void resetSendPlayerLocTime() {
@@ -1291,9 +1212,9 @@ public class Player {
 
     @PostLoad
     private void onLoad() {
-        this.getCodex().setPlayer(this);
-        this.getProgressManager().setPlayer(this);
-        this.getTeamManager().setPlayer(this);
+        getCodex().setPlayer(this);
+        getProgressManager().setPlayer(this);
+        getTeamManager().setPlayer(this);
     }
 
     public void save() {
@@ -1303,26 +1224,26 @@ public class Player {
     // Called from tokenrsp
     public void loadFromDatabase() {
         // Make sure these exist
-        if (this.getTeamManager() == null) {
+        if (getTeamManager() == null) {
             this.teamManager = new TeamManager(this);
         }
-        if (this.getCodex() == null) {
+        if (getCodex() == null) {
             this.codex = new PlayerCodex(this);
         }
-        if (this.getProfile().getUid() == 0) {
-            this.getProfile().syncWithCharacter(this);
+        if (getProfile().getUid() == 0) {
+            getProfile().syncWithCharacter(this);
         }
 
         // Load from db
-        this.getAvatars().loadFromDatabase();
-        this.getInventory().loadFromDatabase();
+        getAvatars().loadFromDatabase();
+        getInventory().loadFromDatabase();
 
-        this.getFriendsList().loadFromDatabase();
-        this.getMailHandler().loadFromDatabase();
-        this.getQuestManager().loadFromDatabase();
+        getFriendsList().loadFromDatabase();
+        getMailHandler().loadFromDatabase();
+        getQuestManager().loadFromDatabase();
 
-        this.loadBattlePassManager();
-        this.getAvatars().postLoad(); // Needs to be called after inventory is handled
+        loadBattlePassManager();
+        getAvatars().postLoad(); // Needs to be called after inventory is handled
     }
 
     public void onPlayerBorn() {
@@ -1349,63 +1270,65 @@ public class Player {
         world.addPlayer(this);
 
         // Multiplayer setting
-        this.setProperty(PlayerProperty.PROP_PLAYER_MP_SETTING_TYPE, this.getMpSetting().getNumber(), false);
-        this.setProperty(PlayerProperty.PROP_IS_MP_MODE_AVAILABLE, 1, false);
+        setProperty(PlayerProperty.PROP_PLAYER_MP_SETTING_TYPE, getMpSetting().getNumber(), false);
+        setProperty(PlayerProperty.PROP_IS_MP_MODE_AVAILABLE, 1, false);
 
         // Execute daily reset logic if this is a new day.
-        this.doDailyReset();
+        doDailyReset();
 
         // Activity needed for some quests
-        activityManager = new ActivityManager(this);
+        this.activityManager = new ActivityManager(this);
 
         // Rewind active quests, and put the player to a rewind position it finds (if any) of an active quest
         getQuestManager().onLogin();
 
         // Packets
-        session.send(new PacketPlayerDataNotify(this)); // Player data
-        session.send(new PacketStoreWeightLimitNotify());
-        session.send(new PacketPlayerStoreNotify(this));
-        session.send(new PacketAvatarDataNotify(this));
+        getSession().send(new PacketPlayerDataNotify(this)); // Player data
+        getSession().send(new PacketStoreWeightLimitNotify());
+        getSession().send(new PacketPlayerStoreNotify(this));
+        getSession().send(new PacketAvatarDataNotify(this));
+        getProgressManager().onPlayerLogin();
 
-        this.getProgressManager().onPlayerLogin();
+        getSession().send(new PacketFinishedParentQuestNotify(this));
+        getBlossomManager().onPlayerLogin(); // this is the real order in official
 
-        session.send(new PacketFinishedParentQuestNotify(this));
-        session.send(new PacketBattlePassAllDataNotify(this));
-        session.send(new PacketQuestListNotify(this));
-        session.send(new PacketCodexDataFullNotify(this));
-        session.send(new PacketAllWidgetDataNotify(this));
-        session.send(new PacketWidgetGadgetAllDataNotify());
-        session.send(new PacketCombineDataNotify(this.unlockedCombines));
-        session.send(new PacketGetChatEmojiCollectionRsp(this.getChatEmojiIdList()));
-        this.forgingManager.sendForgeDataNotify();
-        this.resinManager.onPlayerLogin();
-        this.cookingManager.sendCookDataNotify();
-        this.cookingCompoundManager.onPlayerLogin();
-        this.teamManager.onPlayerLogin();
+        getSession().send(new PacketBattlePassAllDataNotify(this));
+        getSession().send(new PacketQuestListNotify(this));
+        getSession().send(new PacketCodexDataFullNotify(this));
+        getSession().send(new PacketAllWidgetDataNotify(this));
+        getSession().send(new PacketWidgetGadgetAllDataNotify());
+        getSession().send(new PacketCombineDataNotify(getUnlockedCombines()));
+        getSession().send(new PacketGetChatEmojiCollectionRsp(getChatEmojiIdList()));
+
+        getForgingManager().sendForgeDataNotify();
+        getResinManager().onPlayerLogin();
+        getCookingManager().sendCookDataNotify();
+        getCookingCompoundManager().onPlayerLogin();
+        getTeamManager().onPlayerLogin();
 
         getTodayMoonCard(); // The timer works at 0:0, some users log in after that, use this method to check if they have received a reward today or not. If not, send the reward.
 
         // Battle Pass trigger
-        this.getBattlePassManager().triggerMission(WatcherTriggerType.TRIGGER_LOGIN);
+        getBattlePassManager().triggerMission(WatcherTriggerType.TRIGGER_LOGIN);
 
-        this.furnitureManager.onLogin();
+        getFurnitureManager().onLogin();
         // Home
-        home = GameHome.getByUid(getUid());
-        home.onOwnerLogin(this);
+        this.home = GameHome.getByUid(getUid());
+        getHome().onOwnerLogin(this);
 
-        session.send(new PacketPlayerEnterSceneNotify(this)); // Enter game world
-        session.send(new PacketPlayerLevelRewardUpdateNotify(rewardedLevels));
+        getSession().send(new PacketPlayerEnterSceneNotify(this)); // Enter game world
+        getSession().send(new PacketPlayerLevelRewardUpdateNotify(getRewardedLevels()));
 
         // First notify packets sent
         this.hasSentLoginPackets = true;
 
         // Set session state
-        session.setState(SessionState.ACTIVE);
+        getSession().setState(SessionState.ACTIVE);
 
         // Call join event.
         PlayerJoinEvent event = new PlayerJoinEvent(this); event.call();
         if (event.isCanceled()) { // If event is not cancelled, continue.
-            session.close();
+            getSession().close();
             return;
         }
 
@@ -1417,36 +1340,36 @@ public class Player {
     public void onLogout() {
         try {
             // Clear chat history.
-            this.getServer().getChatSystem().clearHistoryOnLogout(this);
+            getServer().getChatSystem().clearHistoryOnLogout(this);
 
             // stop stamina calculation
             getStaminaManager().stopSustainedStaminaHandler();
 
-            // force to leave the dungeon (inside has a "if")
-            this.getServer().getDungeonSystem().exitDungeon(this);
+            // force to leave the dungeon (inside has an "if")
+            getServer().getDungeonSystem().exitDungeon(this);
 
             // Leave world
-            if (this.getWorld() != null) {
-                this.getWorld().removePlayer(this);
+            if (getWorld() != null) {
+                getWorld().removePlayer(this);
             }
 
             // Status stuff
-            this.getProfile().syncWithCharacter(this);
-            this.getProfile().setPlayer(null); // Set offline
+            getProfile().syncWithCharacter(this);
+            getProfile().setPlayer(null); // Set offline
 
-            this.getCoopRequests().clear();
+            getCoopRequests().clear();
 
             // Save to db
-            this.save();
-            this.getTeamManager().saveAvatars();
-            this.getFriendsList().save();
+            save();
+            getTeamManager().saveAvatars();
+            getFriendsList().save();
 
             // Call quit event.
             PlayerQuitEvent event = new PlayerQuitEvent(this); event.call();
-        }catch (Throwable e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             Grasscutter.getLogger().warn("Player (UID {}) save failure", getUid());
-        }finally {
+        } finally {
             removeFromServer();
         }
     }
@@ -1459,13 +1382,13 @@ public class Player {
     }
 
     public int getLegendaryKey() {
-        return this.getProperty(PlayerProperty.PROP_PLAYER_LEGENDARY_KEY);
+        return getProperty(PlayerProperty.PROP_PLAYER_LEGENDARY_KEY);
     }
     public synchronized void addLegendaryKey(int count) {
-        this.setProperty(PlayerProperty.PROP_PLAYER_LEGENDARY_KEY, getLegendaryKey() + count);
+        setProperty(PlayerProperty.PROP_PLAYER_LEGENDARY_KEY, getLegendaryKey() + count);
     }
     public synchronized void useLegendaryKey(int count) {
-        this.setProperty(PlayerProperty.PROP_PLAYER_LEGENDARY_KEY, getLegendaryKey() - count);
+        setProperty(PlayerProperty.PROP_PLAYER_LEGENDARY_KEY, getLegendaryKey() - count);
     }
 
     public enum SceneLoadState {
@@ -1479,48 +1402,40 @@ public class Player {
     }
 
     public int getPropertyMin(PlayerProperty prop) {
-        if (prop.isDynamicRange()) {
-            return 0;
-        } else {
-            return prop.getMin();
-        }
+        return prop.isDynamicRange() ? 0 : prop.getMin();
     }
 
     public int getPropertyMax(PlayerProperty prop) {
-        if (prop.isDynamicRange()) {
-            return switch (prop) {
-                case PROP_CUR_SPRING_VOLUME -> getProperty(PlayerProperty.PROP_MAX_SPRING_VOLUME);
-                case PROP_CUR_PERSIST_STAMINA -> getProperty(PlayerProperty.PROP_MAX_STAMINA);
-                default -> 0;
-            };
-        } else {
-            return prop.getMax();
-        }
+        if (!prop.isDynamicRange()) return prop.getMax();
+
+        return switch (prop) {
+            case PROP_CUR_SPRING_VOLUME -> getProperty(PlayerProperty.PROP_MAX_SPRING_VOLUME);
+            case PROP_CUR_PERSIST_STAMINA -> getProperty(PlayerProperty.PROP_MAX_STAMINA);
+            default -> 0;
+        };
     }
 
     public boolean isValueInPropBounds(PlayerProperty prop, int value){
-        int min = this.getPropertyMin(prop);
-        int max = this.getPropertyMax(prop);
-        return min <= value && value <= max;
+        return getPropertyMin(prop) <= value && value <= getPropertyMax(prop);
     }
 
     private boolean setPropertyWithSanityCheck(PlayerProperty prop, int value, boolean sendPacket) {
-        if(!isValueInPropBounds(prop, value)){
-            return false;
-        }
-        int currentValue = this.properties.get(prop.getId());
-        this.properties.put(prop.getId(), value);
+        if(!isValueInPropBounds(prop, value)) return false;
+
+        int currentValue = getProperties().get(prop.getId());
+        getProperties().put(prop.getId(), value);
         if (sendPacket) {
             // Update player with packet
-            this.sendPacket(new PacketPlayerPropNotify(this, prop));
-            this.sendPacket(new PacketPlayerPropChangeNotify(this, prop, value - currentValue));
+            sendPacket(new PacketPlayerPropNotify(this, prop));
+            sendPacket(new PacketPlayerPropChangeNotify(this, prop, value - currentValue));
 
             // Make the Adventure EXP pop-up show on screen.
             if (prop == PlayerProperty.PROP_PLAYER_EXP) {
-                this.sendPacket(new PacketPlayerPropChangeReasonNotify(this, prop, currentValue, value, PropChangeReason.PROP_CHANGE_REASON_PLAYER_ADD_EXP));
+                sendPacket(new PacketPlayerPropChangeReasonNotify(
+                    this, prop, currentValue, value,
+                    PropChangeReason.PROP_CHANGE_REASON_PLAYER_ADD_EXP));
             }
         }
         return true;
     }
-
 }
