@@ -14,7 +14,6 @@ import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.enums.DungeonPassConditionType;
 import emu.grasscutter.game.entity.*;
 import emu.grasscutter.game.entity.gadget.GadgetWorktop;
-import emu.grasscutter.game.managers.blossom.BlossomManager;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.*;
 import emu.grasscutter.game.quest.QuestGroupSuite;
@@ -62,7 +61,6 @@ public class Scene {
     @Getter private final Set<SpawnDataEntry> deadSpawnedEntities;
     @Getter private final Set<SceneBlock> loadedBlocks;
     @Getter private final Set<SceneGroup> loadedGroups;
-    @Getter private final BlossomManager blossomManager;
     private final HashSet<Integer> unlockedForces;
     private final List<Runnable> afterLoadedCallbacks = new ArrayList<>();
     private final long startWorldTime;
@@ -102,7 +100,6 @@ public class Scene {
         this.loadedGridBlocks = new HashSet<>();
         this.npcBornEntrySet = ConcurrentHashMap.newKeySet();
         this.scriptManager = new SceneScriptManager(this);
-        this.blossomManager = new BlossomManager(this);
         this.unlockedForces = new HashSet<>();
 
         //Create scene entity
@@ -209,7 +206,9 @@ public class Scene {
         getPlayers().add(player);
         player.setSceneId(this.getId());
         player.setScene(this);
-
+        if (player == getWorld().getOwner()) {
+            player.getBlossomManager().setScene(this);
+        }
         this.setupPlayerAvatars(player);
     }
 
@@ -457,8 +456,6 @@ public class Scene {
         val sceneTime = getSceneTimeSeconds();
         getEntities().forEach((eid, e) -> e.onTick(sceneTime));
 
-        blossomManager.onTick();
-
         checkNpcGroup();
         finishLoading();
         checkPlayerRespawn();
@@ -635,7 +632,6 @@ public class Scene {
                     gadget.setFightProperty(FightProperty.FIGHT_PROP_MAX_HP, Float.POSITIVE_INFINITY);
 
                     entity = gadget;
-                    blossomManager.initBlossom(gadget);
                 }
 
                 if (entity == null) continue;
@@ -661,7 +657,6 @@ public class Scene {
         if (toRemove.size() > 0) {
             toRemove.forEach(this::removeEntityDirectly);
             this.broadcastPacket(new PacketSceneEntityDisappearNotify(toRemove, VisionType.VISION_TYPE_REMOVE));
-            blossomManager.recycleGadgetEntity(toRemove);
         }
     }
 

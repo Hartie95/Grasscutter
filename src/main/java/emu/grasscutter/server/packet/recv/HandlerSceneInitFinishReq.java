@@ -16,11 +16,20 @@ public class HandlerSceneInitFinishReq extends PacketHandler {
 		// Info packets
 		session.send(new PacketServerTimeNotify());
 		session.send(new PacketWorldPlayerInfoNotify(session.getPlayer().getWorld()));
+        // WorldOwnerDailyTaskNotify
+        // WorldAllRoutineTypeNotify
 		session.send(new PacketWorldDataNotify(session.getPlayer().getWorld()));
+        session.send(new PacketWorldOwnerBlossomBriefInfoNotify(session.getPlayer().getWorld()));
+        // GroupLinkAllNotify
 		session.send(new PacketPlayerWorldSceneInfoListNotify());
+        // LevelTagDataNotify
+        // DeathZoneInfoNotify
+        // DeshretObeliskChestInfoNotify
+        // TeamResonanceChangeNotify
+        // AvatarEquipChangeNotify
 		session.send(new BasePacket(PacketOpcodes.SceneForceUnlockNotify));
 		session.send(new PacketHostPlayerNotify(session.getPlayer().getWorld()));
-
+        // SceneDataNotify
 		session.send(new PacketSceneTimeNotify(session.getPlayer()));
 		session.send(new PacketPlayerGameTimeNotify(session.getPlayer()));
 		session.send(new PacketPlayerEnterSceneInfoNotify(session.getPlayer()));
@@ -29,6 +38,10 @@ public class HandlerSceneInitFinishReq extends PacketHandler {
 		session.send(new PacketSceneTeamUpdateNotify(session.getPlayer()));
 
 		session.send(new PacketSyncTeamEntityNotify(session.getPlayer()));
+        // ScenePlayBattleInfoListNotify
+        // DailyTaskDataNotify
+        // DeathZoneInfoNotify ?
+        // AllShareCDDataNotify ?
 		session.send(new PacketSyncScenePlayTeamEntityNotify(session.getPlayer()));
 
 		// Done Packet
