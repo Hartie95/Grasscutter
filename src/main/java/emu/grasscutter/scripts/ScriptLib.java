@@ -2,6 +2,7 @@ package emu.grasscutter.scripts;
 
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
+import emu.grasscutter.data.binout.ScriptSceneData.ScriptObject.*;
 import emu.grasscutter.game.activity.ActivityManager;
 import emu.grasscutter.game.dungeons.challenge.DungeonChallenge;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
@@ -11,11 +12,14 @@ import emu.grasscutter.game.entity.*;
 import emu.grasscutter.game.entity.gadget.GadgetWorktop;
 import emu.grasscutter.game.entity.gadget.platform.ConfigRoute;
 import emu.grasscutter.game.entity.gadget.platform.PointArrayRoute;
+import emu.grasscutter.game.managers.blossom.BlossomManager;
+import emu.grasscutter.game.managers.blossom.BlossomSchedule;
 import emu.grasscutter.game.props.ClimateType;
 import emu.grasscutter.game.props.EntityType;
 import emu.grasscutter.game.quest.enums.QuestCond;
 import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.game.quest.enums.QuestState;
+import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.game.world.SceneGroupInstance;
 import emu.grasscutter.net.proto.EnterTypeOuterClass;
 import emu.grasscutter.scripts.constants.EventType;
@@ -106,11 +110,11 @@ public class ScriptLib {
 				configId,gadgetState);
 		GameEntity entity = getSceneScriptManager().getScene().getEntityByConfigId(configId);
 
-		if (!(entity instanceof EntityGadget)) {
+		if (!(entity instanceof EntityGadget gadget)) {
 			return 1;
 		}
 
-        ((EntityGadget) entity).updateState(gadgetState);
+        gadget.updateState(gadgetState);
         return 0;
 	}
 
@@ -119,10 +123,11 @@ public class ScriptLib {
 				groupId,configId,gadgetState);
 
 		val entity = getSceneScriptManager().getScene().getEntityByConfigId(configId, groupId);
-        if(!(entity instanceof EntityGadget)){
+        if(!(entity instanceof EntityGadget gadget)){
             return -1;
         }
-        ((EntityGadget) entity).updateState(gadgetState);
+
+        gadget.updateState(gadgetState);
 
 		return 0;
 	}
@@ -172,9 +177,8 @@ public class ScriptLib {
 
         worktop.addWorktopOptions(worktopOptions);
         var scene = getSceneScriptManager().getScene();
-        Grasscutter.getGameServer().getScheduler().scheduleDelayedTask(() -> {
-            scene.broadcastPacket(new PacketWorktopOptionNotify(gadget));
-        },1);
+        Grasscutter.getGameServer().getScheduler().scheduleDelayedTask(() ->
+            scene.broadcastPacket(new PacketWorktopOptionNotify(gadget)),1);
 		return 0;
 	}
 
@@ -217,9 +221,8 @@ public class ScriptLib {
         worktop.removeWorktopOption(callParams.param2);
 
         var scene = getSceneScriptManager().getScene();
-        Grasscutter.getGameServer().getScheduler().scheduleDelayedTask(() -> {
-            scene.broadcastPacket(new PacketWorktopOptionNotify(gadget));
-        },1);
+        Grasscutter.getGameServer().getScheduler().scheduleDelayedTask(() ->
+            scene.broadcastPacket(new PacketWorktopOptionNotify(gadget)),1);
 
         return 0;
     }
@@ -386,20 +389,26 @@ public class ScriptLib {
 	public int GetGroupVariableValue(String var) {
 		logger.debug("[LUA] Call GetGroupVariableValue with {}",
 				var);
-		return getSceneScriptManager().getVariables(currentGroup.get().id).getOrDefault(var, 0);
+        val variables = getSceneScriptManager().getVariables(currentGroup.get().id);
+		return variables == null ? 1 : variables.getOrDefault(var, 0);
 	}
 
 	public int SetGroupVariableValue(String var, int value) {
 		logger.debug("[LUA] Call SetGroupVariableValue with {},{}",
 				var, value);
+        try {
+            val groupId= currentGroup.get().id;
+            val variables = getSceneScriptManager().getVariables(groupId);
+            if (variables == null) return 1;
 
-        val groupId= currentGroup.get().id;
-        val variables = getSceneScriptManager().getVariables(groupId);
-
-        val old = variables.getOrDefault(var, value);
-        variables.put(var, value);
-        getSceneScriptManager().callEvent(new ScriptArgs(groupId, EventType.EVENT_VARIABLE_CHANGE, value, old));
-		return 0;
+            val old = variables.getOrDefault(var, value);
+            variables.put(var, value);
+            getSceneScriptManager().callEvent(new ScriptArgs(groupId, EventType.EVENT_VARIABLE_CHANGE, value, old));
+            return 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 1;
 	}
 
 	public LuaValue ChangeGroupVariableValue(String var, int value) {
@@ -408,6 +417,7 @@ public class ScriptLib {
 
         val groupId= currentGroup.get().id;
         val variables = getSceneScriptManager().getVariables(groupId);
+        if (variables == null) return LuaValue.ONE;
 
         val old = variables.getOrDefault(var, 0);
         variables.put(var, old + value);
@@ -518,14 +528,16 @@ public class ScriptLib {
 	public int GetGroupVariableValueByGroup(String name, int groupId){
 		logger.debug("[LUA] Call GetGroupVariableValueByGroup with {},{}",
 				name,groupId);
-
-		return getSceneScriptManager().getVariables(groupId).getOrDefault(name, 0);
+        val variables = getSceneScriptManager().getVariables(groupId);
+		return variables == null ? 1 : variables.getOrDefault(name, 0);
 	}
 	public int ChangeGroupVariableValueByGroup(String name, int value, int groupId){
 		logger.debug("[LUA] Call ChangeGroupVariableValueByGroup with {},{}",
 				name,groupId);
         //TODO test
-        getSceneScriptManager().getVariables(groupId).put(name, value);
+        val variables = getSceneScriptManager().getVariables(groupId);
+        if (variables == null) return 1;
+        variables.put(name, value);
 		return 0;
 	}
 
@@ -557,7 +569,10 @@ public class ScriptLib {
 		logger.debug("[LUA] Call SetGroupVariableValueByGroup with {},{},{}",
 				key,value,groupId);
 
-		getSceneScriptManager().getVariables(groupId).put(key, value);
+        val variables = getSceneScriptManager().getVariables(groupId);
+        if (variables == null) return 1;
+
+        variables.put(key, value);
 		return 0;
 	}
 
@@ -839,18 +854,26 @@ public class ScriptLib {
     }
     public int StartFatherChallenge(int challengeIndex){
         logger.debug("[LUA] Call StartFatherChallenge with {}", challengeIndex);
-        //TODO implement
-        val challenge = getSceneScriptManager().getScene().getChallenge();
-        if (challenge != null && challenge.getChallengeIndex() == challengeIndex) {
-            challenge.start();
-            return 0;
-        }
-        return 1;
+        WorldChallenge challenge = getSceneScriptManager().getScene().getChallenge();
+        if (challenge == null || challenge.getChallengeIndex() == challengeIndex) return 1;
+
+        challenge.start();
+        return 0;
     }
-    public int ModifyFatherChallengeProperty(int challengeId, int propertyTypeIndex, int value){
-        val propertyType = FatherChallengeProperty.values()[propertyTypeIndex];
-        logger.warn("[LUA] Call unimplemented ModifyFatherChallengeProperty with {} {} {}", challengeId, propertyType.name(), value);
-        //TODO implement
+    public int ModifyFatherChallengeProperty(int challengeIndex, int propertyTypeIndex, int value){
+        FatherChallengeProperty propertyType = FatherChallengeProperty.values()[propertyTypeIndex];
+        logger.warn("[LUA] Call check ModifyFatherChallengeProperty with {} {} {}", challengeIndex, propertyType.name(), value);
+        Scene scene = getSceneScriptManager().getScene();
+        if (scene == null) return 1;
+
+        WorldChallenge sceneChallenge = scene.getChallenge();
+        if (sceneChallenge == null || sceneChallenge.getChallengeIndex() != challengeIndex) return 1;
+
+        switch (propertyType) {
+            case CUR_FAIL, CUR_SUCC, SUM_FAIL, SUM_SUCC, DURATION -> {
+
+            }
+        }
         return 0;
     }
     public int AttachChildChallenge(int fatherChallengeIndex, int childChallengeIndex, int childChallengeId, int[] conditionArray, LuaTable var5, LuaTable conditionTable){
@@ -890,15 +913,38 @@ public class ScriptLib {
         //TODO implement
         return 0;
     }
-    public int CreateBlossomChestByGroupId(int groupId, int var2){
-        logger.warn("[LUA] Call unimplemented SetBlossomScheduleStateByGroupId with {} {}", groupId, var2);
-        //TODO implement
+    public int CreateBlossomChestByGroupId(int groupId, int chestGadgetId){
+        logger.debug("[LUA] Call CreateBlossomChestByGroupId with {} {}", groupId, chestGadgetId);
+
+        BlossomManager blossomManager = getSceneScriptManager().getScene().getWorld().getOwner().getBlossomManager();
+        if (blossomManager == null) return 1;
+
+        BlossomSchedule blossomSchedule = blossomManager.getActiveBlossomChallenge().get(groupId);
+        if (blossomSchedule == null) return 1;
+
+        List<SceneGadgetData> chestDataList = blossomManager.getBlossomGadgetData(
+            getSceneScriptManager().getScene().getId(), groupId);
+        if (chestDataList == null) return 1;
+
+        SceneGadgetData chestData = chestDataList.stream()
+            .filter(SceneGadgetData::isBlossomChest)
+            .findFirst().orElse(null);
+        if (chestData == null) return 1;
+
+        val group = getCurrentGroup();
+        if (group.isEmpty()) return 1;
+
+        blossomManager.getSpawnedChest().putIfAbsent(chestData.getGadgetId(), blossomSchedule);
+        GameEntity chestEntity = createGadget(chestData.getConfigId(), group.get());
+        getSceneScriptManager().getScene().broadcastPacket(new PacketBlossomChestCreateNotify(
+            blossomSchedule.getRefreshId(), blossomSchedule.getCircleCampId()));
         return 0;
     }
-    public int SetBlossomScheduleStateByGroupId(int groupId, int scene){
-        logger.warn("[LUA] Call unimplemented SetBlossomScheduleStateByGroupId with {} {}", groupId, scene);
-        //TODO implement scene is guessed
-        return 0;
+    public int SetBlossomScheduleStateByGroupId(int groupId, int state){
+        logger.debug("[LUA] Call SetBlossomScheduleStateByGroupId with {} {}", groupId, state);
+
+        BlossomManager blossomManager = getSceneScriptManager().getScene().getWorld().getOwner().getBlossomManager();
+        return blossomManager != null && blossomManager.setBlossomState(groupId, state) ? 0 : 1;
     }
     public int RefreshBlossomGroup(LuaTable var1){
         logger.warn("[LUA] Call unimplemented RefreshBlossomGroup with {}", printTable(var1));
@@ -911,9 +957,10 @@ public class ScriptLib {
         return 0;
     }
     public int AddBlossomScheduleProgressByGroupId(int groupId){
-        logger.warn("[LUA] Call unimplemented AddBlossomScheduleProgressByGroupId with {}", groupId);
-        //TODO implement
-        return 0;
+        logger.debug("[LUA] Call AddBlossomScheduleProgressByGroupId with {}", groupId);
+
+        BlossomManager blossomManager = getSceneScriptManager().getScene().getWorld().getOwner().getBlossomManager();
+        return blossomManager != null && blossomManager.addBlossomProgress(groupId) ? 0 : 1;
     }
     public int RefreshHuntingClueGroup(){
         logger.warn("[LUA] Call unimplemented RefreshHuntingClueGroup"); //TODO: Much many calls o this garbages the log
@@ -949,7 +996,7 @@ public class ScriptLib {
 
     public int StartSealBattle(int gadgetId, LuaTable var2){
         logger.warn("[LUA] unimplemented Call StartSealBattle with {} {}", gadgetId, printTable(var2));
-        //TODO implement var2 containt int radius, int battle_time, int monster_group_id, int default_kill_charge, int auto_charge, int auto_decline, int max_energy, SealBattleType battleType
+        //TODO implement var2 contain int radius, int battle_time, int monster_group_id, int default_kill_charge, int auto_charge, int auto_decline, int max_energy, SealBattleType battleType
         // for type KILL_MONSTER watch group monster_group_id and afterwards trigger EVENT_SEAL_BATTLE_END with the result in param2
         return 0;
     }
@@ -1204,13 +1251,13 @@ public class ScriptLib {
 
     public int ShowReminderRadius(int var1, LuaTable var2, int var3){
         logger.warn("[LUA] Call unimplemented ShowReminderRadius with {} {} {}", var1, printTable(var2), var3);
-        //TODO implement var2 is a postion
+        //TODO implement var2 is a position
         return 0;
     }
     public int ShowClientGuide(String guideName){
         logger.debug("[LUA] Call unimplemented ShowClientGuide with {}", guideName);
         if (GameData.getGuideTriggerDataStringMap().get(guideName) != null) {
-            // if should handle by open state, dont send packet here
+            // it should handle by open state, don't send packet here
             // not entirely sure what return value is about
             // probably not needing this check statement here since the value comes from
             // the lua script
@@ -1602,13 +1649,9 @@ public class ScriptLib {
     public int[] GetGatherConfigIdList() {
         EntityGadget gadget = getCurrentEntityGadget();
 
-        GameEntity[] children = (GameEntity[]) gadget.getChildren().toArray();
-
-        int[] configIds = new int[children.length + 1];
-        for(int i = 0; i < children.length; i++) {
-            configIds[i] = children[i].getConfigId();
-        }
-
-        return configIds;
+        return gadget == null ? new int[]{} : gadget.getChildren().stream()
+            .map(GameEntity::getConfigId)
+            .mapToInt(Integer::intValue)
+            .toArray();
     }
 }

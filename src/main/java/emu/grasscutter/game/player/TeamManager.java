@@ -273,8 +273,7 @@ public class TeamManager extends BasePlayerDataManager {
     public synchronized boolean setupAvatarTeam(int teamId, @NotNull List<Long> guidList, long guid) {
         // Sanity checks
         TeamInfo teamInfo = getTeams().get(teamId);
-        if (guidList.isEmpty() || guidList.size() > getMaxTeamSize() || teamInfo == null
-            || !canAddAvatarsToTeam(teamInfo, newTeam(guidList).size())) return false;
+        if (guidList.isEmpty() || guidList.size() > getMaxTeamSize() || teamInfo == null) return false;
 
         // Set team data and clear current team info and add avatars from our new team
         teamInfo.getAvatars().clear();

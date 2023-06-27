@@ -22,11 +22,9 @@ public class BossChestInteractHandler implements ChestInteractHandler{
         return this.onInteract(chest,player,false);
     }
 
-    public boolean onInteract(GadgetChest chest, Player player,boolean useCondensedResin) {
-        var blossomRewards = player.getScene().getBlossomManager().onReward(player,chest.getGadget(),useCondensedResin);
-        if (blossomRewards!=null) {
-            player.getInventory().addItems(blossomRewards, ActionReason.OpenWorldBossChest);
-            player.sendPacket(new PacketGadgetAutoPickDropInfoNotify(blossomRewards));
+    public boolean onInteract(GadgetChest chest, Player player, boolean useCondensedResin) {
+        boolean blossomRewards = player.getScene().getWorld().getOwner().getBlossomManager().onReward(player, chest.getGadget(), useCondensedResin);
+        if (blossomRewards) {
             return true;
         }
 

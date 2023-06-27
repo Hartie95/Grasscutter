@@ -50,7 +50,7 @@ public enum ElementReactionType {
         });
     }
 
-    private ElementReactionType(int value) {
+    ElementReactionType(int value) {
         this.value = value;
     }
 
