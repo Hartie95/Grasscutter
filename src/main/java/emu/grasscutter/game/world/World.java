@@ -367,7 +367,9 @@ public class World implements Iterable<Player> {
     // Returns true if the world should be deleted
     public boolean onTick() {
         if (this.getPlayerCount() == 0) return true;
-        this.scenes.forEach((k, scene) -> scene.onTick());
+        this.scenes.values().stream()
+            .filter(scene -> scene.getPlayerCount() > 0)
+            .forEach(Scene::onTick);
 
         if(!isGameTimeLocked && !isPaused){
             currentGameTime++;
