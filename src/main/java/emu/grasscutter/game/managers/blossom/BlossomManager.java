@@ -7,13 +7,9 @@ import java.util.stream.Stream;
 
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
-import emu.grasscutter.data.binout.ScriptSceneData;
-import emu.grasscutter.data.binout.ScriptSceneData.ScriptObject;
-import emu.grasscutter.data.binout.ScriptSceneData.ScriptObject.*;
 import emu.grasscutter.data.excels.*;
 import emu.grasscutter.data.excels.BlossomRefreshData.*;
 import emu.grasscutter.game.entity.EntityGadget;
-import emu.grasscutter.game.entity.gadget.GadgetWorktop;
 import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.managers.ResinManager;
 import emu.grasscutter.game.managers.blossom.enums.BlossomRefreshType;
@@ -23,8 +19,10 @@ import emu.grasscutter.game.props.ActionReason;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.net.proto.BlossomBriefInfoOuterClass.BlossomBriefInfo;
 import emu.grasscutter.net.proto.BlossomChestInfoOuterClass.BlossomChestInfo;
-import emu.grasscutter.scripts.CommonScriptManager;
-import emu.grasscutter.scripts.data.common.BlossomGroupV2;
+import emu.grasscutter.scripts.constants.EventType;
+import emu.grasscutter.scripts.data.SceneGadget;
+import emu.grasscutter.scripts.data.SceneGroup;
+import emu.grasscutter.scripts.data.ScriptArgs;
 import emu.grasscutter.server.packet.send.PacketBlossomBriefInfoNotify;
 import emu.grasscutter.server.packet.send.PacketWorldOwnerBlossomScheduleInfoNotify;
 import emu.grasscutter.utils.Utils;
@@ -40,41 +38,28 @@ import org.jetbrains.annotations.NotNull;
 public class BlossomManager extends BasePlayerDataManager {
     private Scene scene;
     /**
-     * Holds information of all blossom camps
+     * Holds information of all blossom camps, [Key: GroupId, Value: BlossomSchedule]
      * */
-    private final List<BlossomSchedule> blossomSchedule = new ArrayList<>();
+    private final Int2ObjectMap<BlossomSchedule> blossomSchedule = new Int2ObjectOpenHashMap<>();
     /**
-     * Holds information of all spawned blossom camps [Key: GadgetGroupId, Value: EntityGadget]
-     * */
-    private final Int2ObjectMap<EntityGadget> spawnedBlossoms = new Int2ObjectOpenHashMap<>();
-    /**
-     * Holds information of all active(started) blossom camps [Key: GadgetGroupId, Value: BlossomSchedule]
-     * */
-    private final Int2ObjectMap<BlossomSchedule> activeBlossomChallenge = new Int2ObjectOpenHashMap<>();
-    /**
-     * Holds information of all active(started) blossom camps [Key: GadgetId, Value: BlossomSchedule]
+     * Holds information of all spawned chest after finishing blossom challenge,
+     * necessary for building chest brief info,
+     * [Key: ConfigId, Value: BlossomSchedule]
      * */
     private final Int2ObjectMap<BlossomSchedule> spawnedChest = new Int2ObjectOpenHashMap<>();
-    /**
-     * Script used to connect with ScriptLib
-     * */
-    private BlossomGroupV2 blossomScript = null;
 
     public BlossomManager(Player player) {
         setPlayer(player);
-        Optional.ofNullable(CommonScriptManager.getCommonScripts("BlossomGroupV2"))
-            .ifPresent(commonScript -> {
-                if (!(commonScript instanceof BlossomGroupV2 blossomGroupV2)) return;
-                this.blossomScript = blossomGroupV2;
-            });
     }
 
     /**
      * BlossomBriefInfo proto
      * */
     public List<BlossomBriefInfo> getBriefInfo() {
-        return getBlossomSchedule().stream()
+        return getBlossomSchedule().values().stream()
             .map(BlossomSchedule::toBriefProto)
+            .sorted(Comparator.comparing(BlossomBriefInfo::getRefreshId)
+                .thenComparing(BlossomBriefInfo::getCircleCampId))
             .toList();
     }
 
@@ -97,17 +82,12 @@ public class BlossomManager extends BasePlayerDataManager {
      * Update Blossom camp's state (started or ended blossom challenge for example), triggered by ScriptLib
      * */
     public boolean setBlossomState(int groupId, int state) {
-        val blossom = getBlossomSchedule().stream()
-            .filter(schedule -> schedule.getGroupId() == groupId)
-            .filter(schedule -> schedule.getState() != state) // get blossom not already started
-            .filter(schedule -> getSpawnedBlossoms().containsKey(schedule.getGroupId()))
-            .findFirst();
+        val blossom = getBlossomSchedule().get(groupId);
 
-        if (blossom.isEmpty()) return false;
+        if (blossom == null) return false;
 
-        blossom.get().setState(state);
-        getActiveBlossomChallenge().putIfAbsent(groupId, blossom.get());
-        getScene().broadcastPacket(new PacketWorldOwnerBlossomScheduleInfoNotify(blossom.get().toScheduleProto()));
+        blossom.setState(state);
+        getScene().broadcastPacket(new PacketWorldOwnerBlossomScheduleInfoNotify(blossom.toScheduleProto()));
         return true;
     }
 
@@ -115,26 +95,27 @@ public class BlossomManager extends BasePlayerDataManager {
      * Update Blossom camp's progress (on monster die for example), triggered by ScriptLib
      * */
     public boolean addBlossomProgress(int groupId) {
-        BlossomSchedule blossomSchedule = getActiveBlossomChallenge().get(groupId);
+        BlossomSchedule blossomSchedule = getBlossomSchedule().get(groupId);
         if (blossomSchedule == null) return false;
 
         blossomSchedule.addProgress();
         getScene().broadcastPacket(new PacketWorldOwnerBlossomScheduleInfoNotify(blossomSchedule.toScheduleProto()));
 
         if (blossomSchedule.getProgress() >= blossomSchedule.getFinishProgress()) {
-            EntityGadget gadget = getSpawnedBlossoms().get(groupId);
-            if (getBlossomScript() == null) return false;
-
-            getBlossomScript().createReward(gadget, groupId);
+            SceneGroup group = getScene().getScriptManager().getGroupById(groupId);
+            getScene().getScriptManager().callEvent(new ScriptArgs(groupId, EventType.EVENT_BLOSSOM_PROGRESS_FINISH,
+                group.gadgets.values().stream()
+                    .filter(g -> g.chest_drop_id > 0)
+                    .map(g -> g.config_id).findFirst().orElse(0)));
         }
         return true;
     }
 
     /**
-     * Get Blossom Chest gadget info (after challenge finish)
+     * Get Blossom Chest gadget proto info (after challenge finish)
      * */
-    public BlossomChestInfo getChestInfo(int chestGadgetId) {
-        BlossomSchedule schedule = getSpawnedChest().get(chestGadgetId);
+    public BlossomChestInfo getChestInfo(int chestConfigId) {
+        BlossomSchedule schedule = getSpawnedChest().get(chestConfigId);
         if (schedule == null) return BlossomChestInfo.newBuilder().build();
 
         List<Integer> playersUid = getScene().getPlayers().stream().map(Player::getUid).toList();
@@ -149,44 +130,13 @@ public class BlossomManager extends BasePlayerDataManager {
     }
 
     /**
-     * Get Blossom Camp gadget (not chest gadget)
-     * */
-    public EntityGadget getBlossomGadget(Scene scene, BlossomSchedule schedule) {
-        EntityGadget blossom = new EntityGadget(scene, schedule.getGadgetId(),
-            schedule.getPosition(), schedule.getRotation());
-        blossom.setGroupId(schedule.getGroupId());
-        blossom.setConfigId(schedule.getConfigId());
-        blossom.setState(204); // TODO find another way to do for it to be less hard coded i guess
-        blossom.buildContent();
-        if (blossom.getContent() instanceof GadgetWorktop gadgetWorktop) {
-            gadgetWorktop.addWorktopOptions(new int[]{187});
-            gadgetWorktop.setOnSelectWorktopOptionEvent((GadgetWorktop context, int option) -> {
-                Grasscutter.getLogger().info("Starting blossom schedule: {}", schedule.getRefreshId());
-                Grasscutter.getLogger().info("Option: {}, CampId: {}, ConfigId: {}",
-                    option, schedule.getCircleCampId(), schedule.getConfigId());
-                if (getBlossomScript() == null) return false;
-
-                getBlossomScript().onSelectOption(context.getGadget());
-                return true;
-            });
-        }
-        return blossom;
-    }
-
-    /**
-     * Get Blossom Camp gadget (not chest gadget)
-     * */
-    public EntityGadget getBlossomGadget(BlossomSchedule schedule) {
-        return getBlossomGadget(getScene(), schedule);
-    }
-
-    /**
      * Give player reward after challenge finish
      * */
-    public boolean onReward(Player player, EntityGadget gadget, boolean useCondensedResin) {
-        BlossomSchedule schedule = getSpawnedChest().get(gadget.getGadgetId());
+    public boolean onReward(Player player, @NotNull EntityGadget gadget, boolean useCondensedResin) {
+        BlossomSchedule schedule = getSpawnedChest().get(gadget.getConfigId());
         if (schedule == null) return false;
 
+        // give rewards
         ResinManager resinManager = player.getResinManager();
         boolean payable = useCondensedResin ?
             resinManager.useCondensedResin(1) :
@@ -203,37 +153,41 @@ public class BlossomManager extends BasePlayerDataManager {
                 blossomReward.getCount() * (useCondensedResin ? 2 : 1)))
             .collect(Collectors.toList()), ActionReason.OpenBlossomChest);
 
+        // build next camps
         schedule.getRemainingUid().remove(player.getUid());
         if (schedule.getRemainingUid().isEmpty()) {
-            getBlossomScript().onBlossomChestDie(gadget);
-            getSpawnedChest().remove(gadget.getGadgetId());
-            getActiveBlossomChallenge().remove(gadget.getGroupId());
-            getSpawnedBlossoms().remove(gadget.getGroupId());
-            getBlossomSchedule().remove(schedule);
+            getSpawnedChest().remove(gadget.getConfigId());
+            getBlossomSchedule().remove(schedule.getGroupId());
+            getScene().getScriptManager().callEvent(new ScriptArgs(schedule.getGroupId(), EventType.EVENT_BLOSSOM_CHEST_DIE));
 
-            List<BlossomSchedule> newScheduleBlossom = new ArrayList<>();
-            GameData.getBlossomGroupsDataMap().get(schedule.getCircleCampId())
-                .getNextCampIdVec().stream()
+            GameData.getBlossomGroupsDataMap().get(schedule.getCircleCampId()).getNextCampIdVec().stream()
                 .map(campId -> GameData.getBlossomGroupsDataMap().get(campId.intValue()))
-                .filter(Objects::nonNull)
-                .forEach(group -> {
-                    int blockGroupId = group.getNewGroupVec().stream().findAny().orElse(0);
-                    List<SceneGadgetData> gadgetDataList = getBlossomGadgetData(3, blockGroupId);
-                    if (gadgetDataList == null) return;
+                .map(groupsData -> {
+                    // if next camp overlaps with existing schedule, get further next camp
+                    return getBlossomSchedule().values().stream().anyMatch(s ->
+                        groupsData.getNextCampIdVec().stream().anyMatch(camp -> s.getCircleCampId() == camp)) ?
+                        GameData.getBlossomGroupsDataMap().get(
+                            groupsData.getNewGroupVec().stream().findAny().orElse(0).intValue()) : groupsData;
+                })
+                .filter(Objects::nonNull).forEach(groupData -> {
+                    int blockGroupId = groupData.getNewGroupVec().stream().findAny().orElse(0);
 
-                    SceneGadgetData gadgetData = gadgetDataList.stream()
-                        .filter(x -> x.getGadgetId() == schedule.getGadgetId())
-                        .findFirst().orElse(null);
+                    SceneGroup newGroup = SceneGroup.of(blockGroupId).load(3);
+                    if (newGroup == null) return;
 
-                    BlossomSchedule newSchedule = new BlossomSchedule(schedule, group, gadgetData, 3, blockGroupId);
-                    getBlossomSchedule().add(newSchedule);
-                    newScheduleBlossom.add(newSchedule);
-                    getSpawnedBlossoms().put(newSchedule.getGroupId(), getBlossomGadget(newSchedule));
+                    val gadgetsMap = newGroup.gadgets;
+                    if (gadgetsMap == null) return;
+
+                    SceneGadget newGadget = gadgetsMap.values().stream()
+                        .filter(g -> g.gadget_id == schedule.getRefreshType().getGadgetId()).findFirst()
+                        .orElse(null);
+                    BlossomSchedule newSchedule = new BlossomSchedule(
+                        schedule, groupData, newGadget, 3, blockGroupId);
+
+                    getBlossomSchedule().put(blockGroupId,newSchedule);
+                    getScene().loadDynamicGroup(blockGroupId);
                 });
-            getBlossomSchedule().sort(Comparator.comparing(BlossomSchedule::getRefreshId)
-                .thenComparing(BlossomSchedule::getCircleCampId));
-            notifyPlayerIcon();
-            notifyOwnerIcon(newScheduleBlossom);
+            notifyPlayerIcon(); // notify all camps again
         }
         return true;
     }
@@ -241,35 +195,13 @@ public class BlossomManager extends BasePlayerDataManager {
     /**
      * Rebuild all Blossom Camp gadget (not chest gadget) for scene
      * */
-    public void buildBlossomEntity(Player player) {
-        if (getScene() == null || player != getPlayer().getWorld().getOwner()) return;
-        getSpawnedBlossoms().clear();
-        getBlossomSchedule().stream()
-            .filter(schedule -> schedule.getSceneId() == getScene().getId() && schedule.getGadgetId() > 0)
-            .forEach(schedule -> {
-                EntityGadget blossom = getBlossomGadget(getScene(), schedule);
-                getSpawnedBlossoms().put(schedule.getGroupId(), blossom);
-                getScene().getEntities().put(blossom.getId(), blossom);
-            });
+    public void loadBlossomGroup() {
+        if (getScene() == null) return;
 
-//        getSpawnedBlossoms().values().forEach(scene::addEntity);
-    }
-
-    /**
-     * Notify world owner's all BlossomBriefInfo (all including not spawned)
-     * */
-    public void notifyOwnerIcon() {
-        notifyOwnerIcon(getBlossomSchedule());
-    }
-
-    /**
-     * Notify world owner's all BlossomBriefInfo (all including not spawned)
-     * */
-    public void notifyOwnerIcon(Collection<BlossomSchedule> notifyList) {
-        notifyList.stream()
-            .filter(schedule -> getSpawnedBlossoms().keySet().contains(schedule.getGroupId()))
-            .map(BlossomSchedule::toScheduleProto)
-            .forEach(proto -> getScene().broadcastPacket(new PacketWorldOwnerBlossomScheduleInfoNotify(proto)));
+        getBlossomSchedule().values().forEach(schedule -> {
+            Grasscutter.getLogger().info("{}", schedule.getGroupId());
+            getScene().loadDynamicGroup(schedule.getGroupId());
+        });
     }
 
     public int getWorldLevel() {
@@ -298,25 +230,6 @@ public class BlossomManager extends BasePlayerDataManager {
     }
 
     /**
-     * Get all gadget information of a blossom camp using group id
-     * */
-    public List<SceneGadgetData> getBlossomGadgetData(int sceneId, int groupId) {
-        ScriptSceneData fullGlobals = GameData.getScriptSceneDataMap().get("flat.luas.scenes.full_globals.lua.json");
-        if (fullGlobals == null) return null;
-
-        ScriptObject scriptObject = fullGlobals.getScriptObjectList()
-            .get(sceneId + "/scene" + sceneId + "_group" + groupId +".lua");
-        if (scriptObject == null) return null;
-
-        val gadgets = scriptObject.getGadgets();
-
-        return gadgets == null ? null : ((List<?>) gadgets).stream()
-            .filter(b -> b instanceof SceneGadgetData)
-            .map(b -> ((SceneGadgetData) b))
-            .toList();
-    }
-
-    /**
      * Get resin cost of current blossom camp
      * */
     public int getResinCost(BlossomRefreshType refreshType) {
@@ -332,7 +245,7 @@ public class BlossomManager extends BasePlayerDataManager {
     public void buildBlossomSchedule() {
         WorldLevelData worldData = GameData.getWorldLevelDataMap().get(getWorldLevel());
         int monsterLevel = worldData == null ? 26 : worldData.getMonsterLevel();
-        List<Integer> appendedGroupId = new ArrayList<>();
+        List<Integer> appendedGroupId = new ArrayList<>(); // counter to avoid repeated groups and section
         List<Integer> appendedSectionId = new ArrayList<>();
 
         // list out all the available sections for groups
@@ -340,7 +253,8 @@ public class BlossomManager extends BasePlayerDataManager {
             .map(BlossomGroupsData::getSectionId)
             .toList();
 
-        getBlossomSchedule().addAll(GameData.getBlossomRefreshDataMap().values().stream()
+        getBlossomSchedule().putAll((Map<? extends Integer, ? extends BlossomSchedule>)
+            GameData.getBlossomRefreshDataMap().values().stream()
             .filter(data -> data.getRefreshCondVec().stream().allMatch(this::refreshCondMet))
             .filter(data -> getPlayerLevel() >= GameData.getBlossomOpenDataMap().get(data.getCityId()).getOpenLevel())
             .map(data -> {
@@ -361,14 +275,12 @@ public class BlossomManager extends BasePlayerDataManager {
                                 && group.getSectionId() == sectionId
                                 && group.getRefreshTypeVec().contains(refreshType.getValue())
                                 && !appendedGroupId.contains(group.getId()))
-                            .filter(BlossomGroupsData::isInitialRefresh)
-                            .toList();
+                            .filter(BlossomGroupsData::isInitialRefresh).toList();
                         if (tempGroupList.size() < data.getRefreshCount()) return false;
 
                         groupList.addAll(tempGroupList);
                         return true;
-                    })
-                    .filter(sectionId -> !appendedSectionId.contains(sectionId)) // don't want to get the same section
+                    }).filter(sectionId -> !appendedSectionId.contains(sectionId)) // don't want to get the same section
                     .toList();
 
                 if (sectionList.isEmpty() || groupList.isEmpty()) {
@@ -380,32 +292,34 @@ public class BlossomManager extends BasePlayerDataManager {
                 int randomSectionId = Utils.drawRandomListElement(sectionList);
                 appendedSectionId.add(randomSectionId);
 
-                return IntStream.range(0, data.getRefreshCount())
-                    .mapToObj(e -> {
-                        // draw a new random group
-                        BlossomGroupsData randomGroup = Utils.drawRandomListElement(groupList);
-                        appendedGroupId.add(randomGroup.getId());
-                        groupList.remove(randomGroup);
+                return IntStream.range(0, data.getRefreshCount()).mapToObj(e -> {
+                    // draw a new random group
+                    BlossomGroupsData randomGroup = Utils.drawRandomListElement(groupList);
+                    appendedGroupId.add(randomGroup.getId());
+                    groupList.remove(randomGroup);
 
-                        // build blossom schedule
-                        int blockGroupId = randomGroup.getNewGroupVec().stream().findAny().orElse(0);
-                        List<SceneGadgetData> gadgetDataList = getBlossomGadgetData(3, blockGroupId);
-                        if (gadgetDataList == null) return null;
+                    // new camp group id
+                    int blockGroupId = randomGroup.getNewGroupVec().stream().findAny().orElse(0);
 
-                        SceneGadgetData gadgetData = gadgetDataList.stream()
-                            .filter(x -> x.getGadgetId() == refreshType.getGadgetId())
-                            .findFirst().orElse(null);
+                    SceneGroup group = SceneGroup.of(blockGroupId).load(3);
+                    if (group == null) return null;
 
-                        return new BlossomSchedule(data, randomGroup, gadgetData, 3,
-                            getResinCost(refreshType), monsterLevel - data.getReviseLevel(),
-                            getWorldLevel(), blockGroupId, refreshType);
-                    })
-                    .filter(Objects::nonNull)
-                    .toList();
+                    val gadgetsMap = group.gadgets;
+                    if (gadgetsMap == null) return null;
+
+                    SceneGadget gadget = gadgetsMap.values().stream()
+                        .filter(g -> g.gadget_id == refreshType.getGadgetId()).findFirst()
+                        .orElse(null);
+
+                    // build blossom schedule
+                    return new BlossomSchedule(data, randomGroup, gadget, 3,
+                        getResinCost(refreshType), monsterLevel - data.getReviseLevel(),
+                        getWorldLevel(), blockGroupId, refreshType);
+                }).filter(Objects::nonNull).toList();
             })
-            .filter(Objects::nonNull)
-            .flatMap(List::stream)
-            .sorted(Comparator.comparing(BlossomSchedule::getRefreshId).thenComparing(BlossomSchedule::getCircleCampId))
-            .toList());
+            .filter(Objects::nonNull).flatMap(List::stream)
+            .collect(Collectors.toMap(BlossomSchedule::getGroupId, schedule -> schedule,
+                (existingValue, newValue) -> newValue,   // Merge function: In case of duplicate keys, choose the new value
+                Int2ObjectOpenHashMap::new)));
     }
 }

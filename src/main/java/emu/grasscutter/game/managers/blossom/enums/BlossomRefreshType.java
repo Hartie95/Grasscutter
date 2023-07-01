@@ -11,16 +11,17 @@ public enum BlossomRefreshType {
     BLOSSOM_REFRESH_NONE(0, 0),
     BLOSSOM_REFRESH_SCOIN(1, 70360056),
     BLOSSOM_REFRESH_EXP(3, 70360057);
-//    BLOSSOM_REFRESH_INFUSED_CRYSTAL(3, -1); // not sure
-    // followings are not sure, giving value so that it does not affect the working ones
-//    BLOSSOM_REFRESH_DRAGON_SPINE_B(4, 70560218),
-//    BLOSSOM_REFRESH_DRAGON_SPINE_A(5, 70560218),
-//    BLOSSOM_REFRESH_CRYSTAL(6, -1),
-//    BLOSSOM_REFRESH_BLITZ_RUSH_A(7, -1),
-//    BLOSSOM_REFRESH_BLITZ_RUSH_B(8, -1),
-//    BLOSSOM_ISLAND_SENTRY_TOWER_A(9, -1),
-//    BLOSSOM_ISLAND_SENTRY_TOWER_B(10, -1),
-//    BLOSSOM_ISLAND_BOMB(11, -1);
+    // followings are not sure, do not uncomment if unsure
+    // as it will affect the currently working blossom groups
+//    BLOSSOM_REFRESH_INFUSED_CRYSTAL(); // not sure
+//    BLOSSOM_REFRESH_DRAGON_SPINE_B(),
+//    BLOSSOM_REFRESH_DRAGON_SPINE_A(),
+//    BLOSSOM_REFRESH_CRYSTAL(),
+//    BLOSSOM_REFRESH_BLITZ_RUSH_A(),
+//    BLOSSOM_REFRESH_BLITZ_RUSH_B(),
+//    BLOSSOM_ISLAND_SENTRY_TOWER_A(),
+//    BLOSSOM_ISLAND_SENTRY_TOWER_B(),
+//    BLOSSOM_ISLAND_BOMB();
 
     private final int value;
     private final int gadgetId; // not chest gadget id

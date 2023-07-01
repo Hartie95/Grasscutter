@@ -1,6 +1,7 @@
 package emu.grasscutter.scripts;
 
 import emu.grasscutter.Grasscutter;
+import emu.grasscutter.scripts.data.SceneGroup;
 import emu.grasscutter.scripts.data.common.BaseCommonScript;
 import emu.grasscutter.scripts.data.common.CommonScriptType;
 import lombok.val;
@@ -8,29 +9,74 @@ import org.reflections.Reflections;
 
 import javax.script.Bindings;
 import javax.script.CompiledScript;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static emu.grasscutter.utils.FileUtils.getScriptPath;
 
 public class CommonScriptManager {
     /**
-     * Holds all Common scripts [Key: lua file name without extension, should also be the java class name, value: class instance]
+     * Holds all Common scripts,
+     * [Key: lua file name without extension (including subfolder name if any) i.e. : V2_0/BlossomGroup,
+     * value: class instance]
      * */
     private static final Map<String, BaseCommonScript> COMMON_SCRIPTS = new ConcurrentHashMap<>();
     /**
      * Holds all Common scripts [Key: lua file name for mapping, value: class type]
      * */
     private static final Map<String, Class<? extends BaseCommonScript>> COMMON_SCRIPT_FILE_NAME_TO_CLASS = new ConcurrentHashMap<>();
-    private static final String SCRIPT_TYPE = "Common";
+    private static final String SCRIPT_TOP_FOLDER = "Common/";
 
     /**
      * Loads when server starts
      * */
     public static void load(){
         cacheCommonScripts();
+    }
+
+    /**
+     * Process common lua scripts
+     * */
+    private static void processFile(String subdirNFileName) {
+        val commonScript = COMMON_SCRIPT_FILE_NAME_TO_CLASS.get(subdirNFileName);
+        if(!subdirNFileName.endsWith(".lua") || commonScript == null) return;
+
+        CompiledScript cs = ScriptLoader.getScript(SCRIPT_TOP_FOLDER + "/" + subdirNFileName);
+        Bindings bindings = ScriptLoader.getEngine().createBindings();
+        if (cs == null) return;
+
+        try{
+            cs.eval(bindings);
+            val newInstance = commonScript.getDeclaredConstructor(
+                CompiledScript.class, Bindings.class).newInstance(cs, bindings);
+            COMMON_SCRIPTS.put(subdirNFileName.replace(".lua", ""), newInstance);
+        } catch (Throwable e){
+            Grasscutter.getLogger().error("Error while loading common script: {}", subdirNFileName);
+        }
+    }
+
+    /**
+     * Recursively process common scripts folder and sub folders
+     * */
+    private static void processFolder(String folderPath, String subfolderPath) throws IOException{
+        File folder = new File(folderPath);
+        if (!folder.isDirectory()) return;
+
+        Files.newDirectoryStream(folder.toPath()).forEach(subPath -> {
+            try {
+                String newSubfolderPath = subfolderPath + subPath.getFileName();
+                if (Files.isDirectory(subPath)) {
+                    processFolder(subPath.toString(), newSubfolderPath + "/"); // Recursively process sub folders
+                } else {
+                    processFile(newSubfolderPath); // Process individual file
+                }
+            } catch (Exception ignored) {
+
+            }
+        });
     }
 
     /**
@@ -50,35 +96,27 @@ public class CommonScriptManager {
             }
         });
 
-        try {
-            Files.newDirectoryStream(getScriptPath(SCRIPT_TYPE + "/"), "*.lua")
-                .forEach(path -> {
-                String fileName = path.getFileName().toString();
-                val commonScript = COMMON_SCRIPT_FILE_NAME_TO_CLASS.getOrDefault(fileName, null);
-
-                if(!fileName.endsWith(".lua") || commonScript == null) return;
-
-                String controllerName = commonScript.getSimpleName();
-                CompiledScript cs = ScriptLoader.getScript(SCRIPT_TYPE + "/" + fileName);
-                Bindings bindings = ScriptLoader.getEngine().createBindings();
-                if (cs == null) return;
-
-                try{
-                    cs.eval(bindings);
-                    COMMON_SCRIPTS.put(controllerName, commonScript.getDeclaredConstructor(
-                        CompiledScript.class, Bindings.class).newInstance(cs, bindings));
-                } catch (Throwable e){
-                    Grasscutter.getLogger().error("Error while loading common script: {}", fileName);
-                }
-            });
-
+        try{ // loads all files
+            processFolder(getScriptPath(SCRIPT_TOP_FOLDER).toString(), "");
             Grasscutter.getLogger().info("Loaded {} common scripts", COMMON_SCRIPTS.size());
-        } catch (IOException e) {
+        } catch (Exception ignored) {
             Grasscutter.getLogger().error("Error loading common scripts luas");
         }
     }
 
     public static BaseCommonScript getCommonScripts(String name) {
         return COMMON_SCRIPTS.get(name);
+    }
+
+    /**
+     * Adds all triggers and bindings of common scripts to the group
+     * */
+    public static void rebuildTriggersAndBindings(String name, SceneGroup group){
+        if (name == null || name.isBlank()) return;
+
+        BaseCommonScript targetScript = getCommonScripts(name);
+        if (targetScript == null) return;
+
+        targetScript.rebuildTriggersAndBindings(group);
     }
 }
