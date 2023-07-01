@@ -1,17 +1,17 @@
 package emu.grasscutter.game.managers.blossom;
 
-import emu.grasscutter.data.binout.ScriptSceneData.ScriptObject.SceneGadgetData;
 import emu.grasscutter.data.excels.BlossomGroupsData;
 import emu.grasscutter.data.excels.BlossomRefreshData;
 import emu.grasscutter.game.managers.blossom.enums.BlossomRefreshType;
 import emu.grasscutter.net.proto.BlossomBriefInfoOuterClass.BlossomBriefInfo;
 import emu.grasscutter.net.proto.BlossomScheduleInfoOuterClass.BlossomScheduleInfo;
+import emu.grasscutter.scripts.data.SceneGadget;
 import emu.grasscutter.utils.Position;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -24,7 +24,6 @@ public class BlossomSchedule {
     private final int resin;
     private final int monsterLevel;
     private final int rewardId;
-    private final boolean isGuideOpened = false;
     // both info related
     private final int circleCampId;
     private final int refreshId;
@@ -35,20 +34,16 @@ public class BlossomSchedule {
     private final int finishProgress;
     private Set<Integer> remainingUid = new HashSet<>();
     // gadget info related
-    private final int gadgetId;
     private final int groupId;
-    private final int configId;
-    private final Position rotation;
     // extra
     private final BlossomRefreshType refreshType;
 
-    public BlossomSchedule(int sceneId, int cityId, List<Float> position, int resin, int monsterLevel, int rewardId,
+    public BlossomSchedule(int sceneId, int cityId, Position position, int resin, int monsterLevel, int rewardId,
                            int circleCampId, int refreshId, int finishProgress,
-                           int gadgetId, int groupId, int configId, List<Float> rotation,
-                           BlossomRefreshType refreshType) {
+                           int groupId, BlossomRefreshType refreshType) {
         this.sceneId = sceneId;
         this.cityId = cityId;
-        this.position = new Position(position);
+        this.position = position;
         this.resin = resin;
         this.monsterLevel = monsterLevel;
         this.rewardId = rewardId;
@@ -57,39 +52,34 @@ public class BlossomSchedule {
         this.refreshId = refreshId;
         this.finishProgress = finishProgress;
 
-        this.gadgetId = gadgetId;
         this.groupId = groupId;
-        this.configId = configId;
-        this.rotation = new Position(rotation);
 
         this.refreshType = refreshType;
     }
 
-    public BlossomSchedule(BlossomRefreshData refreshData, BlossomGroupsData groupsData, SceneGadgetData gadgetData,
+    public BlossomSchedule(@NotNull BlossomRefreshData refreshData, @NotNull BlossomGroupsData groupsData, SceneGadget gadgetData,
                            int sceneId, int resin, int monsterLevel, int woldLevel, int groupId,
                            BlossomRefreshType refreshType) {
         this(sceneId, refreshData.getCityId(),
-            gadgetData == null ? List.of(0f, 0f, 0f) : gadgetData.getPos(),
+            gadgetData == null ? new Position(0f, 0f, 0f) : gadgetData.pos,
             resin, monsterLevel - refreshData.getReviseLevel(),
             refreshData.getDropVec().get(woldLevel).getPreviewReward(),
             groupsData.getId(), refreshData.getId(), groupsData.getFinishProgress(),
-            refreshType.getGadgetId(), groupId, gadgetData == null ? 0 : gadgetData.getConfigId(),
-            gadgetData == null ? List.of(0f, 0f, 0f) : gadgetData.getRot(),
-            refreshType);
+            groupId, refreshType);
     }
 
-    public BlossomSchedule(BlossomSchedule oldSchedule, BlossomGroupsData groupsData, SceneGadgetData gadgetData,
+    public BlossomSchedule(@NotNull BlossomSchedule oldSchedule, @NotNull BlossomGroupsData groupsData, SceneGadget gadgetData,
                            int sceneId, int groupId) {
         this(sceneId, oldSchedule.getCityId(),
-            gadgetData == null ? List.of(0f, 0f, 0f) : gadgetData.getPos(),
+            gadgetData == null ? new Position(0f, 0f, 0f) : gadgetData.pos,
             oldSchedule.getResin(), oldSchedule.getMonsterLevel(), oldSchedule.getRewardId(),
             groupsData.getId(), oldSchedule.getRefreshId(), groupsData.getFinishProgress(),
-            oldSchedule.getGadgetId(), groupId,
-            gadgetData == null ? 0 : gadgetData.getConfigId(),
-            gadgetData == null ? List.of(0f, 0f, 0f) : gadgetData.getRot(),
-            oldSchedule.getRefreshType());
+            groupId, oldSchedule.getRefreshType());
     }
 
+    /**
+     * Add blossom camp challenge progress (i.e. when monster die)
+     * */
     public void addProgress() {
         if (getProgress() < getFinishProgress()) {
             this.progress += 1;

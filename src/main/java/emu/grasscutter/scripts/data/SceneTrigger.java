@@ -18,4 +18,12 @@ public class SceneTrigger {
     public boolean forbid_guest;
 
 	public transient SceneGroup currentGroup;
+
+    /**
+     * To prevent unlimited recursion when logging
+     * */
+    public String toString(){
+        return "Name: " + this.name + ", ConfigId: " + this.config_id + ", Event: " + this.event
+            + ", Condition: " + this.condition + ", Action: " + this.action;
+    }
 }

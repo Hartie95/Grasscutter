@@ -51,7 +51,7 @@ public class GadgetWorktop extends GadgetContent {
         }
 
         WorktopInfo worktop = WorktopInfo.newBuilder()
-                .addAllOptionList(this.getWorktopOptions())
+                .addAllOptionList(getWorktopOptions() == null ? new IntOpenHashSet() : getWorktopOptions())
                 .build();
 
         gadgetInfo.setWorktop(worktop);
