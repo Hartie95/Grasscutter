@@ -145,23 +145,21 @@ public class ResourceLoader {
         long startTime = System.nanoTime();
         val errors = new ConcurrentLinkedQueue<Pair<String, Exception>>();  // Logger in a parallel stream will deadlock
 
-        getResourceDefClassesPrioritySets().forEach(classes -> {
-            classes.stream()
-                .parallel().unordered()
-                .forEach(c -> {
-                    val type = c.getAnnotation(ResourceType.class);
-                    if (type == null) return;
+        getResourceDefClassesPrioritySets().forEach(classes -> classes.stream()
+            .parallel().unordered()
+            .forEach(c -> {
+                val type = c.getAnnotation(ResourceType.class);
+                if (type == null) return;
 
-                    val map = GameData.getMapByResourceDef(c);
-                    if (map == null) return;
+                val map = GameData.getMapByResourceDef(c);
+                if (map == null) return;
 
-                    try {
-                        loadFromResource(c, type, map, doReload);
-                    } catch (Exception e) {
-                        errors.add(Pair.of(Arrays.toString(type.name()), e));
-                    }
-                });
-        });
+                try {
+                    loadFromResource(c, type, map, doReload);
+                } catch (Exception e) {
+                    errors.add(Pair.of(Arrays.toString(type.name()), e));
+                }
+            }));
         errors.forEach(pair -> Grasscutter.getLogger().error("Error loading resource file: " + pair.left(), pair.right()));
         long endTime = System.nanoTime();
         long ns = (endTime - startTime);  //divide by 1000000 to get milliseconds.
@@ -228,10 +226,10 @@ public class ResourceLoader {
                 val scenePoints = new IntArrayList();
                 config.points.forEach((pointId, pointData) -> {
                     val scenePoint = new ScenePointEntry(sceneId, pointData);
-                    scenePoints.add(pointId);
+                    scenePoints.add(pointId.intValue());
                     pointData.setId(pointId);
 
-                    GameData.getScenePointIdList().add(pointId);
+                    GameData.getScenePointIdList().add(pointId.intValue());
                     GameData.getScenePointEntries().put(scenePoint.getName(), scenePoint);
                     GameData.scenePointEntryMap.put((sceneId << 16) + pointId, scenePoint);
 
@@ -386,10 +384,10 @@ public class ResourceLoader {
 
     private static void loadDungeonDrops(){
         try {
-            DataLoader.loadList("DungeonDrop.json", DungeonDrop.class).forEach(entry -> {
-                GameData.getDungeonDropDataMap().put(entry.getDungeonId(), entry.getDrops());
-            });
-            Grasscutter.getLogger().debug("Loaded {} dungeon drop data entries.", GameData.getDungeonDropDataMap().size());
+            DataLoader.loadList("DungeonDrop.json", DungeonDrop.class).forEach(entry ->
+                GameData.getDungeonDropDataMap().put(entry.getDungeonId(), entry.getDrops()));
+            Grasscutter.getLogger().debug("Loaded {} dungeon drop data entries.",
+                GameData.getDungeonDropDataMap().size());
         }
         catch (Exception ex) {
             Grasscutter.getLogger().error("Unable to load dungeon drop data.", ex);
@@ -416,7 +414,6 @@ public class ResourceLoader {
                                 .forEach((name, data) -> map.put(name, new OpenConfigEntry(name, data)));
                         } catch (Exception e) {
                             e.printStackTrace();
-                            return;
                         }
                     });
                 } catch (IOException e) {
@@ -450,7 +447,7 @@ public class ResourceLoader {
                     for(SubQuestData quest : mainQuest.getSubQuests()){
                         addToCache(quest);
                     }
-                } catch (IOException e) {
+                } catch (IOException ignored) {
 
                 }
             });
@@ -504,17 +501,14 @@ public class ResourceLoader {
             stream.forEach(path -> {
                 try {
                     val scriptObject = JsonUtils.loadToClass(path, ScriptSceneData.class);
-                    scriptObject.getScriptObjectList().values().forEach(ScriptSceneData.ScriptObject::onLoad);
                     GameData.getScriptSceneDataMap().put(path.getFileName().toString(), scriptObject);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    return;
                 }
             });
             Grasscutter.getLogger().debug("Loaded {} ScriptSceneDatas.", GameData.getScriptSceneDataMap().size());
         } catch (IOException e) {
             Grasscutter.getLogger().debug("ScriptSceneData folder missing or empty.");
-            return;
         }
     }
 
@@ -694,7 +688,7 @@ public class ResourceLoader {
         try {
             val gadgetMap = GameData.getGadgetMappingMap();
             try {
-                JsonUtils.loadToList(getResourcePath("Server/GadgetMapping.json"), GadgetMapping.class).forEach(entry -> gadgetMap.put(entry.getGadgetId(), entry));;
+                JsonUtils.loadToList(getResourcePath("Server/GadgetMapping.json"), GadgetMapping.class).forEach(entry -> gadgetMap.put(entry.getGadgetId(), entry));
             } catch (IOException | NullPointerException ignored) {}
             Grasscutter.getLogger().debug("Loaded {} gadget mappings.", gadgetMap.size());
         } catch (Exception e) {
@@ -740,10 +734,8 @@ public class ResourceLoader {
             try {
                 JsonUtils.loadToList(
                     getResourcePath(pathName + "TrialAvatarCustomConfigData.json"),
-                    TrialAvatarCustomData.class).forEach(instance -> {
-                        GameData.getTrialAvatarCustomData()
-                            .put(instance.getTrialAvatarId(), instance);
-                    });
+                    TrialAvatarCustomData.class).forEach(instance -> GameData.getTrialAvatarCustomData()
+                        .put(instance.getTrialAvatarId(), instance));
             } catch (IOException | NullPointerException ignored) {}
             Grasscutter.getLogger().debug("Loaded trial avatar custom data.");
         } catch (Exception e) {
@@ -765,7 +757,7 @@ public class ResourceLoader {
             // these are Map<String, class>
             var replacementsMap = ScriptLoader.getSerializer().toMap(GroupReplacementData.class, bindings.get("replacements"));
             // convert them to Map<Integer, class> and cache
-            GameData.getGroupReplacements().putAll(replacementsMap.entrySet().stream().collect(Collectors.toMap(entry -> Integer.valueOf(entry.getValue().getId()), Entry::getValue)));
+            GameData.getGroupReplacements().putAll(replacementsMap.entrySet().stream().collect(Collectors.toMap(entry -> entry.getValue().getId(), Entry::getValue)));
 
         } catch (Throwable e){
             Grasscutter.getLogger().error("Error while loading Group Replacements");
@@ -773,12 +765,9 @@ public class ResourceLoader {
 
         if (GameData.getGroupReplacements() == null || GameData.getGroupReplacements().isEmpty()) {
             Grasscutter.getLogger().error("No Group Replacements loaded!");
-            return;
         } else {
             Grasscutter.getLogger().debug("Loaded {} group replacements.", GameData.getGroupReplacements().size());
-            GameData.getGroupReplacements().forEach((group, groups) -> {
-                Grasscutter.getLogger().debug("{} -> {}", group, groups.getReplace_groups().stream().map(String::valueOf).collect(Collectors.joining(",")));
-            });
+            GameData.getGroupReplacements().forEach((group, groups) -> Grasscutter.getLogger().debug("{} -> {}", group, groups.getReplace_groups().stream().map(String::valueOf).collect(Collectors.joining(","))));
         }
     }
 

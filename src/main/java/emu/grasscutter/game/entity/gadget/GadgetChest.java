@@ -71,7 +71,7 @@ public class GadgetChest extends GadgetContent {
 
         BlossomManager blossomManager = getGadget().getScene().getWorld().getOwner().getBlossomManager();
         if (blossomManager != null) {
-            gadgetInfo.setBlossomChest(blossomManager.getChestInfo(getGadget().getGadgetId()));
+            gadgetInfo.setBlossomChest(blossomManager.getChestInfo(getGadget().getConfigId()));
         }
     }
 }

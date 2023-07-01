@@ -1,16 +1,20 @@
 package emu.grasscutter.scripts.data;
 
 import emu.grasscutter.Grasscutter;
+import emu.grasscutter.scripts.CommonScriptManager;
 import emu.grasscutter.scripts.ScriptLoader;
+import emu.grasscutter.utils.FileUtils;
 import emu.grasscutter.utils.Position;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.val;
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.jse.JsePlatform;
 
 import javax.script.Bindings;
 import javax.script.CompiledScript;
-import javax.script.ScriptException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ToString
 @Setter
@@ -91,8 +96,9 @@ public class SceneGroup {
         this.setLoaded(true);
 
         this.bindings = ScriptLoader.getEngine().createBindings();
+        String scriptPath = "Scene/" + sceneId + "/scene" + sceneId + "_group" + this.id + ".lua";
 
-        CompiledScript cs = ScriptLoader.getScript("Scene/" + sceneId + "/scene" + sceneId + "_group" + this.id + ".lua");
+        CompiledScript cs = ScriptLoader.getScript(scriptPath);
 
         if (cs == null) {
             return this;
@@ -141,9 +147,9 @@ public class SceneGroup {
             // Add variables to suite
             this.variables = ScriptLoader.getSerializer().toList(SceneVar.class, this.bindings.get("variables"));
 
+            CommonScriptManager.rebuildTriggersAndBindings(getRequiredPackage(scriptPath), this);
             // Add monsters and gadgets to suite
             this.suites.forEach(i -> i.init(this));
-
         } catch (Exception e) {
             Grasscutter.getLogger().error("An error occurred while loading group " + this.id + " in scene " + sceneId + ".", e);
         }
@@ -164,7 +170,7 @@ public class SceneGroup {
                     if(i == exclude_index) continue;
 
                     var suite = suites.get(i);
-                    for(int j = 0; j < suite.rand_weight; j++) randSuiteList.add(Integer.valueOf(i));
+                    for(int j = 0; j < suite.rand_weight; j++) randSuiteList.add(i);
                 }
                 return randSuiteList.get(new Random().nextInt(randSuiteList.size()));
             }
@@ -179,4 +185,25 @@ public class SceneGroup {
                 .findFirst();
     }
 
+    /**
+     * Used to find required package of lua script
+     * */
+    public String getRequiredPackage(String scriptPath) {
+        // TODO,1 please do enlighten me if you have better idea of doing this
+        // TODO,2 this will not work if the lua script requires more than one package
+        try{
+            val GLOBALS = JsePlatform.standardGlobals();
+            val SCRIPT = GLOBALS.loadfile(FileUtils.getScriptPath(scriptPath).toString());
+            val PROTO = SCRIPT.checkclosure().p;
+            val LINES_INFO = Stream.of(PROTO.k)
+                .filter(LuaValue::isstring)
+                .map(LuaValue::toString)
+                .toList();
+            return LINES_INFO.contains("require") ? LINES_INFO.get(LINES_INFO.size() - 1) : null;
+
+        } catch (LuaError ignored) {
+
+        }
+        return null;
+    }
 }
