@@ -1,12 +1,14 @@
 package emu.grasscutter.server.packet.send;
 
+import emu.grasscutter.data.GameData;
 import emu.grasscutter.game.home.GameHome;
+import emu.grasscutter.game.home.HomeSceneItem;
 import emu.grasscutter.game.home.HomeBlockItem;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.packet.PacketOpcodes;
-import emu.grasscutter.net.proto.HomeMarkPointNotifyOuterClass;
-import emu.grasscutter.net.proto.HomeMarkPointSceneDataOuterClass;
+import emu.grasscutter.net.proto.HomeMarkPointNotifyOuterClass.HomeMarkPointNotify;
+import emu.grasscutter.net.proto.HomeMarkPointSceneDataOuterClass.HomeMarkPointSceneData;
 
 import java.util.Collection;
 
@@ -15,32 +17,44 @@ public class PacketHomeMarkPointNotify extends BasePacket {
 	public PacketHomeMarkPointNotify(Player player) {
 		super(PacketOpcodes.HomeMarkPointNotify);
 
-		var proto = HomeMarkPointNotifyOuterClass.HomeMarkPointNotify.newBuilder();
+		if(player.getRealmList() == null || player.getCurrentRealmId() <= 0) return;
 
-		if(player.getRealmList() == null){
-			return;
-		}
-		for(var moduleId : player.getRealmList()){
-			var homeScene = player.getHome().getHomeSceneItem(moduleId + 2000);
+		HomeMarkPointNotify.Builder proto = HomeMarkPointNotify.newBuilder();
 
-			var markPointData = HomeMarkPointSceneDataOuterClass.HomeMarkPointSceneData.newBuilder()
-					.setModuleId(moduleId)
-					.setSceneId(moduleId + 2000)
-					.setTeapotSpiritPos(homeScene.getDjinnPos().toProto());
+		HomeSceneItem homeScene = player.getHome().getHomeSceneItem();
 
-			// Now it only supports the teleport point
-			// TODO add more types
-			var marks = homeScene.getBlockItems().values().stream()
-					.map(HomeBlockItem::getDeployFurnitureList)
-					.flatMap(Collection::stream)
-					.filter(i -> i.getFurnitureId() == 373501)
-					.map(x -> x.toMarkPointProto(3))
-					.toList();
+		HomeMarkPointSceneData.Builder markPointDataHomeScene = HomeMarkPointSceneData.newBuilder()
+			.setModuleId(player.getCurrentRealmId())
+			.setSceneId(homeScene.getSceneId())
+			.setTeapotSpiritPos(homeScene.getDjinnPos().toProto());
 
-			markPointData.addAllFurnitureList(marks);
-			proto.addMarkPointDataList(markPointData);
-		}
+		homeScene.getBlockItems().values().stream()
+			.map(HomeBlockItem::getDeployFurnitureList).forEach(block -> {
+				block.forEach(furniture -> {
+					if (furniture == null) return;
+					markPointDataHomeScene.addFurnitureList(furniture.toMarkPointProto(player));
+				});
+			});
+			
+		proto.addMarkPointDataList(markPointDataHomeScene.build());
 
-		this.setData(proto);
+		HomeSceneItem roomScene = player.getHome().getHomeSceneItem(homeScene.getRoomSceneId());
+
+		HomeMarkPointSceneData.Builder markPointDataRoomScene = HomeMarkPointSceneData.newBuilder()
+			.setModuleId(player.getCurrentRealmId())
+			.setSceneId(roomScene.getSceneId());
+
+		roomScene.getBlockItems().values().stream()
+			.map(HomeBlockItem::getDeployFurnitureList).forEach(block -> {
+				block.forEach(furniture -> {
+					if (furniture == null || !furniture.isNPC()) return;
+					markPointDataRoomScene.addFurnitureList(furniture.toMarkPointProto(player));
+				});
+			});
+		
+			
+		proto.addMarkPointDataList(markPointDataRoomScene.build());
+
+		this.setData(proto.build());
 	}
 }

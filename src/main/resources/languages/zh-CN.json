@@ -302,6 +302,21 @@
       "unlocked": "%s 已解锁。",
       "unlocked_for": "%s [来自 %s] 已解锁。"
     },
+    "teapot": {
+      "description": "设置尘歌壶各种功能.  \n\t可更改的功能： setLevel<等级>  \n\tunlockModule<洞天值（不包括须弥）> \n\tlockModule<洞天值（不包括须弥）> \n\tgiveAllFurniture<家具数量> \n\tValues for refreshLimitedShop<无/不需要>",
+      "level_range_error": "尘歌壶等级必须在 1 - 10 之间。",
+      "level_success": "成功设定尘歌壶等级为 %s.",
+      "invalid_param": "无效的参数。",
+      "module_sumeru_error": "当前不支持须弥洞天。",
+      "module_range_error" : "洞天必须在 1 - 4 之间。",
+      "unlock_module_contain_error" : "洞天已解锁。",
+      "unlock_module_success": "成功解锁洞天 %s。",
+      "lock_module_in_scene_error": "无法锁定选定中的洞天。",
+      "lock_module_contain_error": "洞天不存在。",
+      "lock_module_success": "成功锁定洞天 %s。",
+      "give_furniture_success": "已给予所有的家具。",
+      "refresh_limited_shop_success": "限定商店已刷新。"
+    },
     "spawn": {
       "success": "已生成 %s 个 %s。",
       "limit_reached": "场景中的生成数量已达上限。已替代为生成 %s 个实体。",

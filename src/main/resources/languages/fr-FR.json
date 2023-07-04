@@ -302,6 +302,21 @@
       "unlocked": "%s déverrouillé.",
       "unlocked_for": "%s de %s déverrouillé."
     },
+    "teapot": {
+      "description": "Manipulez les fonctions du pot Serenitea. \n\tValeurs pour setLevel<1-10> \n\tValeurs pour unlockModule<1-4> \n\tValeurs pour lockModule<1-4> \n\tValeurs pour giveAllFurniture<count> \n\tValeurs pour refreshLimitedShop<aucun >",
+      "level_range_error": "Le niveau du pot Serenitea doit être compris entre 1 et 10.",
+      "level_success": "Niveau du pot de Serenitea défini sur %s.",
+      "invalid_param": "Paramètre invalide.",
+      "module_sumeru_error": "Module Sumeru non pris en charge pour le moment.",
+      "module_range_error" : "Le numéro de module doit être compris entre 1 et 4.",
+      "unlock_module_contain_error" : "Module déjà déverrouillé.",
+      "unlock_module_success": "Module %s déverrouillé.",
+      "lock_module_in_scene_error": "Impossible de verrouiller le module actif.",
+      "lock_module_contain_error": "Le module n'existe pas.",
+      "lock_module_success": "Locked module %s.",
+      "give_furniture_success": "A donné tous les meubles.",
+      "refresh_limited_shop_success": "Boutique limitée rafraîchie."
+    },
     "spawn": {
       "success": " %s %s sont apparu.",
       "limit_reached": "La limite d'apparition de la scène est atteinte. Apparition de %s entités à la place.",

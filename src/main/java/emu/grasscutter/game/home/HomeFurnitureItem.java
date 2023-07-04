@@ -3,9 +3,12 @@ package emu.grasscutter.game.home;
 import dev.morphia.annotations.Entity;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.HomeworldDefaultSaveData;
+import emu.grasscutter.data.excels.HomeWorldNPCData;
 import emu.grasscutter.data.excels.ItemData;
-import emu.grasscutter.net.proto.HomeFurnitureDataOuterClass;
-import emu.grasscutter.net.proto.HomeMarkPointFurnitureDataOuterClass;
+import emu.grasscutter.game.player.Player;
+import emu.grasscutter.net.proto.HomeFurnitureDataOuterClass.HomeFurnitureData;
+import emu.grasscutter.net.proto.HomeMarkPointFurnitureDataOuterClass.HomeMarkPointFurnitureData;
+import emu.grasscutter.net.proto.HomeMarkPointNPCDataOuterClass.HomeMarkPointNPCData;
 import emu.grasscutter.net.proto.VectorOuterClass;
 import emu.grasscutter.utils.Position;
 import lombok.AccessLevel;
@@ -24,8 +27,9 @@ public class HomeFurnitureItem {
     Position spawnPos;
     Position spawnRot;
     int version;
-    public HomeFurnitureDataOuterClass.HomeFurnitureData toProto(){
-        return HomeFurnitureDataOuterClass.HomeFurnitureData.newBuilder()
+
+    public HomeFurnitureData toProto(){
+        return HomeFurnitureData.newBuilder()
                 .setFurnitureId(furnitureId)
                 .setGuid(guid)
                 .setParentFurnitureIndex(parentFurnitureIndex)
@@ -35,17 +39,37 @@ public class HomeFurnitureItem {
                 .build();
     }
 
-    public HomeMarkPointFurnitureDataOuterClass.HomeMarkPointFurnitureData toMarkPointProto(int type){
-        return HomeMarkPointFurnitureDataOuterClass.HomeMarkPointFurnitureData.newBuilder()
-                .setFurnitureId(furnitureId)
-                .setGuid(guid)
-                .setFurnitureType(type)
-                .setPos(spawnPos.toProto())
-                // TODO NPC and farm
-                .build();
+    public HomeMarkPointFurnitureData toMarkPointProto(Player player){
+        HomeMarkPointFurnitureData.Builder proto = HomeMarkPointFurnitureData.newBuilder();
+        proto.setFurnitureId(furnitureId)
+            .setGuid(guid)
+            .setPos(spawnPos.toProto());
+
+        if (getAsItem() != null && getAsItem().getMarkPointType() != null) {
+            proto.setFurnitureType(
+                switch (getAsItem().getMarkPointType()) {
+                    // TODO add more types
+                    case "Apartment" -> 6;
+                    case "FarmField" -> 2;
+                    case "NPC" -> 5;
+                    case "Paimon" -> 8;
+                    case "TeleportPoint" -> 3;
+                    default -> 0;
+                }
+            );
+        }
+        
+        if (isNPC() && !isPaimon()) {
+            proto.setNpcData(HomeMarkPointNPCData.newBuilder()
+                .setAvatarId(getAvatarId())
+                .setCostumeId(player.getAvatars().getAvatarById(getAvatarId()).getCostume())
+                .build());
+        }
+            
+        return proto.build();
     }
 
-    public static HomeFurnitureItem parseFrom(HomeFurnitureDataOuterClass.HomeFurnitureData homeFurnitureData) {
+    public static HomeFurnitureItem parseFrom(HomeFurnitureData homeFurnitureData) {
         return HomeFurnitureItem.of()
                 .furnitureId(homeFurnitureData.getFurnitureId())
                 .guid(homeFurnitureData.getGuid())
@@ -76,5 +100,21 @@ public class HomeFurnitureItem {
             return 0;
         }
         return item.getComfort();
+    }
+
+    public HomeWorldNPCData getNPCData() {
+        return GameData.getHomeWorldNPCDataMap().get(this.furnitureId);
+    }
+
+    public int getAvatarId() {
+        return getNPCData().getAvatarID();
+    }
+
+    public boolean isNPC() {
+        return getNPCData() != null;
+    }
+
+    public boolean isPaimon() {
+        return getNPCData().isPaimon();
     }
 }

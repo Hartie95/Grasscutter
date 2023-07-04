@@ -53,6 +53,7 @@ import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.proto.AbilityInvokeEntryOuterClass.AbilityInvokeEntry;
 import emu.grasscutter.net.proto.AttackResultOuterClass.AttackResult;
 import emu.grasscutter.net.proto.CombatInvokeEntryOuterClass.CombatInvokeEntry;
+import emu.grasscutter.net.proto.FurnitureMakeMakeInfoOuterClass.FurnitureMakeMakeInfo;
 import emu.grasscutter.net.proto.GadgetInteractReqOuterClass.GadgetInteractReq;
 import emu.grasscutter.net.proto.MpSettingTypeOuterClass.MpSettingType;
 import emu.grasscutter.net.proto.OnlinePlayerInfoOuterClass.OnlinePlayerInfo;
@@ -130,6 +131,10 @@ public class Player {
     @Getter private Set<Integer> unlockedCombines;
     @Getter private Set<Integer> unlockedFurniture;
     @Getter private Set<Integer> unlockedFurnitureSuite;
+    // First integer is furniture id, second integer is made count,
+    // count might be useful when achievement is implemented
+    @Getter private Map<Integer, Integer> madeFurniture;
+    @Getter private Set<Integer> teapotLevelReward;
     @Getter private Map<Long, ExpeditionInfo> expeditionInfo;
     @Getter private Map<Integer, Integer> unlockedRecipies;
     @Getter private List<ActiveForgeData> activeForges;
@@ -246,6 +251,8 @@ public class Player {
         this.unlockedCombines = new HashSet<>();
         this.unlockedFurniture = new HashSet<>();
         this.unlockedFurnitureSuite = new HashSet<>();
+        this.teapotLevelReward = new HashSet<>();
+        this.madeFurniture = new HashMap<>();
         this.activeCookCompounds=new HashMap<>();
         this.activeForges = new ArrayList<>();
         this.unlockedRecipies = new HashMap<>();
@@ -1284,6 +1291,15 @@ public class Player {
 
     public void resetSendPlayerLocTime() {
         this.nextSendPlayerLocTime = System.currentTimeMillis() + 5000;
+    }
+
+    public List<FurnitureMakeMakeInfo> madeFurnitureProto() {
+        return getMadeFurniture().entrySet().stream()
+            .map(e -> {return FurnitureMakeMakeInfo.newBuilder()
+                .setFurnitureId(e.getKey())
+                .setMakeCount(e.getValue())
+                .build();})
+            .toList();
     }
 
     @PostLoad

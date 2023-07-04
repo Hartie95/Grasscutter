@@ -1,25 +1,25 @@
 package emu.grasscutter.server.packet.send;
 
-import emu.grasscutter.game.home.FurnitureMakeSlotItem;
 import emu.grasscutter.game.home.GameHome;
+import emu.grasscutter.game.player.Player;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.packet.PacketOpcodes;
-import emu.grasscutter.net.proto.FurnitureMakeRspOuterClass;
-import emu.grasscutter.net.proto.FurnitureMakeSlotOuterClass;
+import emu.grasscutter.net.proto.FurnitureMakeRspOuterClass.FurnitureMakeRsp;
+import emu.grasscutter.net.proto.FurnitureMakeSlotOuterClass.FurnitureMakeSlot;
 
 public class PacketFurnitureMakeRsp extends BasePacket {
 
-	public PacketFurnitureMakeRsp(GameHome home) {
+	public PacketFurnitureMakeRsp(Player player) {
 		super(PacketOpcodes.FurnitureMakeRsp);
 
-		var proto = FurnitureMakeRspOuterClass.FurnitureMakeRsp.newBuilder();
+		FurnitureMakeRsp.Builder proto = FurnitureMakeRsp.newBuilder();
 
-		proto.setFurnitureMakeSlot(FurnitureMakeSlotOuterClass.FurnitureMakeSlot.newBuilder()
-				.addAllFurnitureMakeDataList(home.getFurnitureMakeSlotItemList().stream()
-						.map(FurnitureMakeSlotItem::toProto)
-						.toList())
+		proto.setFurnitureMakeSlot(FurnitureMakeSlot.newBuilder()
+				.addAllFurnitureMakeDataList(player.getHome().furnitureMakeItemToProto())
 				.build());
 
-		this.setData(proto);
+		proto.addAllMakeInfoList(player.madeFurnitureProto());
+
+		this.setData(proto.build());
 	}
 }

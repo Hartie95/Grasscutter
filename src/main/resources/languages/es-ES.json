@@ -302,6 +302,21 @@
       "unlocked": "%s desfijado.",
       "unlocked_for": "%s para %s desfijado."
     },
+    "teapot": {
+      "description": "Manipular las funciones de la olla serenitea. \n\tValores para setLevel<1-10> \n\tValores para unlockModule<1-4> \n\tValores para lockModule<1-4> \n\tValores para giveAllFurniture<count> \n\tValores para refreshLimitedShop<none >",
+      "level_range_error": "El nivel del bote de Serenitea debe estar entre 1 y 10.",
+      "level_success": "Nivel de bote de Serenitea establecido en %s.",
+      "invalid_param": "Parametro invalido.",
+      "module_sumeru_error": "Módulo Sumeru no soportado en este momento.",
+      "module_range_error" : "El número de módulo debe estar entre 1 y 4.",
+      "unlock_module_contain_error" : "Módulo ya desbloqueado.",
+      "unlock_module_success": "Módulo desbloqueado %s.",
+      "lock_module_in_scene_error": "No se puede bloquear el módulo activo.",
+      "lock_module_contain_error": "El módulo no existe.",
+      "lock_module_success": "Módulo bloqueado %s.",
+      "give_furniture_success": "Entregó todos los muebles.",
+      "refresh_limited_shop_success": "Tienda limitada renovada."
+    },
     "spawn": {
       "success": "Generados %s de %s.",
       "limit_reached": "Se ha alcanzado el límite de generaciones en el escenario. Generando %s entidades en su lugar.",

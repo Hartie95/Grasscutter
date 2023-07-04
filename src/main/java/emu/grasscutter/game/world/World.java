@@ -250,15 +250,19 @@ public class World implements Iterable<Player> {
             .enterType(EnterType.ENTER_TYPE_JUMP);
 
         val sceneData = GameData.getSceneDataMap().get(sceneId);
+        val sceneType = sceneData!= null ? sceneData.getSceneType() : SceneType.SCENE_NONE;
         if (dungeonData != null) {
             teleportProps.enterType(EnterType.ENTER_TYPE_DUNGEON)
                 .enterReason(EnterReason.DungeonEnter);
         } else if (player.getSceneId() == sceneId) {
             teleportProps.enterType(EnterType.ENTER_TYPE_GOTO);
-        } else if (sceneData!= null && sceneData.getSceneType() == SceneType.SCENE_HOME_WORLD) {
+        } else if (sceneType == SceneType.SCENE_HOME_WORLD) {
             // Home
             teleportProps.enterType(EnterType.ENTER_TYPE_SELF_HOME)
                 .enterReason(EnterReason.EnterHome);
+        } else if (sceneType == SceneType.SCENE_HOME_ROOM) {
+            teleportProps.enterType(EnterType.ENTER_TYPE_SELF_HOME)
+                .enterReason(EnterReason.HomeSceneJump);
         }
         return transferPlayerToScene(player, teleportProps.build());
     }

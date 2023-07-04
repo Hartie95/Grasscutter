@@ -302,6 +302,21 @@
       "unlocked": "🇺🇸%s unlocked.",
       "unlocked_for": "🇺🇸%s for %s unlocked."
     },
+    "teapot": {
+      "description": "設置塵歌壺各種功能.  \n\t可更改的功能： setLevel<等級>  \n\tunlockModule<洞天值（不包括須彌）> \n\tlockModule<洞天值（不包括須彌）> \n\tgiveAllFurniture<家具數量> \n\tValues for refreshLimitedShop<無/不需要>",
+      "level_range_error": "塵歌壺等級必須在 1 - 10 之間。",
+      "level_success": "成功設定塵歌壺等級為 %s.",
+      "invalid_param": "無效的參數。",
+      "module_sumeru_error": "當前不支持須彌洞天。",
+      "module_range_error" : "洞天必須在 1 - 4 之間。",
+      "unlock_module_contain_error" : "洞天已解鎖。",
+      "unlock_module_success": "成功解鎖洞天 %s。",
+      "lock_module_in_scene_error": "無法鎖定選定中的洞天。",
+      "lock_module_contain_error": "洞天不存在。",
+      "lock_module_success": "成功鎖定洞天 %s。",
+      "give_furniture_success": "已給予所有的家具。",
+      "refresh_limited_shop_success": "限定商店已刷新。"
+    },
     "spawn": {
       "success": "已生成 %s 個 %s。",
       "limit_reached": "已達到場景生成上限，已改為%s個實體。",

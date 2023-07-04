@@ -302,6 +302,21 @@
       "unlocked": "%s разблокировано.",
       "unlocked_for": "%s для %s разблокировно."
     },
+    "teapot": {
+      "description": "Управление функциями горшка Serenitea. \n\tЗначения для setLevel<1-10> \n\tЗначения для unlockModule<1-4> \n\tЗначения для lockModule<1-4> \n\tЗначения для giveAllFurniture<count> \n\tЗначения для refreshLimitedShop<none >",
+      "level_range_error": "Уровень горшка Serenitea должен быть между 1 и 10.",
+      "level_success": "Уровень горшка Serenitea установлен на %s.",
+      "invalid_param": "Неверный параметр.",
+      "module_sumeru_error": "Модуль Sumeru в настоящее время не поддерживается.",
+      "module_range_error" : "Номер модуля должен быть от 1 до 4.",
+      "unlock_module_contain_error" : "Модуль уже разблокирован.",
+      "unlock_module_success": "Разблокирован модуль %s.",
+      "lock_module_in_scene_error": "Невозможно заблокировать активный модуль.",
+      "lock_module_contain_error": "Модуль не существует.",
+      "lock_module_success": "Заблокированный модуль %s.",
+      "give_furniture_success": "Отдали всю мебель.",
+      "refresh_limited_shop_success": "Ограниченный магазин обновлен."
+    },
     "spawn": {
       "success": "Заспавнено %s %s.",
       "limit_reached": "Лимит существ в сцене был достигнут. Спавним %s существ вместо этого.",

@@ -302,6 +302,21 @@
       "unlocked": "%s 잠금해제됨.",
       "unlocked_for": "%s의 %s 잠금이 해제됩니다."
     },
+    "teapot": {
+      "description": "serenitea pot 기능을 조작합니다. \n\tsetLevel<1-10>의 값 \n\tunlockModule<1-4>의 값 \n\tlockModule<1-4>의 값 \n\tgiveAllFurniture<count>의 값 \n\trefreshLimitedShop<none의 값 >",
+      "level_range_error": "Serenitea 냄비 레벨은 1에서 10 사이여야 합니다.",
+      "level_success": "Serenitea 냄비 수준이 %s(으)로 설정되었습니다.",
+      "invalid_param": "잘못된 매개 변수.",
+      "module_sumeru_error": "Sumeru 모듈은 현재 지원되지 않습니다.",
+      "module_range_error" : "모듈 번호는 1 - 4 사이여야 합니다.",
+      "unlock_module_contain_error" : "모듈이 이미 잠금 해제되었습니다.",
+      "unlock_module_success": "잠금 해제된 모듈 %s.",
+      "lock_module_in_scene_error": "활성 모듈을 잠글 수 없습니다.",
+      "lock_module_contain_error": "모듈이 존재하지 않습니다.",
+      "lock_module_success": "잠긴 모듈 %s.",
+      "give_furniture_success": "모든 가구를 제공합니다.",
+      "refresh_limited_shop_success": "리미티드 샵 리뉴얼."
+    },
     "spawn": {
       "success": " %s 개의 %s 를 소환하는데 성공했습니다.",
       "limit_reached": "scene당 소환 엔티티 한계입니다. 대신 %s 개의 엔티티를 소환합니다.",

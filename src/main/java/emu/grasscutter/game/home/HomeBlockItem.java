@@ -3,6 +3,7 @@ package emu.grasscutter.game.home;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import emu.grasscutter.data.binout.HomeworldDefaultSaveData;
+import emu.grasscutter.game.player.Player;
 import emu.grasscutter.net.proto.HomeBlockArrangementInfoOuterClass.HomeBlockArrangementInfo;
 import emu.grasscutter.utils.Position;
 import lombok.AccessLevel;
@@ -24,6 +25,7 @@ public class HomeBlockItem {
     List<HomeFurnitureItem> persistentFurnitureList;
     List<HomeAnimalItem> deployAnimalList;
     List<HomeNPCItem> deployNPCList;
+    List<HomeBlockFieldItem> deployFieldList;
 
     public void update(HomeBlockArrangementInfo homeBlockArrangementInfo) {
         this.blockId = homeBlockArrangementInfo.getBlockId();
@@ -43,10 +45,20 @@ public class HomeBlockItem {
         this.deployNPCList = homeBlockArrangementInfo.getDeployNpcListList().stream()
                 .map(HomeNPCItem::parseFrom)
                 .toList();
+
+        this.deployFieldList =  homeBlockArrangementInfo.getFieldListList().stream()
+                .map(HomeBlockFieldItem::parseFrom)
+                .toList();
     }
 
     public int calComfort() {
+        // deploy furnitures are the ones movable like couch or table etc, 
+        // persistent furnitures are those that can only be changed like wall 
+        // and door design
         return this.deployFurnitureList.stream()
+                .mapToInt(HomeFurnitureItem::getComfort)
+                .sum() + 
+                this.persistentFurnitureList.stream()
                 .mapToInt(HomeFurnitureItem::getComfort)
                 .sum();
     }
@@ -61,7 +73,7 @@ public class HomeBlockItem {
         this.persistentFurnitureList.forEach(f -> proto.addPersistentFurnitureList(f.toProto()));
         this.deployAnimalList.forEach(f -> proto.addDeployAnimalList(f.toProto()));
         this.deployNPCList.forEach(f -> proto.addDeployNpcList(f.toProto()));
-
+        this.deployFieldList.forEach(f -> proto.addFieldList(f.toProto()));
         return proto.build();
     }
 
@@ -82,6 +94,29 @@ public class HomeBlockItem {
                                         .toList())
                 .deployAnimalList(List.of())
                 .deployNPCList(List.of())
+                .deployFieldList(List.of())
                 .build();
+    }
+
+    public List<Integer> getDeployedNPCAvatarId() {
+        return getDeployNPCList().stream()
+                .map(HomeNPCItem::getAvatarId)
+                .toList();
+    }
+
+    public void upgradeAllNPCFetterLevel(Player player, int fetterValue) {
+        getDeployNPCList().stream()
+                .map(HomeNPCItem::getAvatarId)
+                .forEach(avatarId -> {
+                        player.getServer().getInventorySystem().upgradeAvatarFetterLevel(
+                                player, player.getAvatars().getAvatarById(avatarId), fetterValue);
+                });
+    }
+
+    public HomeFurnitureItem getDeployFurnitureByGuid(int guid) {
+        return getDeployFurnitureList().stream()
+                .filter(x -> x.getGuid() == guid)
+                .findFirst()
+                .orElse(null);
     }
 }

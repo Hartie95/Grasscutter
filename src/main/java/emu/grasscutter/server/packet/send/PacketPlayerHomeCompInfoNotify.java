@@ -3,8 +3,8 @@ package emu.grasscutter.server.packet.send;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.packet.PacketOpcodes;
-import emu.grasscutter.net.proto.PlayerHomeCompInfoNotifyOuterClass;
-import emu.grasscutter.net.proto.PlayerHomeCompInfoOuterClass;
+import emu.grasscutter.net.proto.PlayerHomeCompInfoNotifyOuterClass.PlayerHomeCompInfoNotify;
+import emu.grasscutter.net.proto.PlayerHomeCompInfoOuterClass.PlayerHomeCompInfo;
 
 import java.util.List;
 
@@ -18,15 +18,14 @@ public class PacketPlayerHomeCompInfoNotify extends BasePacket {
             return;
         }
 
-        PlayerHomeCompInfoNotifyOuterClass.PlayerHomeCompInfoNotify proto = PlayerHomeCompInfoNotifyOuterClass.PlayerHomeCompInfoNotify.newBuilder()
-                .setCompInfo(
-                        PlayerHomeCompInfoOuterClass.PlayerHomeCompInfo.newBuilder()
-                                .addAllUnlockedModuleIdList(player.getRealmList())
-                                .addAllLevelupRewardGotLevelList(List.of(1)) // Hardcoded
-                                .setFriendEnterHomeOptionValue(player.getHome().getEnterHomeOption())
-                                .build()
-                )
-                .build();
+        PlayerHomeCompInfo.Builder homeCompInfoProto = PlayerHomeCompInfo.newBuilder()
+            .addAllUnlockedModuleIdList(player.getRealmList())
+            .setFriendEnterHomeOptionValue(player.getHome().getEnterHomeOption())
+            .addAllLevelupRewardGotLevelList(player.getTeapotLevelReward().stream().toList());
+            
+        PlayerHomeCompInfoNotify proto = PlayerHomeCompInfoNotify.newBuilder()
+            .setCompInfo(homeCompInfoProto.build())
+            .build();
 
         this.setData(proto);
     }

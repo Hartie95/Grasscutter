@@ -81,8 +81,10 @@ public class ItemData extends GameResource {
     private int comfort;
     private List<Integer> furnType;
     private List<Integer> furnitureGadgetID;
+    @SerializedName(value="markPointType", alternate={"AGLIINELHNE"})
+    private String markPointType; // guessing the true name, might be wrong
 
-    @SerializedName(value="roomSceneId", alternate={"BMEPAMCNABE", "DANFGGLKLNO", "JFDLJGDFIGL", "OHIANNAEEAK"})
+    @SerializedName(value="roomSceneId", alternate={"DANFGGLKLNO", "JFDLJGDFIGL", "OHIANNAEEAK", "BMEPAMCNABE"})
     private int roomSceneId;
 
     // Custom

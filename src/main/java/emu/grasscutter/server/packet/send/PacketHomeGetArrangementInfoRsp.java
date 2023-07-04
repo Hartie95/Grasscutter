@@ -1,10 +1,12 @@
 package emu.grasscutter.server.packet.send;
 
+import emu.grasscutter.game.home.GameHome;
 import emu.grasscutter.game.home.HomeSceneItem;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.packet.PacketOpcodes;
-import emu.grasscutter.net.proto.HomeGetArrangementInfoRspOuterClass;
+import emu.grasscutter.net.proto.HomeGetArrangementInfoRspOuterClass.HomeGetArrangementInfoRsp;
+import emu.grasscutter.net.proto.HomeSceneArrangementInfoOuterClass.HomeSceneArrangementInfo;
 
 import java.util.List;
 
@@ -13,18 +15,18 @@ public class PacketHomeGetArrangementInfoRsp extends BasePacket {
 	public PacketHomeGetArrangementInfoRsp(Player player, List<Integer> sceneIdList) {
 		super(PacketOpcodes.HomeGetArrangementInfoRsp);
 
-		var home = player.getHome();
+		GameHome home = player.getHome();
 
-		var homeScenes = sceneIdList.stream()
-				.map(home::getHomeSceneItem)
-				.map(HomeSceneItem::toProto)
-				.toList();
+		List<HomeSceneArrangementInfo> homeScenes = sceneIdList.stream()
+			.map(home::getHomeSceneItem)
+			.map(HomeSceneItem::toProto)
+			.toList();
 
 		home.save();
 
-		var proto = HomeGetArrangementInfoRspOuterClass.HomeGetArrangementInfoRsp.newBuilder();
-
-		proto.addAllSceneArrangementInfoList(homeScenes);
+		HomeGetArrangementInfoRsp proto = HomeGetArrangementInfoRsp.newBuilder()
+			.addAllSceneArrangementInfoList(homeScenes)
+			.build();
 
 		this.setData(proto);
 	}

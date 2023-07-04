@@ -39,6 +39,9 @@ public class HomeworldDefaultSaveData {
 
         @SerializedName("MLIODLGDFHJ")
         List<HomeFurniture> persistentFurnitures;
+
+        @SerializedName(value="weeklyDjin", alternate="OAMAFGAEPLH")
+        List<HomeWeeklyDjin> weeklyDjin;
     }
 
     @Data
@@ -50,6 +53,16 @@ public class HomeworldDefaultSaveData {
         @SerializedName(value = "NGIEEIOLPPO", alternate = "JFKAHNCPDME")
         Position pos;
         //@SerializedName(value = "HEOCEHKEBFM", alternate = "LKCKOOGFDBM")
+        Position rot;
+    }
+
+    @Data
+    @FieldDefaults(level = AccessLevel.PRIVATE)
+    public static class HomeWeeklyDjin{
+
+        @SerializedName(value = "pos")
+        Position pos;
+        @SerializedName(value = "rot")
         Position rot;
     }
 }

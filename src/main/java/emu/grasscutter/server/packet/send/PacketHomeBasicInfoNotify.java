@@ -1,11 +1,11 @@
 package emu.grasscutter.server.packet.send;
 
+import emu.grasscutter.game.home.HomeSceneItem;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.packet.PacketOpcodes;
-import emu.grasscutter.net.proto.HomeBasicInfoNotifyOuterClass;
-import emu.grasscutter.net.proto.HomeBasicInfoOuterClass;
-import emu.grasscutter.net.proto.HomeLimitedShopInfoOuterClass;
+import emu.grasscutter.net.proto.HomeBasicInfoNotifyOuterClass.HomeBasicInfoNotify;
+import emu.grasscutter.net.proto.HomeBasicInfoOuterClass.HomeBasicInfo;
 import emu.grasscutter.net.proto.VectorOuterClass;
 
 public class PacketHomeBasicInfoNotify extends BasePacket {
@@ -13,23 +13,24 @@ public class PacketHomeBasicInfoNotify extends BasePacket {
     public PacketHomeBasicInfoNotify(Player player, boolean editMode) {
         super(PacketOpcodes.HomeBasicInfoNotify);
 
-        if (player.getCurrentRealmId() <= 0) {
-            return;
-        }
+        if (player.getCurrentRealmId() <= 0) return;
 
-        var proto = HomeBasicInfoNotifyOuterClass.HomeBasicInfoNotify.newBuilder();
+        HomeBasicInfoNotify.Builder proto = HomeBasicInfoNotify.newBuilder();
 
-        var sceneId = player.getCurrentRealmId() + 2000;
-        var homeScene = player.getHome().getHomeSceneItem(sceneId);
+        HomeSceneItem homeScene = player.getHome().getHomeSceneItem();
 
-        proto.setBasicInfo(HomeBasicInfoOuterClass.HomeBasicInfo.newBuilder()
+        player.getHome().updateWeeklyDjin();
+        proto.setBasicInfo(HomeBasicInfo.newBuilder()
                 .setCurModuleId(player.getCurrentRealmId())
                 .setCurRoomSceneId(homeScene.getRoomSceneId())
                 .setIsInEditMode(editMode)
                 .setHomeOwnerUid(player.getUid())
                 .setLevel(player.getHome().getLevel())
                 .setOwnerNickName(player.getNickname())
-                // TODO limit shop
+                .setExp(player.getHome().getExp())
+                .setLimitedShopInfo(player.getHome().getWeeklyDjin().toProtoBuilder()
+                    .setUid(player.getUid())
+                    .build())
                 .build());
 
         this.setData(proto);

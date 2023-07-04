@@ -108,7 +108,12 @@ public class GameData {
     @Getter private static final Int2ObjectMap<GatherData> gatherDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<GuideTriggerData> guideTriggerDataMap = new Int2ObjectOpenHashMap<>(); // Don't use, just to prevent resource loader from crashing
     @Getter private static final Int2ObjectMap<HomeWorldBgmData> homeWorldBgmDataMap = new Int2ObjectOpenHashMap<>();
+    @Getter private static final Int2ObjectMap<HomeWorldComfortLevelData> homeWorldComfortLevelDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<HomeWorldLevelData> homeWorldLevelDataMap = new Int2ObjectOpenHashMap<>();
+    @Getter private static final Int2ObjectMap<HomeWorldLimitShopData> homeWorldLimitShopDataMap = new Int2ObjectOpenHashMap<>();
+    @Getter private static final Int2ObjectMap<HomeWorldModuleData> homeWorldModuleDataMap = new Int2ObjectOpenHashMap<>();
+    @Getter private static final Int2ObjectMap<HomeWorldNPCData> homeWorldNPCDataMap = new Int2ObjectOpenHashMap<>();
+    @Getter private static final Int2ObjectMap<HomeWorldPlantData> homeWorldPlantDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<InvestigationMonsterData> investigationMonsterDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<ItemData> itemDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<MonsterCurveData> monsterCurveDataMap = new Int2ObjectOpenHashMap<>();

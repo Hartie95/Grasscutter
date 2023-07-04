@@ -302,6 +302,21 @@
       "unlocked": "%s unlocked.",
       "unlocked_for": "%s for %s unlocked."
     },
+    "teapot": {
+      "description": "Manipulate serenitea pot functions.  \n\tValues for setLevel<1-10>  \n\tValues for unlockModule<1-4> \n\tValues for lockModule<1-4> \n\tValues for giveAllFurniture<count> \n\tValues for refreshLimitedShop<none>",
+      "level_range_error": "Serenitea pot level must be between 1 and 10.",
+      "level_success": "Serenitea pot level set to %s.",
+      "invalid_param": "Invalid parameter.",
+      "module_sumeru_error": "Sumeru module unsupported at the moment.",
+      "module_range_error" : "Module number must be between 1 - 4.",
+      "unlock_module_contain_error" : "Module already unlocked.",
+      "unlock_module_success": "Unlocked module %s.",
+      "lock_module_in_scene_error": "Cannot lock active module.",
+      "lock_module_contain_error": "Module doesn't exist.",
+      "lock_module_success": "Locked module %s.",
+      "give_furniture_success": "Gave all furniture.",
+      "refresh_limited_shop_success": "Limited shop refreshed."
+    },
     "spawn": {
       "success": "Spawned %s of %s.",
       "limit_reached": "Scene spawn limit reached. Spawning %s entities instead.",

@@ -302,6 +302,21 @@
       "unlocked": "%s oblokowana.",
       "unlocked_for": "%s odblokowano dla %s."
     },
+    "teapot": {
+      "description": "Manipuluj funkcjami garnka Serenitea. \n\tWartości dla setLevel<1-10> \n\tWartości dla unlockModule<1-4> \n\tWartości dla lockModule<1-4> \n\tWartości dla giveAllFurniture<liczba> \n\tWartości dla odświeżeniaLimitedShop<brak >",
+      "level_range_error": "Poziom puli Serenitea musi wynosić od 1 do 10.",
+      "level_success": "Poziom puli Serenitea ustawiony na %s.",
+      "invalid_param": "Niewłaściwy parametr.",
+      "module_sumeru_error": "Moduł Sumeru nie jest obecnie obsługiwany.",
+      "module_range_error" : "Numer modułu musi zawierać się w przedziale od 1 do 4.",
+      "unlock_module_contain_error" : "Moduł już odblokowany.",
+      "unlock_module_success": "Odblokowany moduł %s.",
+      "lock_module_in_scene_error": "Nie można zablokować aktywnego modułu.",
+      "lock_module_contain_error": "Moduł nie istnieje.",
+      "lock_module_success": "Zablokowany moduł %s.",
+      "give_furniture_success": "Dał wszystkie meble.",
+      "refresh_limited_shop_success": "Limitowany sklep odświeżony."
+    },
     "spawn": {
       "success": "Stworzono %s obiektów o ID %s.",
       "limit_reached": "Osiągnięto maksymalną ilość obiektów w scenie. Dodane zostaną tylko %s.",
