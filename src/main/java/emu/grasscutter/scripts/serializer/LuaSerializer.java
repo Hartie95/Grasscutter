@@ -8,15 +8,17 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import lombok.val;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class LuaSerializer implements Serializer {
 
@@ -42,39 +44,23 @@ public class LuaSerializer implements Serializer {
     private <T> Map<String,T> serializeMap(Class<T> type, LuaTable table) {
         Map<String,T> map = new HashMap<>();
 
-        if (table == null) {
-            return map;
-        }
+        if (table == null) return map;
 
         try {
-            LuaValue[] keys = table.keys();
-            for (LuaValue k : keys) {
+            Stream.of(table.keys()).forEach(k -> {
                 try {
                     LuaValue keyValue = table.get(k);
+                    T object = switch (keyValue.type()) {
+                        case LuaValue.TTABLE -> serialize(type, null, keyValue.checktable());
+                        case LuaValue.TSTRING -> type.cast(keyValue.tojstring());
+                        case LuaValue.TNUMBER -> keyValue.isint() ? type.cast(keyValue.toint()) : type.cast(keyValue.tofloat());  // terrible...
+                        case LuaValue.TBOOLEAN -> type.cast(keyValue.toboolean());
+                        default -> type.cast(keyValue);
+                    };
 
-                    T object = null;
-
-                    if (keyValue.istable()) {
-                        object = serialize(type, null, keyValue.checktable());
-                    } else if (keyValue.isint()) {
-                        object = (T) (Integer) keyValue.toint();
-                    } else if (keyValue.isnumber()) {
-                        object = (T) (Float) keyValue.tofloat(); // terrible...
-                    } else if (keyValue.isstring()) {
-                        object = (T) keyValue.tojstring();
-                    } else if (keyValue.isboolean()) {
-                        object = (T) (Boolean) keyValue.toboolean();
-                    } else {
-                        object = (T) keyValue;
-                    }
-
-                    if (object != null) {
-                        map.put(String.valueOf(k),object);
-                    }
-                } catch (Exception ex) {
-
-                }
-            }
+                    if (object != null) map.put(String.valueOf(k),object);
+                } catch (Exception ignored) {}
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -83,164 +69,112 @@ public class LuaSerializer implements Serializer {
     }
 
     public <T> List<T> serializeList(Class<T> type, LuaTable table) {
-        List<T> list = new ArrayList<>();
-
-        if (table == null) {
-            return list;
-        }
-
-        try {
-            LuaValue[] keys = table.keys();
-            for (LuaValue k : keys) {
+        return (table == null) ? List.of() : Stream.of(table.keys()).map(table::get)
+            .map(keyValue -> {
                 try {
-                    LuaValue keyValue = table.get(k);
-
-                    T object = null;
-
-                    if (keyValue.istable()) {
-                        object = serialize(type, null, keyValue.checktable());
-                    } else if (keyValue.isint()) {
-                        object = (T) (Integer) keyValue.toint();
-                    } else if (keyValue.isnumber()) {
-                        object = (T) (Float) keyValue.tofloat(); // terrible...
-                    } else if (keyValue.isstring()) {
-                        object = (T) keyValue.tojstring();
-                    } else if (keyValue.isboolean()) {
-                        object = (T) (Boolean) keyValue.toboolean();
-                    } else {
-                        object = (T) keyValue;
-                    }
-
-                    if (object != null) {
-                        list.add(object);
-                    }
-                } catch (Exception ex) {
-
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return list;
+                    return switch (keyValue.type()) {
+                        case LuaValue.TTABLE -> serialize(type, null, keyValue.checktable());
+                        case LuaValue.TSTRING -> type.cast(keyValue.tojstring());
+                        case LuaValue.TNUMBER ->
+                            keyValue.isint() ? type.cast(keyValue.toint()) : type.cast(keyValue.tofloat());  // terrible...
+                        case LuaValue.TBOOLEAN -> type.cast(keyValue.toboolean());
+                        default -> type.cast(keyValue);
+                    };
+                } catch (Exception ignored){}
+                return null;
+            })
+            .filter(Objects::nonNull)
+            .toList();
     }
 
     private Class<?> getListType(Class<?> type, @Nullable Field field){
-        if(field == null){
-            return type.getTypeParameters()[0].getClass();
-        }
-        Type fieldType = field.getGenericType();
-        if(fieldType instanceof ParameterizedType){
-            return (Class<?>) ((ParameterizedType) fieldType).getActualTypeArguments()[0];
-        }
-
-        return null;
+        return field == null ? type.getTypeParameters()[0].getClass() :
+            !(field.getGenericType() instanceof ParameterizedType fieldType) ? null :
+            (Class<?>) fieldType.getActualTypeArguments()[0];
     }
 
     public <T> T serialize(Class<T> type, @Nullable Field field, LuaTable table) {
-        T object = null;
-
         if (type == List.class) {
             try {
-                Class<?> listType = getListType(type, field);
-                return (T) serializeList(listType, table);
+                return type.cast(serializeList(getListType(type, field), table));
             } catch (Exception e) {
                 e.printStackTrace();
                 return null;
             }
         }
 
+        T object = null;
         try {
-            if (!methodAccessCache.containsKey(type)) {
-                cacheType(type);
-            }
-            var methodAccess = methodAccessCache.get(type);
-            var fieldMetaMap = fieldMetaCache.get(type);
+            if (!methodAccessCache.containsKey(type)) cacheType(type);
 
-            object = (T) constructorCache.get(type).newInstance();
+            MethodAccess methodAccess = methodAccessCache.get(type);
+            val fieldMetaMap = fieldMetaCache.get(type);
 
-            if (table == null) {
-                return object;
-            }
+            object = type.cast(constructorCache.get(type).newInstance());
 
-            LuaValue[] keys = table.keys();
-            for (LuaValue k : keys) {
+            if (table == null) return object;
+
+            for (LuaValue k : table.keys()) {
                 try {
-                    var keyName = k.checkjstring();
-                    if (!fieldMetaMap.containsKey(keyName)) {
-                        continue;
-                    }
-                    var fieldMeta = fieldMetaMap.get(keyName);
+                    String keyName = k.checkjstring();
+                    if (!fieldMetaMap.containsKey(keyName)) continue;
+
+                    FieldMeta fieldMeta = fieldMetaMap.get(keyName);
                     LuaValue keyValue = table.get(k);
 
-                    if (keyValue.istable()) {
-                        methodAccess.invoke(object, fieldMeta.index, serialize(fieldMeta.getType(), fieldMeta.getField(), keyValue.checktable()));
-                    } else if (fieldMeta.getType().equals(float.class)) {
-                        methodAccess.invoke(object, fieldMeta.index, keyValue.tofloat());
-                    } else if (fieldMeta.getType().equals(int.class)) {
-                        methodAccess.invoke(object, fieldMeta.index, keyValue.toint());
-                    } else if (fieldMeta.getType().equals(String.class)) {
-                        methodAccess.invoke(object, fieldMeta.index, keyValue.tojstring());
-                    } else if (fieldMeta.getType().equals(boolean.class)) {
-                        methodAccess.invoke(object, fieldMeta.index, keyValue.toboolean());
-                    } else {
-                        methodAccess.invoke(object, fieldMeta.index, keyValue.tojstring());
-                    }
-                } catch (Exception ex) {
-                    //ex.printStackTrace();
-                    continue;
-                }
+                    methodAccess.invoke(object, fieldMeta.index,
+                        switch (fieldMeta.getType().getSimpleName()) {
+                            case "float" -> keyValue.tofloat();
+                            case "int" -> keyValue.toint();
+                            case "boolean" -> keyValue.toboolean();
+                            case "String" -> keyValue.tojstring();
+                            default -> serialize(fieldMeta.getType(), fieldMeta.getField(), keyValue.checktable());
+                        });
+                } catch (Exception ignored) {}
             }
         } catch (Exception e) {
             Grasscutter.getLogger().info(ScriptUtils.toMap(table).toString());
-            e.printStackTrace();
+//            e.printStackTrace();
         }
 
         return object;
     }
 
     public <T> Map<String, FieldMeta> cacheType(Class<T> type) {
-        if (fieldMetaCache.containsKey(type)) {
-            return fieldMetaCache.get(type);
-        }
-        if (!constructorCache.containsKey(type)) {
-            constructorCache.putIfAbsent(type, ConstructorAccess.get(type));
-        }
-        var methodAccess = Optional.ofNullable(methodAccessCache.get(type)).orElse(MethodAccess.get(type));
+        if (fieldMetaCache.containsKey(type)) return fieldMetaCache.get(type);
+
+        constructorCache.putIfAbsent(type, ConstructorAccess.get(type));
+        MethodAccess methodAccess = Optional.ofNullable(methodAccessCache.get(type)).orElse(MethodAccess.get(type));
         methodAccessCache.putIfAbsent(type, methodAccess);
 
-        var fieldMetaMap = new HashMap<String, FieldMeta>();
-        var methodNameSet = new HashSet<>(Arrays.stream(methodAccess.getMethodNames()).toList());
+        val fieldMetaMap = new HashMap<String, FieldMeta>();
+        val methodNameSet = Stream.of(methodAccess.getMethodNames()).collect(Collectors.toSet());
 
         Arrays.stream(type.getDeclaredFields())
-                .filter(field -> methodNameSet.contains(getSetterName(field.getName())))
-                .forEach(field -> {
-                    var setter = getSetterName(field.getName());
-                    var index = methodAccess.getIndex(setter);
-                    fieldMetaMap.put(field.getName(), new FieldMeta(field.getName(), setter, index, field.getType(), field));
-                });
+            .filter(field -> methodNameSet.contains(getSetterName(field.getName())))
+            .forEach(field -> {
+                String setter = getSetterName(field.getName());
+                fieldMetaMap.put(field.getName(),
+                    new FieldMeta(field.getName(), setter, methodAccess.getIndex(setter), field.getType(), field));
+            });
 
         Arrays.stream(type.getFields())
-                .filter(field -> !fieldMetaMap.containsKey(field.getName()))
-                .filter(field -> methodNameSet.contains(getSetterName(field.getName())))
-                .forEach(field -> {
-                    var setter = getSetterName(field.getName());
-                    var index = methodAccess.getIndex(setter);
-                    fieldMetaMap.put(field.getName(), new FieldMeta(field.getName(), setter, index, field.getType(), field));
-                });
+            .filter(field -> !fieldMetaMap.containsKey(field.getName()))
+            .filter(field -> methodNameSet.contains(getSetterName(field.getName())))
+            .forEach(field -> {
+                String setter = getSetterName(field.getName());
+                fieldMetaMap.put(field.getName(),
+                    new FieldMeta(field.getName(), setter, methodAccess.getIndex(setter), field.getType(), field));
+            });
 
         fieldMetaCache.put(type, fieldMetaMap);
         return fieldMetaMap;
     }
 
     public String getSetterName(String fieldName) {
-        if (fieldName == null || fieldName.length() == 0) {
-            return null;
-        }
-        if (fieldName.length() == 1) {
-            return "set" + fieldName.toUpperCase();
-        }
-        return "set" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
+        return (fieldName == null || fieldName.length() == 0) ? null :
+            fieldName.length() == 1 ? "set" + fieldName.toUpperCase() :
+            "set" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
     }
 
     @Data

@@ -13,6 +13,7 @@ import emu.grasscutter.scripts.serializer.Serializer;
 import emu.grasscutter.utils.FileUtils;
 import lombok.Getter;
 
+import lombok.val;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -20,8 +21,7 @@ import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 import org.luaj.vm2.script.LuajContext;
 
 import javax.script.*;
-import java.io.File;
-import java.io.FileReader;
+import java.io.*;
 import java.lang.ref.SoftReference;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,11 +40,11 @@ public class ScriptLoader {
     /**
      * suggest GC to remove it if the memory is less
      */
-    private static Map<String, SoftReference<CompiledScript>> scriptsCache = new ConcurrentHashMap<>();
+    private static final Map<String, SoftReference<CompiledScript>> scriptsCache = new ConcurrentHashMap<>();
     /**
      * sceneId - SceneMeta
      */
-    private static Map<Integer, SoftReference<SceneMeta>> sceneMetaCache = new ConcurrentHashMap<>();
+    private static final Map<Integer, SoftReference<SceneMeta>> sceneMetaCache = new ConcurrentHashMap<>();
 
     public synchronized static void init() throws Exception {
         if (sm != null) {
@@ -63,14 +63,21 @@ public class ScriptLoader {
         LuajContext ctx = (LuajContext) engine.getContext();
         ctx.globals.set("require", new OneArgFunction() {
             @Override
-            public LuaValue call(LuaValue arg0) {
-                return LuaValue.ZERO;
+            public LuaValue call(LuaValue filename) {
+                LuaValue result = LuaValue.ZERO;
+                try{
+                    val targetFullPath = FileUtils.getScriptPath("Common/" + filename + ".lua");
+                    result = ctx.globals.loadfile(targetFullPath.toString()).call();
+                } catch (Exception ignored) {}
+
+                return result;
             }
         });
 
         addEnumByIntValue(ctx, EntityType.values(), "EntityType");
         addEnumByIntValue(ctx, QuestState.values(), "QuestState");
         addEnumByIntValue(ctx, ElementType.values(), "ElementType");
+        addEnumByIntValue(ctx, GadgetType.values(), "GadgetType");
 
         addEnumByOrdinal(ctx, GroupKillPolicy.values(), "GroupKillPolicy");
         addEnumByOrdinal(ctx, SealBattleType.values(), "SealBattleType");
@@ -78,9 +85,9 @@ public class ScriptLoader {
         addEnumByOrdinal(ctx, ChallengeEventMarkType.values(), "ChallengeEventMarkType");
         addEnumByOrdinal(ctx, VisionLevelType.values(), "VisionLevelType");
 
-        ctx.globals.set("EventType", CoerceJavaToLua.coerce(new EventType())); // TODO - make static class to avoid instantiating a new class every scene
-        ctx.globals.set("GadgetState", CoerceJavaToLua.coerce(new ScriptGadgetState()));
-        ctx.globals.set("RegionShape", CoerceJavaToLua.coerce(new ScriptRegionShape()));
+        ctx.globals.set("EventType", CoerceJavaToLua.coerce(EventType.class)); // TODO - make static class to avoid instantiating a new class every scene
+        ctx.globals.set("GadgetState", CoerceJavaToLua.coerce(ScriptGadgetState.class));
+        ctx.globals.set("RegionShape", CoerceJavaToLua.coerce(ScriptRegionShape.class));
 
         scriptLib = new ScriptLib();
         scriptLibLua = CoerceJavaToLua.coerce(scriptLib);

@@ -24,7 +24,6 @@ import emu.grasscutter.game.world.GroupReplacementData;
 import emu.grasscutter.game.world.SpawnDataEntry;
 import emu.grasscutter.game.world.SpawnDataEntry.GridBlockId;
 import emu.grasscutter.game.world.SpawnDataEntry.SpawnGroupEntry;
-import emu.grasscutter.scripts.CommonScriptManager;
 import emu.grasscutter.scripts.EntityControllerScriptManager;
 import emu.grasscutter.scripts.SceneIndexManager;
 import emu.grasscutter.scripts.ScriptLoader;
@@ -132,7 +131,6 @@ public class ResourceLoader {
         loadGroupReplacements();
         loadTrialAvatarCustomData();
         EntityControllerScriptManager.load();
-        CommonScriptManager.load();
         Grasscutter.getLogger().info(translate("messages.status.resources.finish"));
         loadedAll = true;
     }
@@ -250,10 +248,10 @@ public class ResourceLoader {
                 .add(data.getLevel()));
         // All known levels, keyed by avatarSkillId
         GameData.getAvatarSkillDataMap().forEach((id, data) ->
-            GameData.avatarSkillLevels.put((int) id, GameData.proudSkillGroupLevels.get(data.getProudSkillGroupId())));
+            GameData.avatarSkillLevels.put(id.intValue(), GameData.proudSkillGroupLevels.get(data.getProudSkillGroupId())));
         // Maximum known levels, keyed by proudSkillGroupId
         GameData.proudSkillGroupLevels.forEach((id, set) ->
-            GameData.proudSkillGroupMaxLevels.put((int) id, set.intStream().max().getAsInt()));
+            GameData.proudSkillGroupMaxLevels.put(id.intValue(), set.intStream().max().getAsInt()));
     }
 
 
@@ -426,7 +424,7 @@ public class ResourceLoader {
         }
 
         if (list.isEmpty()) {
-            Grasscutter.getLogger().error("No openconfig entries loaded!");
+            Grasscutter.getLogger().error("No open config entries loaded!");
             return;
         }
 
@@ -470,7 +468,7 @@ public class ResourceLoader {
             Grasscutter.getLogger().error("Unable to load quest keys.", e);
         }
 
-        Grasscutter.getLogger().debug("Loaded " + GameData.getMainQuestDataMap().size() + " MainQuestDatas.");
+        Grasscutter.getLogger().debug("Loaded " + GameData.getMainQuestDataMap().size() + " MainQuestData(s).");
     }
 
     private static void addToCache(SubQuestData questData) {
@@ -506,7 +504,7 @@ public class ResourceLoader {
                     e.printStackTrace();
                 }
             });
-            Grasscutter.getLogger().debug("Loaded {} ScriptSceneDatas.", GameData.getScriptSceneDataMap().size());
+            Grasscutter.getLogger().debug("Loaded {} ScriptSceneData(s).", GameData.getScriptSceneDataMap().size());
         } catch (IOException e) {
             Grasscutter.getLogger().debug("ScriptSceneData folder missing or empty.");
         }
@@ -525,9 +523,9 @@ public class ResourceLoader {
                     GameData.getHomeworldDefaultSaveData().put(sceneId, data);
                 } catch (Exception ignored) {}
             });
-            Grasscutter.getLogger().debug("Loaded {} HomeworldDefaultSaveDatas.", GameData.getHomeworldDefaultSaveData().size());
+            Grasscutter.getLogger().debug("Loaded {} HomeWorldDefaultSaveData(s).", GameData.getHomeworldDefaultSaveData().size());
         } catch (IOException e) {
-            Grasscutter.getLogger().error("Failed to load HomeworldDefaultSave folder.");
+            Grasscutter.getLogger().error("Failed to load HomeWorldDefaultSave folder.");
         }
     }
 
@@ -544,7 +542,7 @@ public class ResourceLoader {
                     GameData.getSceneNpcBornData().put(data.getSceneId(), data);
                 } catch (IOException ignored) {}
             });
-            Grasscutter.getLogger().debug("Loaded {} SceneNpcBornDatas.", GameData.getSceneNpcBornData().size());
+            Grasscutter.getLogger().debug("Loaded {} SceneNpcBornData(s).", GameData.getSceneNpcBornData().size());
         } catch (IOException e) {
             Grasscutter.getLogger().error("Failed to load SceneNpcBorn folder.");
         }

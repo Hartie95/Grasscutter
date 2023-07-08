@@ -1,17 +1,11 @@
 package emu.grasscutter.scripts.data;
 
 import emu.grasscutter.Grasscutter;
-import emu.grasscutter.scripts.CommonScriptManager;
 import emu.grasscutter.scripts.ScriptLoader;
-import emu.grasscutter.utils.FileUtils;
 import emu.grasscutter.utils.Position;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import lombok.val;
-import org.luaj.vm2.LuaError;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.jse.JsePlatform;
 
 import javax.script.Bindings;
 import javax.script.CompiledScript;
@@ -22,7 +16,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @ToString
 @Setter
@@ -96,9 +89,7 @@ public class SceneGroup {
         this.setLoaded(true);
 
         this.bindings = ScriptLoader.getEngine().createBindings();
-        String scriptPath = "Scene/" + sceneId + "/scene" + sceneId + "_group" + this.id + ".lua";
-
-        CompiledScript cs = ScriptLoader.getScript(scriptPath);
+        CompiledScript cs = ScriptLoader.getScript("Scene/" + sceneId + "/scene" + sceneId + "_group" + this.id + ".lua");
 
         if (cs == null) {
             return this;
@@ -134,20 +125,13 @@ public class SceneGroup {
 
             this.init_config = ScriptLoader.getSerializer().toObject(SceneInitConfig.class, this.bindings.get("init_config"));
 
-            // Garbages // TODO: fix properly later
-            Object garbagesValue = this.bindings.get("garbages");
-            if (garbagesValue instanceof LuaValue garbagesTable) {
-                this.garbages = new SceneGarbage();
-                if (garbagesTable.checktable().get("gadgets") != LuaValue.NIL) {
-                    this.garbages.gadgets = ScriptLoader.getSerializer().toList(SceneGadget.class, garbagesTable.checktable().get("gadgets").checktable());
-                    this.garbages.gadgets.forEach(m -> m.group = this);
-                }
-            }
+            // Garbages
+            this.garbages = ScriptLoader.getSerializer().toObject(SceneGarbage.class, this.bindings.get("garbages"));
+            Optional.ofNullable(this.garbages.gadgets).ifPresent(g -> g.forEach(m -> m.group = this));
 
             // Add variables to suite
             this.variables = ScriptLoader.getSerializer().toList(SceneVar.class, this.bindings.get("variables"));
 
-            CommonScriptManager.rebuildTriggersAndBindings(getRequiredPackage(scriptPath), this);
             // Add monsters and gadgets to suite
             this.suites.forEach(i -> i.init(this));
         } catch (Exception e) {
@@ -160,22 +144,17 @@ public class SceneGroup {
 
     public int findInitSuiteIndex(int exclude_index) { //TODO: Investigate end index
         if(init_config == null) return 1;
-        if(init_config.io_type == 1) return init_config.suite; //IO TYPE FLOW
-        if(init_config.rand_suite) {
-            if(suites.size() == 1) {
-                return init_config.suite;
-            } else {
-                List<Integer> randSuiteList = new ArrayList<>();
-                for(int i = 0; i < suites.size(); i++) {
-                    if(i == exclude_index) continue;
+        if(init_config.io_type == 1 || !init_config.rand_suite || suites.size() == 1) return init_config.suite; //IO TYPE FLOW
 
-                    var suite = suites.get(i);
-                    for(int j = 0; j < suite.rand_weight; j++) randSuiteList.add(i);
-                }
-                return randSuiteList.get(new Random().nextInt(randSuiteList.size()));
-            }
+        List<Integer> randSuiteList = new ArrayList<>();
+        for(int i = 0; i < suites.size(); i++) {
+            if(i == exclude_index) continue;
+
+            var suite = suites.get(i);
+            for(int j = 0; j < suite.rand_weight; j++) randSuiteList.add(i);
         }
-        return init_config.suite;
+
+        return randSuiteList.get(new Random().nextInt(randSuiteList.size()));
     }
 
     public Optional<SceneBossChest> searchBossChestInGroup() {
@@ -183,27 +162,5 @@ public class SceneGroup {
                 .filter(g -> g.boss_chest != null && g.boss_chest.monster_config_id > 0)
                 .map(g -> g.boss_chest)
                 .findFirst();
-    }
-
-    /**
-     * Used to find required package of lua script
-     * */
-    public String getRequiredPackage(String scriptPath) {
-        // TODO,1 please do enlighten me if you have better idea of doing this
-        // TODO,2 this will not work if the lua script requires more than one package
-        try{
-            val GLOBALS = JsePlatform.standardGlobals();
-            val SCRIPT = GLOBALS.loadfile(FileUtils.getScriptPath(scriptPath).toString());
-            val PROTO = SCRIPT.checkclosure().p;
-            val LINES_INFO = Stream.of(PROTO.k)
-                .filter(LuaValue::isstring)
-                .map(LuaValue::toString)
-                .toList();
-            return LINES_INFO.contains("require") ? LINES_INFO.get(LINES_INFO.size() - 1) : null;
-
-        } catch (LuaError ignored) {
-
-        }
-        return null;
     }
 }
