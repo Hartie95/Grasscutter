@@ -134,14 +134,12 @@ public class BlossomManager extends BasePlayerDataManager {
      * */
     public boolean onReward(Player player, @NotNull EntityGadget gadget, boolean useCondensedResin) {
         BlossomSchedule schedule = getSpawnedChest().get(gadget.getConfigId());
-        if (schedule == null) return false;
+        // if player is not qualified for the reward
+        if (schedule == null || !schedule.getRemainingUid().contains(player.getUid())) return false;
 
         // give rewards
         ResinManager resinManager = player.getResinManager();
-        boolean payable = useCondensedResin ?
-            resinManager.useCondensedResin(1) :
-            resinManager.useResin(schedule.getResin());
-
+        boolean payable = useCondensedResin ? resinManager.useCondensedResin(1) : resinManager.useResin(schedule.getResin());
         if (!payable) return false;
 
         RewardPreviewData blossomRewards = GameData.getRewardPreviewDataMap().get(schedule.getRewardId());
@@ -159,6 +157,7 @@ public class BlossomManager extends BasePlayerDataManager {
             getSpawnedChest().remove(gadget.getConfigId());
             getBlossomSchedule().remove(schedule.getGroupId());
             getScene().getScriptManager().callEvent(new ScriptArgs(schedule.getGroupId(), EventType.EVENT_BLOSSOM_CHEST_DIE));
+            getScene().unregisterDynamicGroup(schedule.getGroupId());
 
             GameData.getBlossomGroupsDataMap().get(schedule.getCircleCampId()).getNextCampIdVec().stream()
                 .map(campId -> GameData.getBlossomGroupsDataMap().get(campId.intValue()))
@@ -181,10 +180,9 @@ public class BlossomManager extends BasePlayerDataManager {
                     SceneGadget newGadget = gadgetsMap.values().stream()
                         .filter(g -> g.gadget_id == schedule.getRefreshType().getGadgetId()).findFirst()
                         .orElse(null);
-                    BlossomSchedule newSchedule = new BlossomSchedule(
-                        schedule, groupData, newGadget, 3, blockGroupId);
 
-                    getBlossomSchedule().put(blockGroupId,newSchedule);
+                    getBlossomSchedule().put(blockGroupId, new BlossomSchedule(
+                        schedule, groupData, newGadget, 3, blockGroupId));
                     getScene().loadDynamicGroup(blockGroupId);
                 });
             notifyPlayerIcon(); // notify all camps again
