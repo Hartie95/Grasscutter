@@ -1,8 +1,9 @@
 package emu.grasscutter.game.dungeons.challenge.factory;
 
+import emu.grasscutter.game.dungeons.challenge.ChallengeInfo;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.ChallengeType;
-import emu.grasscutter.game.dungeons.challenge.trigger.InTimeTrigger;
+import emu.grasscutter.game.dungeons.challenge.trigger.TimeTrigger;
 import emu.grasscutter.game.dungeons.challenge.trigger.TriggerGroupTriggerTrigger;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.scripts.data.SceneGroup;
@@ -26,12 +27,12 @@ public class TriggerInTimeChallengeFactoryHandler implements ChallengeFactoryHan
      * @param params: [timeLimit, unused1, triggerTag, triggerCount]
      */
     @Override
-    public WorldChallenge build(List<Integer> indices, List<Integer> params, Scene scene, SceneGroup group) {
+    public WorldChallenge build(ChallengeInfo header, List<Integer> params, Scene scene, SceneGroup group) {
         return new WorldChallenge(
             scene, group,
-            indices,
-            List.of(params.get(0), params.get(3)), params.get(0), params.get(3), // parameters, time limit, goal
-            List.of(new InTimeTrigger(1), new TriggerGroupTriggerTrigger(2, Integer.toString(params.get(2)))),
+            header,
+            List.of(params.get(0), params.get(3)), // parameters
+            List.of(new TimeTrigger(1, params.get(0), true), new TriggerGroupTriggerTrigger(2, params.get(3), params.get(2))),
             0, 0 // success count, fail count
         );
     }

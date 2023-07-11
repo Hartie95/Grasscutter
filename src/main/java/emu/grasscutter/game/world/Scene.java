@@ -376,19 +376,17 @@ public class Scene {
         //GameEntity attacker = getEntityById(result.getAttackerId());
         GameEntity target = getEntityById(result.getDefenseId());
         ElementType attackType = ElementType.getTypeByValue(result.getElementType());
-
         if (target == null) return;
 
         // Godmode check
         if (target instanceof EntityAvatar entityAvatar) {
             if (entityAvatar.getPlayer().inGodmode()) return;
 
-            Optional.ofNullable(getChallenge()).ifPresent(c -> {
-                if (!(getEntityById(result.getAttackerId()) instanceof EntityMonster monster)) return;
-                c.onDamageMonsterOrShield(monster, result.getDamageShield());
-            });
+            if (result.getDamage() != result.getDamageShield()) { // when avatar actually have a shield
+                Optional.ofNullable(getChallenge()).ifPresent(c ->
+                    c.onDamageMonsterOrShield(getEntityById(result.getAttackerId()), result.getDamageShield() - result.getDamage()));
+            }
         }
-
         target.damage(result.getDamage(), result.getAttackerId(), attackType);
     }
 

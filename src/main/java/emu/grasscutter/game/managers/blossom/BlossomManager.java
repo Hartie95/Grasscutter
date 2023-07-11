@@ -197,7 +197,7 @@ public class BlossomManager extends BasePlayerDataManager {
         if (getScene() == null) return;
 
         getBlossomSchedule().values().forEach(schedule -> {
-            Grasscutter.getLogger().info("{}", schedule.getGroupId());
+//            Grasscutter.getLogger().info("{}", schedule.getGroupId());
             getScene().loadDynamicGroup(schedule.getGroupId());
         });
     }

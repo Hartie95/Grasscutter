@@ -11,11 +11,11 @@ public class PacketChallengeDataNotify extends BasePacket {
 		super(PacketOpcodes.ChallengeDataNotify);
 
 		ChallengeDataNotify proto = ChallengeDataNotify.newBuilder()
-				.setChallengeIndex(challenge.getChallengeIndex())
+				.setChallengeIndex(challenge.getInfo().challengeIndex())
 				.setParamIndex(index)
 				.setValue(value)
 				.build();
-		
+
 		this.setData(proto);
 	}
 }

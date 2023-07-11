@@ -1,5 +1,6 @@
 package emu.grasscutter.game.dungeons.challenge.factory;
 
+import emu.grasscutter.game.dungeons.challenge.ChallengeInfo;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.ChallengeType;
 import emu.grasscutter.game.world.Scene;
@@ -16,10 +17,10 @@ public interface ChallengeFactoryHandler {
 
     /**
      * Build a new challenge
-     * @param indices: [currentChallengeIndex, currentChallengeId, fatherChallengeIndex]
+     * @param header: currentChallengeIndex, currentChallengeId, fatherChallengeIndex
      * @param params: [Different parameters depending on challenge type, size varies from 3 to 7]
      * @param scene: Current scene that player is in
      * @param group: Group spawned/attached to the challenge
      */
-    WorldChallenge build(List<Integer> indices, List<Integer> params, Scene scene, SceneGroup group);
+    WorldChallenge build(ChallengeInfo header, List<Integer> params, Scene scene, SceneGroup group);
 }
