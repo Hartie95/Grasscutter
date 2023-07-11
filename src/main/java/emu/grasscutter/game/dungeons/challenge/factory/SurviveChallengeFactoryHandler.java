@@ -1,8 +1,9 @@
 package emu.grasscutter.game.dungeons.challenge.factory;
 
+import emu.grasscutter.game.dungeons.challenge.ChallengeInfo;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.ChallengeType;
-import emu.grasscutter.game.dungeons.challenge.trigger.ForTimeTrigger;
+import emu.grasscutter.game.dungeons.challenge.trigger.TimeTrigger;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.scripts.data.SceneGroup;
 
@@ -23,12 +24,12 @@ public class SurviveChallengeFactoryHandler implements ChallengeFactoryHandler {
      * @param params: [timeToSurvive, unused1, unused2, unused3]
      */
     @Override
-    public WorldChallenge build(List<Integer> indices, List<Integer> params, Scene scene, SceneGroup group) {
+    public WorldChallenge build(ChallengeInfo header, List<Integer> params, Scene scene, SceneGroup group) {
         return new WorldChallenge(
             scene, group,
-            indices,
-            List.of(params.get(0)), params.get(0), 0, // parameters, time limit, goal
-            List.of(new ForTimeTrigger(1)),
+            header,
+            List.of(params.get(0)), // parameters
+            List.of(new TimeTrigger(1, params.get(0), false)),
             0, 0 // success count, fail count
         );
     }

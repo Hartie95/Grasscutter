@@ -1,9 +1,10 @@
 package emu.grasscutter.game.dungeons.challenge.factory;
 
+import emu.grasscutter.game.dungeons.challenge.ChallengeInfo;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.ChallengeType;
 import emu.grasscutter.game.dungeons.challenge.trigger.GuardTrigger;
-import emu.grasscutter.game.dungeons.challenge.trigger.KillMonsterCountTrigger;
+import emu.grasscutter.game.dungeons.challenge.trigger.KillMonsterTrigger;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.scripts.data.SceneGroup;
 import lombok.val;
@@ -24,13 +25,13 @@ public class KillAndGuardChallengeFactoryHandler implements ChallengeFactoryHand
      * @param params: [groupId, monstersToKill, gadgetCFGId, unused1]
      */
     @Override /*TODO check param4 == monstersToKill*/
-    public WorldChallenge build(List<Integer> indices, List<Integer> params, Scene scene, SceneGroup group) {
+    public WorldChallenge build(ChallengeInfo header, List<Integer> params, Scene scene, SceneGroup group) {
         val realGroup = scene.getScriptManager().getGroupById(params.get(0));
         return new WorldChallenge(
             scene, realGroup,
-            indices,
-            List.of(params.get(1), 100), 0, params.get(1), // parameters, time limit, goal
-            List.of(new KillMonsterCountTrigger(1), new GuardTrigger(2, params.get(2))),
+            header,
+            List.of(params.get(1), 100), // parameters
+            List.of(new KillMonsterTrigger(1, params.get(1), false), new GuardTrigger(2, params.get(2))),
             0, 0 // success count, fail count
         );
     }

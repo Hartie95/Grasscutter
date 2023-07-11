@@ -3,6 +3,7 @@ package emu.grasscutter.scripts;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.game.activity.ActivityManager;
+import emu.grasscutter.game.dungeons.challenge.ChallengeInfo;
 import emu.grasscutter.game.dungeons.challenge.DungeonChallenge;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.FatherChallengeProperty;
@@ -335,18 +336,16 @@ public class ScriptLib {
 	// param3 (probably time limit for timed dungeons)
 	public int ActiveChallenge(int challengeIndex, int challengeId, int timeLimitOrGroupId, int groupId, int objectiveKills, int param5) {
 		logger.debug("[LUA] Call ActiveChallenge with {},{},{},{},{},{}",
-				challengeId,challengeIndex,timeLimitOrGroupId,groupId,objectiveKills,param5);
+            challengeIndex, challengeId, timeLimitOrGroupId,groupId,objectiveKills,param5);
 
-		var challenge = ChallengeFactory.getChallenge(
-                List.of(challengeIndex, challengeId, 0),
+		val challenge = ChallengeFactory.getChallenge(
+                new ChallengeInfo(challengeIndex, challengeId, 0),
                 List.of(timeLimitOrGroupId, groupId, objectiveKills, param5),
 				getSceneScriptManager().getScene(),
                 getCurrentGroup().isPresent() ? getCurrentGroup().get() : null
 				);
 
-		if(challenge == null){
-			return 1;
-		}
+		if(challenge == null) return 1;
 
 		if(challenge instanceof DungeonChallenge dungeonChallenge){
 			// set if tower first stage (6-1)
@@ -360,26 +359,19 @@ public class ScriptLib {
 	}
 
     public int StopChallenge(int challengeId, int result) {
-        logger.debug("[LUA] Call StopChallenge with ");
-        var challenge = getSceneScriptManager().getScene().getChallenge();
-        if(challenge == null){
-            return 1;
-        }
-        if(challenge.getChallengeId() != challengeId){
-            return 2;
-        }
+        logger.debug("[LUA] Call StopChallenge with {}, {}", challengeId, result);
+        val challenge = getSceneScriptManager().getScene().getChallenge();
+        if(challenge == null) return 1;
 
-        switch (result){
-            case 0:
-                challenge.fail();
-                break;
-            case 1:
-                challenge.done();
-                break;
-            default:
+        if(challenge.getInfo().challengeId() != challengeId) return 2;
+
+        switch (result) {
+            case 0 -> challenge.fail();
+            case 1 -> challenge.done();
+            default -> {
                 logger.warn("[LUA] Call StopChallenge with unsupported result {}", result);
                 return 3;
-
+            }
         }
         return 0;
     }
@@ -387,20 +379,17 @@ public class ScriptLib {
 	public int GetGroupMonsterCountByGroupId(int groupId) {
 		logger.debug("[LUA] Call GetGroupMonsterCountByGroupId with {}",
 				groupId);
-        int count = (int) getSceneScriptManager().getScene().getEntities().values().stream()
+		return (int) getSceneScriptManager().getScene().getEntities().values().stream()
             .filter(e -> e instanceof EntityMonster && e.getGroupId() == groupId)
             .count();
-        Grasscutter.getLogger().info("Monster left count: {}", count);
-		return count;
 	}
 
 	public int CreateVariable(String type, Object value) {
 		logger.warn("[LUA] Call unimplemented CreateVariable with {} {}",
             type, value);
         //TODO implement
-        switch (type){
-            case "int":
-            default:
+        switch (type) {
+            default ->
                 logger.warn("[LUA] Call CreateVariable with unsupported type {} and value {}", type, value);
         }
 		return 0;
@@ -426,7 +415,7 @@ public class ScriptLib {
 	}
 
 	public int SetGroupVariableValue(String varName, int value) {
-		logger.info("[LUA] Call SetGroupVariableValue with {},{}",
+		logger.debug("[LUA] Call SetGroupVariableValue with {},{}",
             varName, value);
 
         val groupId= currentGroup.get().id;
@@ -798,11 +787,7 @@ public class ScriptLib {
     public int GetGroupSuite(int groupId) {
         //logger.warn("[LUA] Call GetGroupSuite with {}", groupID);
         var instance = getSceneScriptManager().getGroupInstanceById(groupId);
-        if(instance != null) {
-            Grasscutter.getLogger().info("GetGroupSuite: {}", instance.getActiveSuiteId());
-            return instance.getActiveSuiteId();
-        }
-        return 0;
+        return instance != null ? instance.getActiveSuiteId() : 0;
     }
     public int SetGroupReplaceable(int groupId, boolean value) {
         logger.warn("[LUA] Call SetGroupReplaceable with {} {}", groupId, value);
@@ -889,7 +874,7 @@ public class ScriptLib {
             challengeIndex, challengeId, timeLimit, conditionTable);
 
         WorldChallenge challenge = ChallengeFactory.getChallenge(
-            List.of(challengeIndex, challengeId, challengeIndex),
+            new ChallengeInfo(challengeIndex, challengeId, challengeIndex),
             List.of(conditionTable.get("success").toint(), conditionTable.get("fail").toint(), timeLimit),
             getSceneScriptManager().getScene(),
             getCurrentGroup().isPresent() ? getCurrentGroup().get() : null
@@ -903,7 +888,7 @@ public class ScriptLib {
     public int StartFatherChallenge(int challengeIndex){
         logger.debug("[LUA] Call StartFatherChallenge with {}", challengeIndex);
         WorldChallenge challenge = getSceneScriptManager().getScene().getChallenge();
-        if (challenge == null || challenge.getChallengeIndex() == challengeIndex) return 1;
+        if (challenge == null || challenge.getInfo().challengeIndex() != challengeIndex) return 1;
 
         challenge.start();
         return 0;
@@ -915,7 +900,7 @@ public class ScriptLib {
         if (scene == null) return 1;
 
         WorldChallenge sceneChallenge = scene.getChallenge();
-        if (sceneChallenge == null || sceneChallenge.getChallengeIndex() != challengeIndex) return 1;
+        if (sceneChallenge == null || sceneChallenge.getInfo().challengeIndex() != challengeIndex) return 1;
 
         switch (propertyType) {
             case CUR_FAIL, CUR_SUCC, SUM_FAIL, SUM_SUCC, DURATION -> {
@@ -933,7 +918,7 @@ public class ScriptLib {
         conditionList.add(conditionTable.get("fail").toint());
 
         WorldChallenge challenge = ChallengeFactory.getChallenge(
-            List.of(childChallengeIndex, childChallengeId, fatherChallengeIndex),
+            new ChallengeInfo(childChallengeIndex, childChallengeId, fatherChallengeIndex),
             conditionList,
             getSceneScriptManager().getScene(),
             getCurrentGroup().isPresent() ? getCurrentGroup().get() : null
@@ -941,7 +926,7 @@ public class ScriptLib {
 
         WorldChallenge sceneChallenge = getSceneScriptManager().getScene().getChallenge();
         if (sceneChallenge == null || challenge == null
-            || sceneChallenge.getChallengeIndex() != fatherChallengeIndex) return 1;
+            || sceneChallenge.getInfo().challengeIndex() != fatherChallengeIndex) return 1;
 
         sceneChallenge.attachChild(challenge);
         return 0;
@@ -1005,7 +990,7 @@ public class ScriptLib {
     }
 
     public int RefreshBlossomGroup(LuaTable configTable){
-        logger.info("[LUA] Call check RefreshBlossomGroup with {}", printTable(configTable));
+        logger.debug("[LUA] Call check RefreshBlossomGroup with {}", printTable(configTable));
         int groupId = configTable.get("group_id").toint();
         val group = getSceneScriptManager().getGroupById(
             groupId == 0 && getCurrentGroup().isPresent() ? getCurrentGroup().get().id : groupId);
@@ -1021,11 +1006,9 @@ public class ScriptLib {
         val blossomSchedule = blossomManager.getBlossomSchedule().get(group.id);
         if (blossomSchedule == null) return 0;
 
-        val configId = group.gadgets.values().stream()
+        val gadget = group.gadgets.values().stream()
             .filter(g -> g.gadget_id == blossomSchedule.getRefreshType().getGadgetId())
-            .map(g -> g.config_id)
-            .findFirst().orElse(0);
-        val gadget = group.gadgets.get(configId);
+            .findFirst().orElse(null);
         if (gadget == null) return 0;
 
         val entity = getSceneScriptManager().createGadget(

@@ -27,11 +27,11 @@ public class SceneGroupInstance {
     @Getter private transient SceneGroup luaGroup;
     @Getter @Setter private int targetSuiteId;
     @Getter @Setter private int activeSuiteId;
-    @Getter private Set<Integer> deadEntities; //Config_ids
+    @Getter private final Set<Integer> deadEntities; //Config_ids
     private boolean isCached;
 
-    @Getter private Map<Integer, Integer> cachedGadgetStates;
-    @Getter private Map<String, Integer> cachedVariables;
+    @Getter private final Map<Integer, Integer> cachedGadgetStates;
+    @Getter private final Map<String, Integer> cachedVariables;
 
     @Getter @Setter private int lastTimeRefreshed;
 
@@ -76,8 +76,7 @@ public class SceneGroupInstance {
     }
 
     public int getCachedGadgetState(SceneGadget g) {
-        Integer state = cachedGadgetStates.getOrDefault(g.config_id, null);
-        return (state == null) ? g.state : state;
+        return cachedGadgetStates.getOrDefault(g.config_id, g.state);
     }
 
     public void save() {

@@ -2,6 +2,7 @@ package emu.grasscutter.game.dungeons.challenge.factory;
 
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.DungeonChallengeConfigData;
+import emu.grasscutter.game.dungeons.challenge.ChallengeInfo;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.scripts.data.SceneGroup;
@@ -31,14 +32,16 @@ public class ChallengeFactory {
         });
     }
 
-    // indices: [currentChallengeIndex, currentChallengeId, fatherChallengeIndex]
-    public static WorldChallenge getChallenge(List<Integer> indices, List<Integer> params, Scene scene, SceneGroup group){
+    /**
+     * challengeInfo: currentChallengeIndex, currentChallengeId, fatherChallengeIndex
+     * */
+    public static WorldChallenge getChallenge(ChallengeInfo challengeInfo, List<Integer> params, Scene scene, SceneGroup group){
         return getChallengeFactoryHandlers().stream()
             .filter(handler -> handler.isThisType(
-                Optional.ofNullable(GameData.getDungeonChallengeConfigDataMap().get(indices.get(1).intValue()))
+                Optional.ofNullable(GameData.getDungeonChallengeConfigDataMap().get(challengeInfo.challengeId()))
                     .map(DungeonChallengeConfigData::getChallengeType)
                     .orElse(CHALLENGE_NONE))
-            ).map(handler -> handler.build(indices, params, scene, group))
+            ).map(handler -> handler.build(challengeInfo, params, scene, group))
             .findFirst().orElse(null);
     }
 }

@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import emu.grasscutter.game.entity.EntityAvatar;
 import emu.grasscutter.game.entity.EntityMonster;
 import emu.grasscutter.game.props.ElementReactionType;
 import emu.grasscutter.net.proto.AbilityMetaTriggerElementReactionOuterClass.AbilityMetaTriggerElementReaction;
@@ -402,31 +403,13 @@ public final class AbilityManager extends BasePlayerManager {
         if (getPlayer().getScene() == null) return;
 
         AbilityMetaTriggerElementReaction data = AbilityMetaTriggerElementReaction.parseFrom(invoke.getAbilityData());
-        GameEntity attackEntity = getPlayer().getScene().getEntityById(data.getTriggerEntityId());
         GameEntity targetEntity = getPlayer().getScene().getEntityById(invoke.getEntityId());
-        if (attackEntity == null || targetEntity == null) return;
+        if (targetEntity == null) return;
 
-        switch (attackEntity.getClass().getSimpleName()) {
-            // client gadget can be Kaeya's ult crystals, Xiangling's ult and Ningguang's auto attack amber
-            case "EntityAvatar", "EntityClientGadget" -> {
-                ElementReactionType reactionType = ElementReactionType.getTypeByValue(data.getElementReactionType());
-                Grasscutter.getLogger().debug(
-                    "EntityAttack: {}, EntityId: {}", attackEntity, data.getTriggerEntityId());
-                Grasscutter.getLogger().debug(
-                    "EntityTarget: {}, EntityId: {}", targetEntity, invoke.getEntityId());
-                Grasscutter.getLogger().debug(
-                    "ReactionType: {}, Value: {}", reactionType, data.getElementReactionType());
-
-                // Challenge related action
-                Optional.ofNullable(getPlayer().getScene().getChallenge())
-                    .ifPresent(sceneChallenge -> {
-                        if (!(targetEntity instanceof EntityMonster entityMonster)) return;
-
-                        sceneChallenge.onElementReaction(entityMonster, reactionType);
-                    });
-            }
-            case "EntityMonster", "EntityGadget" -> {} // TODO
-        }
+        ElementReactionType reactionType = ElementReactionType.getTypeByValue(data.getElementReactionType());
+        // Challenge related action
+        Optional.ofNullable(getPlayer().getScene().getChallenge())
+            .ifPresent(sceneChallenge -> sceneChallenge.onElementReaction(targetEntity, reactionType));
     }
 
     public void addAbilityToEntity(GameEntity entity, String name) {

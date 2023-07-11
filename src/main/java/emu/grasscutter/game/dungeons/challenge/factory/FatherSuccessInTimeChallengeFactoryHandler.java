@@ -1,9 +1,10 @@
 package emu.grasscutter.game.dungeons.challenge.factory;
 
+import emu.grasscutter.game.dungeons.challenge.ChallengeInfo;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.ChallengeType;
 import emu.grasscutter.game.dungeons.challenge.trigger.FatherTrigger;
-import emu.grasscutter.game.dungeons.challenge.trigger.InTimeTrigger;
+import emu.grasscutter.game.dungeons.challenge.trigger.TimeTrigger;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.scripts.data.SceneGroup;
 
@@ -23,12 +24,12 @@ public class FatherSuccessInTimeChallengeFactoryHandler implements ChallengeFact
      * @param params: [successCount, failCount, timeLimit]
      */
     @Override
-    public WorldChallenge build(List<Integer> indices, List<Integer> params, Scene scene, SceneGroup group) {
+    public WorldChallenge build(ChallengeInfo header, List<Integer> params, Scene scene, SceneGroup group) {
         return new WorldChallenge(
             scene, group,
-            indices,
-            params, params.get(2), 0, // parameters, time limit, goal
-            List.of(new FatherTrigger(), new InTimeTrigger(3)),
+            header,
+            params, // parameters
+            List.of(new FatherTrigger(), new TimeTrigger(3, params.get(2), true)),
             params.get(0), params.get(1) // success count, fail count
         );
     }

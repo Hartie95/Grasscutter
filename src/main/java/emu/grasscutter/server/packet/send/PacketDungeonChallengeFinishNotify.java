@@ -12,7 +12,7 @@ public class PacketDungeonChallengeFinishNotify extends BasePacket {
 		super(PacketOpcodes.DungeonChallengeFinishNotify, true);
 
 		DungeonChallengeFinishNotify proto = DungeonChallengeFinishNotify.newBuilder()
-            .setChallengeIndex(challenge.getChallengeIndex())
+            .setChallengeIndex(challenge.getInfo().challengeIndex())
             .setIsSuccess(challenge.isSuccess())
             .setTimeCost(challenge.getFinishedTime() - challenge.getStartedAt())
             .setFinishType(challenge.isSuccess() ?
