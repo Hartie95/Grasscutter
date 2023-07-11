@@ -1,40 +1,60 @@
 package emu.grasscutter.game.dungeons.challenge.trigger;
 
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
+import emu.grasscutter.game.entity.GameEntity;
 import emu.grasscutter.game.props.ElementReactionType;
 import emu.grasscutter.server.packet.send.PacketChallengeDataNotify;
 import lombok.Getter;
 
 import java.util.List;
 
+@Getter
 public class ElementReactionTrigger extends ChallengeTrigger{
-    @Getter private final List<ElementReactionType> GOAL_REACTION_TYPE;
+    private final List<ElementReactionType> GOAL_REACTION_TYPE;
+    /**
+     * Target type that invoke this trigger
+     * i.e. Some challenges require player(AVATAR) avoids getting freeze for x number of times,
+     * but mainly invoking elemental reaction on MONSTERS
+     * */
+    private final Class<? extends GameEntity> DEFENDER_TYPE;
+    private final boolean RUN_SUCC;
 
-    public ElementReactionTrigger(int paramIndex, List<ElementReactionType> reactionType) {
-        super(paramIndex);
+    /**
+     * Used when challenge requires player to invoke certain(or multiple) elemental reaction
+     * */
+    public ElementReactionTrigger(int paramIndex, int goal, ElementReactionType reactionType,
+                                  Class<? extends GameEntity> defenderType, boolean shouldSucc) {
+        this(paramIndex, goal, List.of(reactionType), defenderType, shouldSucc);
+    }
+
+    public ElementReactionTrigger(int paramIndex, int goal, List<ElementReactionType> reactionType,
+                                  Class<? extends GameEntity> defenderType, boolean shouldSucc) {
+        super(paramIndex, goal);
         this.GOAL_REACTION_TYPE = reactionType;
+        this.DEFENDER_TYPE = defenderType;
+        this.RUN_SUCC = shouldSucc;
     }
 
     @Override
     public void onBegin(WorldChallenge challenge) {
         if (getParamIndex() < 1) return; // when challenge is FreezeInTime
 
-        challenge.getScene().broadcastPacket(new PacketChallengeDataNotify(
-            challenge, getParamIndex(), challenge.getScore().get()));
+        challenge.getScene().broadcastPacket(new PacketChallengeDataNotify(challenge, getParamIndex(), getScore().get()));
     }
 
     @Override
-    public void onElementReaction(WorldChallenge challenge, ElementReactionType reactionType) {
-        if (!getGOAL_REACTION_TYPE().contains(reactionType)) return;
+    public void onElementReaction(WorldChallenge challenge, GameEntity defender, ElementReactionType reactionType) {
+        if (!getGOAL_REACTION_TYPE().contains(reactionType) || defender.getClass() != getDEFENDER_TYPE()) return;
 
-        int newScore = challenge.increaseScore();
+        int newScore = getScore().incrementAndGet();
+        onBegin(challenge);
 
-        if (getParamIndex() > 0) { // when challenge is not FreezeInTime
-            challenge.getScene().broadcastPacket(new PacketChallengeDataNotify(challenge, getParamIndex(), newScore));
-        }
+        if (newScore < getGoal()) return;
 
-        if (newScore >= challenge.getGoal()) {
+        if (isRUN_SUCC()) {
             challenge.done();
+        } else {
+            challenge.fail();
         }
     }
 }

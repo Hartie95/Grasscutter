@@ -3,16 +3,22 @@ package emu.grasscutter.game.dungeons.challenge.trigger;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.entity.EntityGadget;
 import emu.grasscutter.game.entity.EntityMonster;
+import emu.grasscutter.game.entity.GameEntity;
 import emu.grasscutter.game.props.ElementReactionType;
-import emu.grasscutter.game.props.ElementType;
 import emu.grasscutter.scripts.data.SceneTrigger;
 import lombok.Getter;
 
-public abstract class ChallengeTrigger {
-    @Getter private final int paramIndex;
+import java.util.concurrent.atomic.AtomicInteger;
 
-    public ChallengeTrigger (int paramIndex) {
+@Getter
+public abstract class ChallengeTrigger {
+    private final int paramIndex;
+    private final AtomicInteger score = new AtomicInteger(0);
+    private final int goal;
+
+    public ChallengeTrigger (int paramIndex, int goal) {
         this.paramIndex = paramIndex;
+        this.goal = goal;
     }
     /**
      * Trigger start action, sends PacketChallengeDataNotify
@@ -42,7 +48,7 @@ public abstract class ChallengeTrigger {
     /**
      * Trigger when an elemental reaction occurred
      */
-    public void onElementReaction(WorldChallenge challenge, ElementReactionType reactionType){}
+    public void onElementReaction(WorldChallenge challenge, GameEntity defender, ElementReactionType reactionType){}
     /**
      * Trigger when damaging monster or player's shield
      */
@@ -50,5 +56,5 @@ public abstract class ChallengeTrigger {
     /**
      * Trigger when child challenge finishes or fails
      */
-    public void onIncFailSuccScore(WorldChallenge challenge, int index, int score){}
+    public void onIncFailSuccScore(WorldChallenge challenge, boolean useSucc, int score){}
 }

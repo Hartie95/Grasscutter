@@ -11,9 +11,9 @@ public class PacketDungeonChallengeBeginNotify extends BasePacket {
 		super(PacketOpcodes.DungeonChallengeBeginNotify, true);
 
 		DungeonChallengeBeginNotify proto = DungeonChallengeBeginNotify.newBuilder()
-            .setFatherIndex(challenge.getFatherIndex())
-            .setChallengeId(challenge.getChallengeId())
-            .setChallengeIndex(challenge.getChallengeIndex())
+            .setFatherIndex(challenge.getInfo().fatherChallengeIndex())
+            .setChallengeId(challenge.getInfo().challengeId())
+            .setChallengeIndex(challenge.getInfo().challengeIndex())
             .setGroupId(challenge.getGroupId())
             .addAllParamList(challenge.getParamList())
             .build();
