@@ -4,7 +4,6 @@ import emu.grasscutter.game.dungeons.challenge.ChallengeInfo;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.ChallengeType;
 import emu.grasscutter.game.dungeons.challenge.trigger.ElementReactionTrigger;
-import emu.grasscutter.game.entity.EntityMonster;
 import emu.grasscutter.game.props.ElementReactionType;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.scripts.data.SceneGroup;
@@ -71,7 +70,7 @@ public class ElementReactionCountChallengeFactoryHandler implements ChallengeFac
             scene, group,
             header,
             List.of(goalCount), // parameters
-            List.of(new ElementReactionTrigger(1, goalCount, getReactionType(params.subList(0, 4)), EntityMonster.class, true)),
+            List.of(new ElementReactionTrigger(1, goalCount, getReactionType(params.subList(0, 4)), true)),
             params.get(params.size() - 2), params.get(params.size() - 1) // success count, fail count
         );
     }

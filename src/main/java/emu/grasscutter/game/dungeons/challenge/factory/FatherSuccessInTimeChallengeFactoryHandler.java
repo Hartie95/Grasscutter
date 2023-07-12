@@ -29,7 +29,7 @@ public class FatherSuccessInTimeChallengeFactoryHandler implements ChallengeFact
             scene, group,
             header,
             params, // parameters
-            List.of(new FatherTrigger(), new TimeTrigger(3, params.get(2), true)),
+            List.of(new FatherTrigger(), new TimeTrigger(3, params.get(2))),
             params.get(0), params.get(1) // success count, fail count
         );
     }

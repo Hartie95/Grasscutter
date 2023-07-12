@@ -6,6 +6,7 @@ import emu.grasscutter.game.entity.EntityMonster;
 import emu.grasscutter.game.entity.GameEntity;
 import emu.grasscutter.game.props.ElementReactionType;
 import emu.grasscutter.scripts.data.SceneTrigger;
+import emu.grasscutter.server.packet.send.PacketChallengeDataNotify;
 import lombok.Getter;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,16 +15,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class ChallengeTrigger {
     private final int paramIndex;
     private final AtomicInteger score = new AtomicInteger(0);
-    private final int goal;
+    private final AtomicInteger goal;
 
     public ChallengeTrigger (int paramIndex, int goal) {
         this.paramIndex = paramIndex;
-        this.goal = goal;
+        this.goal = new AtomicInteger(goal);
     }
     /**
      * Trigger start action, sends PacketChallengeDataNotify
      */
-    public void onBegin(WorldChallenge challenge){}
+    public void onBegin(WorldChallenge challenge){
+        if (getParamIndex() < 0) return;
+
+        challenge.getScene().broadcastPacket(new PacketChallengeDataNotify(challenge, getParamIndex(), getScore().get()));
+    }
     /**
      * Trigger ends action
      */
@@ -44,6 +49,9 @@ public abstract class ChallengeTrigger {
      * Trigger when damaging gadget
      */
     public void onGadgetDamage(WorldChallenge challenge, EntityGadget gadget){}
+    /**
+     * Trigger when interact with gadget, i.e. kill barrels, slime balloons etc.
+     */
     public void onGroupTrigger(WorldChallenge challenge, SceneTrigger trigger){}
     /**
      * Trigger when an elemental reaction occurred

@@ -15,17 +15,12 @@ public class TriggerGroupTriggerTrigger extends ChallengeTrigger{
     }
 
     @Override
-    public void onBegin(WorldChallenge challenge) {
-        challenge.getScene().broadcastPacket(new PacketChallengeDataNotify(challenge, getParamIndex(), getScore().get()));
-    }
-
-    @Override
     public void onGroupTrigger(WorldChallenge challenge, SceneTrigger trigger) {
         if(!getTriggerTag().equals(trigger.getTag())) return;
 
         int newScore = getScore().incrementAndGet();
         onBegin(challenge);
 
-        if(newScore >= getGoal()) challenge.done();
+        if(newScore >= getGoal().get()) challenge.done();
     }
 }

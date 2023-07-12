@@ -3,34 +3,35 @@ package emu.grasscutter.game.dungeons.challenge.factory;
 import emu.grasscutter.game.dungeons.challenge.ChallengeInfo;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.ChallengeType;
-import emu.grasscutter.game.dungeons.challenge.trigger.ElementReactionTrigger;
 import emu.grasscutter.game.dungeons.challenge.trigger.KillMonsterTrigger;
+import emu.grasscutter.game.dungeons.challenge.trigger.TimeTrigger;
+import emu.grasscutter.game.dungeons.challenge.trigger.TriggerGroupTriggerTrigger;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.scripts.data.SceneGroup;
-import lombok.val;
 
 import java.util.List;
 
-import static emu.grasscutter.game.props.ElementReactionType.Freeze;
-public class KillCountFrozenLessChallengeFactoryHandler implements ChallengeFactoryHandler{
+import static emu.grasscutter.game.dungeons.challenge.enums.ChallengeType.CHALLENGE_TRIGGER_IN_TIME_FLY;
+
+public class TriggerInTimeFlyChallengeFactoryHandler implements ChallengeFactoryHandler{
+
     @Override
     public boolean isThisType(ChallengeType challengeType) {
-        // ActiveChallenge with 2, 6, 240014003, 7, 5, 0
-        return challengeType == ChallengeType.CHALLENGE_KILL_COUNT_FROZEN_LESS;
+        // ActiveChallenge with 888,189,25,4,666,5
+        return challengeType == CHALLENGE_TRIGGER_IN_TIME_FLY;
     }
 
     /**
      * Build a new challenge
-     * @param params: [groupId, monsterCountToKill, maximumGotFrozenCount, unused1]
+     * @param params: [timeLimit, unused1, triggerTag, incTimerCount]
      */
     @Override
     public WorldChallenge build(ChallengeInfo header, List<Integer> params, Scene scene, SceneGroup group) {
-        val realGroup = scene.getScriptManager().getGroupById(params.get(0));
         return new WorldChallenge(
-            scene, realGroup,
+            scene, group,
             header,
-            List.of(params.get(1), params.get(2)), // parameters
-            List.of(new KillMonsterTrigger(1, params.get(1)), new ElementReactionTrigger(2, params.get(2), Freeze, false)),
+            List.of(params.get(0), params.get(0)), // parameters
+            List.of(new TimeTrigger(2, params.get(0)), new TriggerGroupTriggerTrigger(0, 1, params.get(2)), new KillMonsterTrigger(0, Integer.MAX_VALUE, params.get(3))),
             0, 0 // success count, fail count
         );
     }
