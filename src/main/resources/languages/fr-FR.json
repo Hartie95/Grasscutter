@@ -223,6 +223,9 @@
       "description": "Ajoute ou termine une quête",
       "enabled": "Quêtes activées."
     },
+    "gadget": {
+      "description": "Modifie le comportement des gadgets"
+    },
     "group": {
       "invalid_groupid": "Invalid group ID.",
       "invalid_suiteid": "Invalid suite ID.",

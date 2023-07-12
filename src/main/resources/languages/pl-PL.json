@@ -223,6 +223,9 @@
       "description": "Dodaj lub wykonaj wskazane zadanie.",
       "enabled": "Questing enabled."
     },
+    "gadget": {
+      "description": "Zmienia zachowanie gadżetu"
+    },
     "group": {
       "invalid_groupid": "Invalid group ID.",
       "invalid_suiteid": "Invalid suite ID.",

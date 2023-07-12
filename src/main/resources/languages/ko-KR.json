@@ -223,6 +223,9 @@
       "description": "퀘스트를 추가하거나 완료합니다.",
       "enabled": "Questing enabled."
     },
+    "gadget": {
+      "description": "가젯 동작 변경"
+    },
     "group": {
       "invalid_groupid": "Invalid group ID.",
       "invalid_suiteid": "Invalid suite ID.",
