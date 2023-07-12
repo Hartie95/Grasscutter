@@ -7,6 +7,10 @@ import lombok.Getter;
 public class TimeTrigger extends ChallengeTrigger{
     @Getter private final boolean RUN_FAIL;
 
+    public TimeTrigger(int paramIndex, int goal){
+        this(paramIndex, goal, true);
+    }
+
     /**
      * Used when challenge have time limit.
      * shouldFail == false represents formal 'ForTimeTrigger'
@@ -22,12 +26,12 @@ public class TimeTrigger extends ChallengeTrigger{
         if (getParamIndex() < 1) return; // when challenge is FreezeInTime
 
         challenge.getScene().broadcastPacket(new PacketChallengeDataNotify(
-            challenge, getParamIndex(), challenge.getStartedAt() + getGoal()));
+            challenge, getParamIndex(), challenge.getStartedAt() + getGoal().get()));
     }
 
     @Override
     public void onCheckTimeout(WorldChallenge challenge) {
-        if(challenge.getScene().getSceneTimeSeconds() - challenge.getStartedAt() <= getGoal()) return;
+        if(challenge.getScene().getSceneTimeSeconds() - challenge.getStartedAt() <= getGoal().get()) return;
 
         if (getParamIndex() < 1) {// when challenge is FreezeInTime
             getScore().set(0);

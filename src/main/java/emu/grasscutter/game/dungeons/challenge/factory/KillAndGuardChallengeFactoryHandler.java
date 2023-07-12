@@ -31,7 +31,7 @@ public class KillAndGuardChallengeFactoryHandler implements ChallengeFactoryHand
             scene, realGroup,
             header,
             List.of(params.get(1), 100), // parameters
-            List.of(new KillMonsterTrigger(1, params.get(1), false), new GuardTrigger(2, params.get(2))),
+            List.of(new KillMonsterTrigger(1, params.get(1)), new GuardTrigger(2, params.get(2))),
             0, 0 // success count, fail count
         );
     }

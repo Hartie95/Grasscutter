@@ -28,7 +28,7 @@ public class KillMonsterCountChallengeFactoryHandler implements ChallengeFactory
             scene, realGroup,
             header,
             List.of(params.get(1)), // parameters
-            List.of(new KillMonsterTrigger(1, params.get(1), false)),
+            List.of(new KillMonsterTrigger(1, params.get(1))),
             0, 0 // success count, fail count
         );
     }

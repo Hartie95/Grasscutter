@@ -42,7 +42,7 @@ public class KillMonsterTimeChallengeFactoryHandler implements ChallengeFactoryH
             scene, realGroup,
             header,
             List.of(params.get(2), params.get(0)), // parameters
-            List.of(new KillMonsterTrigger(1, params.get(2), shouldResetTimer()), new TimeTrigger(2, params.get(0), true)),
+            List.of(new KillMonsterTrigger(1, params.get(2), shouldResetTimer()), new TimeTrigger(2, params.get(0))),
             0, 0 // success count, fail count
         );
     }

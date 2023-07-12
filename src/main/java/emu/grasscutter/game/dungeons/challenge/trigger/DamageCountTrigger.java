@@ -13,11 +13,6 @@ public class DamageCountTrigger extends ChallengeTrigger{
     }
 
     @Override
-    public void onBegin(WorldChallenge challenge) {
-        challenge.getScene().broadcastPacket(new PacketChallengeDataNotify(challenge, getParamIndex(), getScore().get()));
-    }
-
-    @Override
     public void onDamageMonsterOrShield(WorldChallenge challenge, float damage) {
         // Entity.damage() should have checked against the damage type
         int oldScore = getScore().getAndAdd((int) damage);
@@ -25,9 +20,9 @@ public class DamageCountTrigger extends ChallengeTrigger{
         // clip sent damage to not exceed goal
         if (oldScore != getScore().get())
             challenge.getScene().broadcastPacket(new PacketChallengeDataNotify(
-                challenge, getParamIndex(), Math.min(getScore().get(), getGoal())));
+                challenge, getParamIndex(), Math.min(getScore().get(), getGoal().get())));
 
-        if(getScore().get() >= getGoal()){
+        if(getScore().get() >= getGoal().get()){
             challenge.done();
         }
     }

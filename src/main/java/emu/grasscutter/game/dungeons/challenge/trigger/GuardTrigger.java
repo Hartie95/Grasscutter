@@ -14,13 +14,14 @@ public class GuardTrigger extends ChallengeTrigger {
         super(paramIndex, entityToProtectCFGId);
     }
 
+    @Override
     public void onBegin(WorldChallenge challenge) {
         challenge.getScene().broadcastPacket(new PacketChallengeDataNotify(challenge, getParamIndex(), getLastSendPercent()));
     }
 
     @Override
     public void onGadgetDamage(WorldChallenge challenge, EntityGadget gadget) {
-        if(gadget.getConfigId() != getGoal()) return;
+        if(gadget.getConfigId() != getGoal().get()) return;
 
         float curHp = gadget.getFightProperties().get(FightProperty.FIGHT_PROP_CUR_HP.getId());
         float maxHp = gadget.getFightProperties().get(FightProperty.FIGHT_PROP_BASE_HP.getId());
