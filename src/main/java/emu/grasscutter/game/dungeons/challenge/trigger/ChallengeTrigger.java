@@ -25,7 +25,7 @@ public abstract class ChallengeTrigger {
      * Trigger start action, sends PacketChallengeDataNotify
      */
     public void onBegin(WorldChallenge challenge){
-        if (getParamIndex() < 0) return;
+        if (getParamIndex() < 1) return;
 
         challenge.getScene().broadcastPacket(new PacketChallengeDataNotify(challenge, getParamIndex(), getScore().get()));
     }
