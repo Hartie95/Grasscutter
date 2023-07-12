@@ -223,6 +223,9 @@
       "description": "Добавляет (add) или завершает (finish) квесты",
       "enabled": "Questing enabled."
     },
+    "gadget": {
+      "description": "Изменяет поведение гаджета"
+    },
     "group": {
       "invalid_groupid": "Invalid group ID.",
       "invalid_suiteid": "Invalid suite ID.",

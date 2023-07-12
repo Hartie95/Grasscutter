@@ -223,6 +223,9 @@
       "description": "Añade o finaliza misiones",
       "enabled": "Questing enabled."
     },
+    "gadget": {
+      "description": "Cambia el comportamiento del dispositivo"
+    },
     "group": {
       "invalid_groupid": "ID de grupo invalida.",
       "invalid_suiteid": "ID del conjunto invalida.",

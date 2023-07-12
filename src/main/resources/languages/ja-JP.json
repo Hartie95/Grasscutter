@@ -223,6 +223,9 @@
       "description": "クエストを追加または終了する｡",
       "enabled": "Questing enabled."
     },
+    "gadget": {
+      "description": "ガジェットの動作を変更します"
+    },
     "group": {
       "invalid_groupid": "Invalid group ID.",
       "invalid_suiteid": "Invalid suite ID.",
