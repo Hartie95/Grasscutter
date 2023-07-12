@@ -34,7 +34,14 @@ public class TimeTrigger extends ChallengeTrigger{
         if(challenge.getScene().getSceneTimeSeconds() - challenge.getStartedAt() <= getGoal().get()) return;
 
         if (getParamIndex() < 1) {// when challenge is FreezeInTime
-            getScore().set(0);
+            ElementReactionTrigger reactionTrigger = challenge.getChallengeTriggers().stream()
+                .filter(t -> t instanceof ElementReactionTrigger)
+                .map(ElementReactionTrigger.class::cast)
+                .findFirst().orElse(null);
+            if (reactionTrigger == null) return;
+
+            reactionTrigger.getScore().set(0);
+            reactionTrigger.onBegin(challenge);
             challenge.setStartedAt(challenge.getScene().getSceneTimeSeconds());
             return;
         }
