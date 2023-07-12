@@ -5,7 +5,6 @@ import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.ChallengeType;
 import emu.grasscutter.game.dungeons.challenge.trigger.ElementReactionTrigger;
 import emu.grasscutter.game.dungeons.challenge.trigger.TimeTrigger;
-import emu.grasscutter.game.entity.EntityMonster;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.scripts.data.SceneGroup;
 
@@ -29,7 +28,7 @@ public class FreezeEnemyInTimeChallengeFactoryHandler implements ChallengeFactor
             scene, group,
             header,
             List.of(), // parameters
-            List.of(new ElementReactionTrigger(0, params.get(1), Freeze, EntityMonster.class, true), new TimeTrigger(0, params.get(0), true)),
+            List.of(new ElementReactionTrigger(0, params.get(1), Freeze), new TimeTrigger(0, params.get(0))),
             params.get(params.size() - 2), params.get(params.size() - 1) // success count, fail count
         );
     }

@@ -32,7 +32,7 @@ public class TriggerInTimeChallengeFactoryHandler implements ChallengeFactoryHan
             scene, group,
             header,
             List.of(params.get(0), params.get(3)), // parameters
-            List.of(new TimeTrigger(1, params.get(0), true), new TriggerGroupTriggerTrigger(2, params.get(3), params.get(2))),
+            List.of(new TimeTrigger(1, params.get(0)), new TriggerGroupTriggerTrigger(2, params.get(3), params.get(2))),
             0, 0 // success count, fail count
         );
     }

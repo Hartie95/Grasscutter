@@ -5,31 +5,46 @@ import emu.grasscutter.game.entity.EntityMonster;
 import emu.grasscutter.server.packet.send.PacketChallengeDataNotify;
 import lombok.Getter;
 
+
 public class KillMonsterTrigger extends ChallengeTrigger{
     /**
      * For challenge type "KILL_COUNT_FAST", should reset or increment
      * timer after killing one monster
      * */
     @Getter private final boolean RESET_TIMER;
+    /**
+     * For challenge type "KILL_COUNT_FAST", should reset or increment
+     * timer after killing one monster
+     * */
+    @Getter private final int INC_TIMER_COUNT;
+
+
+    public KillMonsterTrigger(int paramIndex, int goal){
+        this(paramIndex, goal, false);
+    }
+
+    public KillMonsterTrigger(int paramIndex, int goal, boolean resetTimer){
+        this(paramIndex, goal, resetTimer, 0);
+    }
+
+    public KillMonsterTrigger(int paramIndex, int goal, int incTimerCount){
+        this(paramIndex, goal, true, incTimerCount);
+    }
 
     /**
      * Used when challenge requires player to kill specific (amount of) monster.
      * Goal will be monster's config id if killing only one monster,
      * otherwise will be the number of monsters to kill.
      * */
-    public KillMonsterTrigger(int paramIndex, int goal, boolean resetTimer){
+    public KillMonsterTrigger(int paramIndex, int goal, boolean resetTimer, int incTimerCount){
         super(paramIndex, goal);
         this.RESET_TIMER = resetTimer;
-    }
-
-    @Override
-    public void onBegin(WorldChallenge challenge) {
-        challenge.getScene().broadcastPacket(new PacketChallengeDataNotify(challenge, getParamIndex(), getScore().get()));
+        this.INC_TIMER_COUNT = incTimerCount;
     }
 
     @Override
     public void onMonsterDeath(WorldChallenge challenge, EntityMonster monster) {
-        if(monster.getConfigId() == getGoal()) { // for challenge killing specific monster
+        if(monster.getConfigId() == getGoal().get()) { // for challenge killing specific monster
             challenge.done();
             return;
         }
@@ -37,14 +52,27 @@ public class KillMonsterTrigger extends ChallengeTrigger{
         int newScore = getScore().incrementAndGet();
         onBegin(challenge);
 
-        if(newScore >= getGoal()) challenge.done();
+        if(newScore >= getGoal().get()) {
+            challenge.done();
+            return;
+        }
 
         if (!isRESET_TIMER()) return;
 
-        // reset time count
-        challenge.setStartedAt(challenge.getScene().getSceneTimeSeconds());
-        challenge.getChallengeTriggers().stream()
+        TimeTrigger trigger = challenge.getChallengeTriggers().stream()
             .filter(t -> t instanceof TimeTrigger)
-            .forEach(t -> t.onBegin(challenge));
+            .map(TimeTrigger.class::cast)
+            .findFirst().orElse(null);
+        if (trigger == null) return;
+
+        if (getINC_TIMER_COUNT() > 0) {
+            // reset time count partially
+            trigger.getGoal().addAndGet(getINC_TIMER_COUNT());
+        } else {
+            // reset time count
+            challenge.setStartedAt(challenge.getScene().getSceneTimeSeconds());
+        }
+
+        trigger.onBegin(challenge);
     }
 }
