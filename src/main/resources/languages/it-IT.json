@@ -216,6 +216,9 @@
       "invalid_id": "ID missione non valido.",
       "description": "Aggiungi o completa missioni"
     },
+    "gadget": {
+      "description": "Modifica il comportamento del gadget"
+    },
     "group": {
       "invalid_groupid": "Invalid group ID.",
       "invalid_suiteid": "Invalid suite ID.",

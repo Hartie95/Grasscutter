@@ -223,12 +223,15 @@
       "description": "添加或完成任務",
       "enabled": "Questing enabled."
     },
+    "gadget": {
+      "description": "更改小工具行為"
+    },
     "group": {
-      "invalid_groupid": "Invalid group ID.",
-      "invalid_suiteid": "Invalid suite ID.",
-      "group_not_found": "Group not found.",
-      "description": "Alter group loading",
-      "refreshed": "Group %s refreshed."
+      "invalid_groupid": "無效的group ID.",
+      "invalid_suiteid": "無效的suite ID.",
+      "group_not_found": "Group不存在.",
+      "description": "自由加載Group",
+      "refreshed": "Group %s 已刷新."
     },
     "cutscene": {
       "description": "Plays a cutscene"

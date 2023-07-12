@@ -223,6 +223,9 @@
       "description": "Adaugă sau termină misiuni",
       "enabled": "Questing enabled."
     },
+    "gadget": {
+      "description": "Schimbă comportamentul gadgetului"
+    },
     "group": {
       "invalid_groupid": "Invalid group ID.",
       "invalid_suiteid": "Invalid suite ID.",

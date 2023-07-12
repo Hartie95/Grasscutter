@@ -223,6 +223,9 @@
       "description": "Add or finish quests",
       "enabled": "Questing enabled."
     },
+    "gadget": {
+      "description": "Changes Gadget Behaviour"
+    },
     "group": {
       "invalid_groupid": "Invalid group ID.",
       "invalid_suiteid": "Invalid suite ID.",
