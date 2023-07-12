@@ -344,6 +344,10 @@ public class Scene {
             }
         }
         target.damage(result.getDamage(), result.getAttackerId(), attackType);
+
+        if (target instanceof EntityGadget gadget) {
+            Optional.ofNullable(getChallenge()).ifPresent(c -> c.onGadgetDamage(gadget));
+        }
     }
 
     public void killEntity(GameEntity target) {

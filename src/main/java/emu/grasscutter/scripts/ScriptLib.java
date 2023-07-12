@@ -358,6 +358,22 @@ public class ScriptLib {
 		return 0;
 	}
 
+    public int StartChallenge(int challengeIndex, int challengeId, int[] challengeParams) {
+        logger.info("[LUA] Call StartChallenge with {},{},{}", challengeIndex, challengeId, challengeParams);
+        val challenge = ChallengeFactory.getChallenge(
+            new ChallengeInfo(challengeIndex, challengeId, 0),
+            Arrays.stream(challengeParams).boxed().toList(),
+            getSceneScriptManager().getScene(),
+            getCurrentGroup().isPresent() ? getCurrentGroup().get() : null
+        );
+
+        if(challenge == null) return 1;
+
+        getSceneScriptManager().getScene().setChallenge(challenge);
+        challenge.start();
+        return 0;
+    }
+
     public int StopChallenge(int challengeId, int result) {
         logger.debug("[LUA] Call StopChallenge with {}, {}", challengeId, result);
         val challenge = getSceneScriptManager().getScene().getChallenge();

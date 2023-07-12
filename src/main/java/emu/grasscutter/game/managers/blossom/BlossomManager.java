@@ -196,10 +196,9 @@ public class BlossomManager extends BasePlayerDataManager {
     public void loadBlossomGroup() {
         if (getScene() == null) return;
 
-        getBlossomSchedule().values().forEach(schedule -> {
-//            Grasscutter.getLogger().info("{}", schedule.getGroupId());
-            getScene().loadDynamicGroup(schedule.getGroupId());
-        });
+        getBlossomSchedule().values().stream()
+            .filter(schedule -> schedule.getSceneId() == getScene().getId())
+            .forEach(schedule -> getScene().loadDynamicGroup(schedule.getGroupId()));
     }
 
     public int getWorldLevel() {

@@ -412,6 +412,8 @@ public class SceneScriptManager {
             var visionOptions = Grasscutter.config.server.game.visionOptions;
             meta.blocks.values().forEach(block -> {
                 block.load(sceneId, meta.context);
+                if (block.groups == null) return;
+
                 block.groups.values().stream().filter(g -> !g.dynamic_load).forEach(group -> {
                     group.load(this.scene.getId());
 
@@ -578,7 +580,6 @@ public class SceneScriptManager {
             })
             .map(g -> createGadget(group.id, group.block_id, g, groupInstance.getCachedGadgetState(g)))
             .peek(g -> groupInstance.cacheGadgetState(g.getMetaGadget(), g.getState()))
-            .filter(Objects::nonNull)
             .toList();
     }
     public List<EntityMonster> getMonstersInGroupSuite(SceneGroupInstance groupInstance, SceneSuite suite) {

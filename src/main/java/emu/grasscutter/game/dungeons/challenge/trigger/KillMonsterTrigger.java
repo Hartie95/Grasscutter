@@ -8,16 +8,11 @@ import lombok.Getter;
 
 public class KillMonsterTrigger extends ChallengeTrigger{
     /**
-     * For challenge type "KILL_COUNT_FAST", should reset or increment
+     * For challenge type i.e. "KILL_COUNT_FAST", should reset or increment
      * timer after killing one monster
      * */
     @Getter private final boolean RESET_TIMER;
-    /**
-     * For challenge type "KILL_COUNT_FAST", should reset or increment
-     * timer after killing one monster
-     * */
     @Getter private final int INC_TIMER_COUNT;
-
 
     public KillMonsterTrigger(int paramIndex, int goal){
         this(paramIndex, goal, false);
@@ -35,6 +30,7 @@ public class KillMonsterTrigger extends ChallengeTrigger{
      * Used when challenge requires player to kill specific (amount of) monster.
      * Goal will be monster's config id if killing only one monster,
      * otherwise will be the number of monsters to kill.
+     * Will also reset/increment time limit for specific challenges
      * */
     public KillMonsterTrigger(int paramIndex, int goal, boolean resetTimer, int incTimerCount){
         super(paramIndex, goal);
