@@ -6,31 +6,30 @@ import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.ChallengeType;
 import emu.grasscutter.game.dungeons.challenge.trigger.FatherTrigger;
 import emu.grasscutter.game.dungeons.challenge.trigger.TimeTrigger;
+import emu.grasscutter.game.dungeons.challenge.trigger.TriggerGroupTriggerTrigger;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.scripts.data.SceneGroup;
 
 import java.util.List;
 
-import static emu.grasscutter.game.dungeons.challenge.enums.ChallengeType.CHALLENGE_FATHER_SUCC_IN_TIME;
-
-public class FatherSuccessTimeChallengeFactoryHandler implements ChallengeFactoryHandler{
-
+public class TriggerCountChallengeFactoryHandler implements ChallengeFactoryHandler {
     @Override
     public boolean isThisType(ChallengeType challengeType) {
-        return challengeType == CHALLENGE_FATHER_SUCC_IN_TIME;
+        // AttachChildChallenge with 100, 1001, 65, { 2,998,2 }
+        return challengeType == ChallengeType.CHALLENGE_TRIGGER_COUNT;
     }
 
     /**
      * Build a new challenge
-     * @param params: [succCount, failCount, timeLimit]
+     * @param params: [unused1, triggerTag, triggerCount]
      */
     @Override
     public WorldChallenge build(ChallengeInfo header, List<Integer> params, ChallengeScoreInfo scoreInfo, Scene scene, SceneGroup group) {
         return new WorldChallenge(
             scene, group,
             header,
-            params, // parameters
-            List.of(new FatherTrigger(), new TimeTrigger(3, params.get(2))),
+            List.of(params.get(2)), // parameters
+            List.of(new TriggerGroupTriggerTrigger(1, params.get(2), params.get(1))),
             scoreInfo
         );
     }
