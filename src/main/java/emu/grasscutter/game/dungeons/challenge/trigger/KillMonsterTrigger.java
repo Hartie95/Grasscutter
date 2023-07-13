@@ -2,7 +2,6 @@ package emu.grasscutter.game.dungeons.challenge.trigger;
 
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.entity.EntityMonster;
-import emu.grasscutter.server.packet.send.PacketChallengeDataNotify;
 import lombok.Getter;
 
 

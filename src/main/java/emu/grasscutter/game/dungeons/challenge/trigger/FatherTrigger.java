@@ -31,7 +31,7 @@ public class FatherTrigger extends ChallengeTrigger{
     @Override
     public void onIncFailSuccScore(WorldChallenge challenge, boolean useSucc, int score) {
         // should add score from CHILD challenge and check against count from FATHER challenge
-        int condCount = useSucc ? challenge.getSuccessCount() : challenge.getFailCount();
+        int condCount = challenge.getScoreInfo().get(useSucc);
         int newScore = useSucc ? getScore().addAndGet(score) : getFailScore().addAndGet(score);
         onBegin(challenge);
         if (newScore < condCount) return;

@@ -19,8 +19,8 @@ public class DungeonChallenge extends WorldChallenge {
                             ChallengeInfo header,
                             List<Integer> paramList,
                             List<ChallengeTrigger> challengeTriggers,
-                            int successCount, int failCount) {
-        super(scene, group, header, paramList, challengeTriggers, successCount, failCount);
+                            ChallengeScoreInfo scoreInfo) {
+        super(scene, group, header, paramList, challengeTriggers, scoreInfo);
     }
 
     public boolean isStage() {

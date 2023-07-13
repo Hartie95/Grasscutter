@@ -1,6 +1,7 @@
 package emu.grasscutter.game.dungeons.challenge.factory;
 
 import emu.grasscutter.game.dungeons.challenge.ChallengeInfo;
+import emu.grasscutter.game.dungeons.challenge.ChallengeScoreInfo;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.ChallengeType;
 import emu.grasscutter.game.dungeons.challenge.trigger.ElementReactionTrigger;
@@ -57,21 +58,21 @@ public class ElementReactionCountChallengeFactoryHandler implements ChallengeFac
 
     /**
      * Build a new challenge
-     * @param params: 1) [reactionType, goal, unused1, unused2, successCount, failCount] or
-     *              2) [Fire, Water, Electric, Ice, goalCount, successCount, failCount],
+     * @param params: 1) [reactionType, goal, unused1, unused2] or
+     *              2) [Fire, Water, Electric, Ice, goalCount],
      *              first four parameters are one hot encoded
      */
     @Override
-    public WorldChallenge build(ChallengeInfo header, List<Integer> params, Scene scene, SceneGroup group) {
-        // normal reaction if size == 6, crystallise or swirl if more than 6
-        int goalCount = params.size() > 6 ? params.get(4) : params.get(1);
+    public WorldChallenge build(ChallengeInfo header, List<Integer> params, ChallengeScoreInfo scoreInfo, Scene scene, SceneGroup group) {
+        // normal reaction if size == 4, crystallise or swirl if more than 4
+        int goalCount = params.size() > 4 ? params.get(4) : params.get(1);
 
         return new WorldChallenge(
             scene, group,
             header,
             List.of(goalCount), // parameters
             List.of(new ElementReactionTrigger(1, goalCount, getReactionType(params.subList(0, 4)), true)),
-            params.get(params.size() - 2), params.get(params.size() - 1) // success count, fail count
+            scoreInfo
         );
     }
 }

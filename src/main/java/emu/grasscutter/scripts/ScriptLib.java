@@ -4,6 +4,7 @@ import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.game.activity.ActivityManager;
 import emu.grasscutter.game.dungeons.challenge.ChallengeInfo;
+import emu.grasscutter.game.dungeons.challenge.ChallengeScoreInfo;
 import emu.grasscutter.game.dungeons.challenge.DungeonChallenge;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.FatherChallengeProperty;
@@ -341,6 +342,7 @@ public class ScriptLib {
 		val challenge = ChallengeFactory.getChallenge(
                 new ChallengeInfo(challengeIndex, challengeId, 0),
                 List.of(timeLimitOrGroupId, groupId, objectiveKills, param5),
+                new ChallengeScoreInfo(0, 0),
 				getSceneScriptManager().getScene(),
                 getCurrentGroup().isPresent() ? getCurrentGroup().get() : null
 				);
@@ -363,6 +365,7 @@ public class ScriptLib {
         val challenge = ChallengeFactory.getChallenge(
             new ChallengeInfo(challengeIndex, challengeId, 0),
             Arrays.stream(challengeParams).boxed().toList(),
+            new ChallengeScoreInfo(0, 0),
             getSceneScriptManager().getScene(),
             getCurrentGroup().isPresent() ? getCurrentGroup().get() : null
         );
@@ -891,7 +894,8 @@ public class ScriptLib {
 
         WorldChallenge challenge = ChallengeFactory.getChallenge(
             new ChallengeInfo(challengeIndex, challengeId, challengeIndex),
-            List.of(conditionTable.get("success").toint(), conditionTable.get("fail").toint(), timeLimit),
+            List.of(timeLimit),
+            new ChallengeScoreInfo(conditionTable.get("success").toint(), conditionTable.get("fail").toint()),
             getSceneScriptManager().getScene(),
             getCurrentGroup().isPresent() ? getCurrentGroup().get() : null
         );
@@ -930,12 +934,11 @@ public class ScriptLib {
             fatherChallengeIndex, childChallengeIndex, childChallengeId, conditionArray, var5, conditionTable);
 
         List<Integer> conditionList = new ArrayList<>(Arrays.stream(conditionArray).boxed().toList());
-        conditionList.add(conditionTable.get("success").toint());
-        conditionList.add(conditionTable.get("fail").toint());
 
         WorldChallenge challenge = ChallengeFactory.getChallenge(
             new ChallengeInfo(childChallengeIndex, childChallengeId, fatherChallengeIndex),
             conditionList,
+            new ChallengeScoreInfo(conditionTable.get("success").toint(), conditionTable.get("fail").toint()),
             getSceneScriptManager().getScene(),
             getCurrentGroup().isPresent() ? getCurrentGroup().get() : null
         );
@@ -1092,6 +1095,7 @@ public class ScriptLib {
         logger.warn("[LUA] unimplemented Call StartSealBattle with {} {}", gadgetId, printTable(var2));
         //TODO implement var2 contain int radius, int battle_time, int monster_group_id, int default_kill_charge, int auto_charge, int auto_decline, int max_energy, SealBattleType battleType
         // for type KILL_MONSTER watch group monster_group_id and afterwards trigger EVENT_SEAL_BATTLE_END with the result in param2
+//        [LUA] unimplemented Call StartSealBattle with 1817 {kill_time:100,max_progress:10,radius:18,monster_group_id:133001275,battle_type:2,}
         return 0;
     }
 

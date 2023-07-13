@@ -36,25 +36,25 @@ public class WorldChallenge {
     private int startedAt;
     private int finishedTime;
     /**
-     * Father challenge related info
+     * Father and child challenge related info
      * */
     private final List<WorldChallenge> childChallenge = new ArrayList<>();
     private WorldChallenge fatherChallenge = null;
-    private final int successCount;
-    private final int failCount;
+    private final ChallengeScoreInfo scoreInfo;
 
+    // info: currentChallengeIndex, currentChallengeId, fatherChallengeIndex
+    // scoreInfo: success count, fail count
     public WorldChallenge(Scene scene, SceneGroup group,
                           ChallengeInfo info,
                           List<Integer> paramList,
                           List<ChallengeTrigger> challengeTriggers,
-                          int successCount, int failCount){
+                          ChallengeScoreInfo scoreInfo){
         this.scene = scene;
         this.group = group;
         this.info = info;
         this.paramList = paramList;
         this.challengeTriggers = challengeTriggers;
-        this.successCount = successCount;
-        this.failCount = failCount;
+        this.scoreInfo = scoreInfo;
     }
 
     /**
@@ -152,7 +152,7 @@ public class WorldChallenge {
         setFinishedTime(getScene().getSceneTimeSeconds() - getStartedAt());
         getScene().broadcastPacket(new PacketDungeonChallengeFinishNotify(this));
         Optional.ofNullable(getFatherChallenge()).ifPresent(fc ->
-            fc.onIncFailSuccScore(success, success ? getSuccessCount() : getFailCount()));
+            fc.onIncFailSuccScore(success, getScoreInfo().get(success)));
     }
 
     /**

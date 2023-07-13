@@ -5,7 +5,6 @@ import emu.grasscutter.game.entity.EntityAvatar;
 import emu.grasscutter.game.entity.EntityMonster;
 import emu.grasscutter.game.entity.GameEntity;
 import emu.grasscutter.game.props.ElementReactionType;
-import emu.grasscutter.server.packet.send.PacketChallengeDataNotify;
 import lombok.Getter;
 
 import java.util.List;
