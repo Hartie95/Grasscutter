@@ -377,12 +377,12 @@ public class ScriptLib {
         return 0;
     }
 
-    public int StopChallenge(int challengeId, int result) {
-        logger.debug("[LUA] Call StopChallenge with {}, {}", challengeId, result);
+    public int StopChallenge(int challengeIndex, int result) {
+        logger.debug("[LUA] Call StopChallenge with {}, {}", challengeIndex, result);
         val challenge = getSceneScriptManager().getScene().getChallenge();
         if(challenge == null) return 1;
 
-        if(challenge.getInfo().challengeId() != challengeId) return 2;
+        if(challenge.getInfo().challengeIndex() != challengeIndex) return 2;
 
         switch (result) {
             case 0 -> challenge.fail();

@@ -191,9 +191,6 @@ public class EntityGadget extends EntityBaseGadget {
         if (this.getSpawnEntry() != null) {
             this.getScene().getDeadSpawnedEntities().add(getSpawnEntry());
         }
-        if (getScene().getChallenge() != null) {
-            getScene().getChallenge().onGadgetDeath(this);
-        }
         getScene().getScriptManager().callEvent(new ScriptArgs(this.getGroupId(), EventType.EVENT_ANY_GADGET_DIE, this.getConfigId()));
 
         SceneGroupInstance groupInstance = getScene().getScriptManager().getCachedGroupInstanceById(this.getGroupId());

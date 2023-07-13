@@ -105,8 +105,6 @@ public class WorldChallenge {
         if(!inProgress()) return;
 
         finish(true);
-        getChallengeTriggers().forEach(t -> t.onFinish(this));
-
         if (getScene().getDungeonManager() != null && getScene().getDungeonManager().getDungeonData() != null) {
             getScene().getPlayers().forEach(p -> p.getActivityManager().triggerWatcher(
                 WatcherTriggerType.TRIGGER_FINISH_CHALLENGE,
@@ -115,7 +113,6 @@ public class WorldChallenge {
                 String.valueOf(getInfo().challengeId())
             ));
         }
-
         getScene().getScriptManager().callEvent(
                 // TODO record the time in PARAM2 and used in action
                 new ScriptArgs(getGroupId(), EventType.EVENT_CHALLENGE_SUCCESS)
@@ -134,11 +131,8 @@ public class WorldChallenge {
         if(!inProgress()) return;
 
         finish(false);
-        getChallengeTriggers().forEach(t -> t.onFinish(this));
-
         this.getScene().getScriptManager().callEvent(new ScriptArgs(getGroupId(), EventType.EVENT_CHALLENGE_FAIL)
             .setEventSource(Integer.toString(getInfo().challengeIndex())));
-
         getChildChallenge().forEach(WorldChallenge::fail);
     }
 
@@ -161,6 +155,7 @@ public class WorldChallenge {
     public void onCheckTimeOut(){
         if(!inProgress()) return;
 
+
         getChallengeTriggers().forEach(t -> t.onCheckTimeout(this));
         getChildChallenge().stream().filter(WorldChallenge::inProgress)
             .forEach(cc -> cc.getChallengeTriggers().forEach(t -> t.onCheckTimeout(cc)));
@@ -176,14 +171,6 @@ public class WorldChallenge {
         getChallengeTriggers().forEach(t -> t.onMonsterDeath(this, monster));
         getChildChallenge().stream().filter(WorldChallenge::inProgress)
             .forEach(cc -> cc.getChallengeTriggers().forEach(t -> t.onMonsterDeath(cc, monster)));
-    }
-
-    public void onGadgetDeath(EntityGadget gadget){
-        if(!inProgress() || gadget.getGroupId() != getGroupId()) return;
-
-        getChallengeTriggers().forEach(t -> t.onGadgetDeath(this, gadget));
-        getChildChallenge().stream().filter(WorldChallenge::inProgress)
-            .forEach(cc -> cc.getChallengeTriggers().forEach(t -> t.onGadgetDeath(cc, gadget)));
     }
 
     public void onGroupTriggerDeath(SceneTrigger trigger){
