@@ -1,6 +1,7 @@
 package emu.grasscutter.game.dungeons.challenge.factory;
 
 import emu.grasscutter.game.dungeons.challenge.ChallengeInfo;
+import emu.grasscutter.game.dungeons.challenge.ChallengeScoreInfo;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.ChallengeType;
 import emu.grasscutter.game.dungeons.challenge.trigger.GuardTrigger;
@@ -13,7 +14,7 @@ import lombok.val;
 import java.util.List;
 import static emu.grasscutter.game.dungeons.challenge.enums.ChallengeType.CHALLENGE_GUARD_HP;
 
-public class KillAndGuardInTimeChallengeFactoryHandler implements ChallengeFactoryHandler{
+public class KillCountGuardTimeChallengeFactoryHandler implements ChallengeFactoryHandler{
     @Override
     public boolean isThisType(ChallengeType challengeType) {
         // StartChallenge with 666, 251,{ 120,133210421,421007,0,5 } or
@@ -27,7 +28,7 @@ public class KillAndGuardInTimeChallengeFactoryHandler implements ChallengeFacto
      *                [timeLimit, groupId, gadgetCFGId, incTimerCount(pretty sure)]
      */
     @Override
-    public WorldChallenge build(ChallengeInfo header, List<Integer> params, Scene scene, SceneGroup group) {
+    public WorldChallenge build(ChallengeInfo header, List<Integer> params, ChallengeScoreInfo scoreInfo, Scene scene, SceneGroup group) {
         val realGroup = scene.getScriptManager().getGroupById(params.get(1));
         int goal = realGroup == null || realGroup.monsters == null ? 0 : realGroup.monsters.size();
 
@@ -36,7 +37,7 @@ public class KillAndGuardInTimeChallengeFactoryHandler implements ChallengeFacto
             header,
             List.of(100, params.get(0), params.get(params.size()-1)), // parameters
             List.of(new GuardTrigger(1, params.get(2)), new TimeTrigger(2, params.get(0)), new KillMonsterTrigger(3, goal, params.get(params.size()-1))),
-            0, 0 // success count, fail count
+            scoreInfo
         );
     }
 }
