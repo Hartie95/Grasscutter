@@ -30,17 +30,9 @@ public abstract class ChallengeTrigger {
         challenge.getScene().broadcastPacket(new PacketChallengeDataNotify(challenge, getParamIndex(), getScore().get()));
     }
     /**
-     * Trigger ends action
-     */
-    public void onFinish(WorldChallenge challenge){}
-    /**
      * Trigger when monster died
      */
     public void onMonsterDeath(WorldChallenge challenge, EntityMonster monster){}
-    /**
-     * Trigger when gadget died
-     */
-    public void onGadgetDeath(WorldChallenge challenge, EntityGadget gadget){}
     /**
      * Trigger constantly to check if challenge progress exceeds time limit
      */
