@@ -265,7 +265,7 @@ public class ScriptLib {
 		// avoid spawn wrong monster
 		if(getSceneScriptManager().getScene().getChallenge() != null)
 			if(!getSceneScriptManager().getScene().getChallenge().inProgress() ||
-					getSceneScriptManager().getScene().getChallenge().getGroup().id != groupId){
+					getSceneScriptManager().getScene().getChallenge().getGroupId() != groupId){
 			return 0;
 		}
 		this.getSceneScriptManager().addGroupSuite(groupInstance, suiteData);
@@ -894,8 +894,8 @@ public class ScriptLib {
 
         WorldChallenge challenge = ChallengeFactory.getChallenge(
             new ChallengeInfo(challengeIndex, challengeId, challengeIndex),
-            List.of(timeLimit),
-            new ChallengeScoreInfo(conditionTable.get("success").toint(), conditionTable.get("fail").toint()),
+            List.of(conditionTable.get("success").checkint(), conditionTable.get("fail").checkint(), timeLimit),
+            new ChallengeScoreInfo(conditionTable.get("success").checkint(), conditionTable.get("fail").checkint()),
             getSceneScriptManager().getScene(),
             getCurrentGroup().isPresent() ? getCurrentGroup().get() : null
         );
@@ -933,12 +933,10 @@ public class ScriptLib {
         logger.debug("[LUA] Call AttachChildChallenge with {} {} {} {} {} {}",
             fatherChallengeIndex, childChallengeIndex, childChallengeId, conditionArray, var5, conditionTable);
 
-        List<Integer> conditionList = new ArrayList<>(Arrays.stream(conditionArray).boxed().toList());
-
         WorldChallenge challenge = ChallengeFactory.getChallenge(
             new ChallengeInfo(childChallengeIndex, childChallengeId, fatherChallengeIndex),
-            conditionList,
-            new ChallengeScoreInfo(conditionTable.get("success").toint(), conditionTable.get("fail").toint()),
+            Arrays.stream(conditionArray).boxed().toList(),
+            new ChallengeScoreInfo(conditionTable.get("success").checkint(), conditionTable.get("fail").checkint()),
             getSceneScriptManager().getScene(),
             getCurrentGroup().isPresent() ? getCurrentGroup().get() : null
         );

@@ -79,6 +79,8 @@ public class WorldChallenge {
     public void attachChild(WorldChallenge childChallenge) {
         getChildChallenge().add(childChallenge);
         childChallenge.setFatherChallenge(this);
+
+        if (inProgress()) childChallenge.start(); // some child challenges will be added after father challenge started
     }
 
     /**
@@ -104,7 +106,6 @@ public class WorldChallenge {
 
         finish(true);
         getChallengeTriggers().forEach(t -> t.onFinish(this));
-        if (getFatherChallenge() != null) return; // means that this is a child challenge
 
         if (getScene().getDungeonManager() != null && getScene().getDungeonManager().getDungeonData() != null) {
             getScene().getPlayers().forEach(p -> p.getActivityManager().triggerWatcher(
@@ -134,7 +135,6 @@ public class WorldChallenge {
 
         finish(false);
         getChallengeTriggers().forEach(t -> t.onFinish(this));
-        if (getFatherChallenge() != null) return; // means that this is a child challenge
 
         this.getScene().getScriptManager().callEvent(new ScriptArgs(getGroupId(), EventType.EVENT_CHALLENGE_FAIL)
             .setEventSource(Integer.toString(getInfo().challengeIndex())));
