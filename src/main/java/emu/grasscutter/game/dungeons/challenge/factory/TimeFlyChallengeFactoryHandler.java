@@ -1,6 +1,7 @@
 package emu.grasscutter.game.dungeons.challenge.factory;
 
 import emu.grasscutter.game.dungeons.challenge.ChallengeInfo;
+import emu.grasscutter.game.dungeons.challenge.ChallengeScoreInfo;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.ChallengeType;
 import emu.grasscutter.game.dungeons.challenge.trigger.KillMonsterTrigger;
@@ -25,14 +26,14 @@ public class TimeFlyChallengeFactoryHandler implements ChallengeFactoryHandler {
      * @param params: [groupId, monsterKillCount, timeLimit, incTimerCount]
      */
     @Override
-    public WorldChallenge build(ChallengeInfo header, List<Integer> params, Scene scene, SceneGroup group) {
+    public WorldChallenge build(ChallengeInfo header, List<Integer> params, ChallengeScoreInfo scoreInfo, Scene scene, SceneGroup group) {
         val realGroup = scene.getScriptManager().getGroupById(params.get(0));
         return new WorldChallenge(
             scene, realGroup,
             header,
             List.of(params.get(1), params.get(2)), // parameters
             List.of(new KillMonsterTrigger(1, params.get(1), params.get(3)), new TimeTrigger(2, params.get(2))),
-            0, 0 // success count, fail count
+            scoreInfo
         );
     }
 }
