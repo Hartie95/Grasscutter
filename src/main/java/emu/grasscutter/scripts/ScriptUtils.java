@@ -1,10 +1,8 @@
 package emu.grasscutter.scripts;
 
 import java.util.HashMap;
-import java.util.List;
 
 import emu.grasscutter.utils.Position;
-import lombok.val;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 
@@ -45,13 +43,6 @@ public class ScriptUtils {
     }
 
     public static Position luaToPos(LuaValue position){
-        val result = new Position();
-        if(position != null && !position.isnil()){
-            result.setX(position.get("x").optint(0));
-            result.setY(position.get("y").optint(0));
-            result.setZ(position.get("z").optint(0));
-        }
-
-        return result;
+        return ScriptLoader.getSerializer().toObject(Position.class, position);
     }
 }

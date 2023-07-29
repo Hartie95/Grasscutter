@@ -17,16 +17,16 @@ import java.util.Optional;
 import static emu.grasscutter.game.dungeons.challenge.enums.ChallengeType.CHALLENGE_NONE;
 
 public class ChallengeFactory {
-    @Getter private static final List<ChallengeFactoryHandler> challengeFactoryHandlers = new ArrayList<>();
+    private static final List<ChallengeFactoryHandler> challengeFactoryHandlers = new ArrayList<>();
 
     static {
         // Use reflection to scan and find the classes that implement the interface
-        Reflections reflections = new Reflections("emu.grasscutter.game.dungeons.challenge.factory");
+        Reflections reflections = new Reflections(ChallengeFactory.class.getPackage().getName());
 
         // Instantiate objects of those classes dynamically
         reflections.getSubTypesOf(ChallengeFactoryHandler.class).forEach(clazz -> {
             try {
-                getChallengeFactoryHandlers().add(clazz.getDeclaredConstructor().newInstance());
+                challengeFactoryHandlers.add(clazz.getDeclaredConstructor().newInstance());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -37,12 +37,12 @@ public class ChallengeFactory {
      * challengeInfo: currentChallengeIndex, currentChallengeId, fatherChallengeIndex
      * */
     public static WorldChallenge getChallenge(ChallengeInfo challengeInfo, List<Integer> params, ChallengeScoreInfo scoreInfo, Scene scene, SceneGroup group){
-        return getChallengeFactoryHandlers().stream()
+        return challengeFactoryHandlers.stream()
             .filter(handler -> handler.isThisType(
                 Optional.ofNullable(GameData.getDungeonChallengeConfigDataMap().get(challengeInfo.challengeId()))
                     .map(DungeonChallengeConfigData::getChallengeType)
-                    .orElse(CHALLENGE_NONE))
-            ).map(handler -> handler.build(challengeInfo, params, scoreInfo, scene, group))
+                    .orElse(CHALLENGE_NONE)))
+            .map(handler -> handler.build(challengeInfo, params, scoreInfo, scene, group))
             .findFirst().orElse(null);
     }
 }

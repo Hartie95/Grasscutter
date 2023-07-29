@@ -31,25 +31,18 @@ public class TimeTrigger extends ChallengeTrigger{
 
     @Override
     public void onCheckTimeout(WorldChallenge challenge) {
-        if(challenge.getScene().getSceneTimeSeconds() - challenge.getStartedAt() <= getGoal().get()) return;
+        if(challenge.getScene().getSceneTimeSeconds() - challenge.getStartedAt() < getGoal().get()) return;
 
         if (getParamIndex() < 1) {// when challenge is FreezeInTime
-            ElementReactionTrigger reactionTrigger = challenge.getChallengeTriggers().stream()
+            challenge.getChallengeTriggers().stream()
                 .filter(t -> t instanceof ElementReactionTrigger)
                 .map(ElementReactionTrigger.class::cast)
-                .findFirst().orElse(null);
-            if (reactionTrigger == null) return;
-
-            reactionTrigger.getScore().set(0);
-            reactionTrigger.onBegin(challenge);
-            challenge.setStartedAt(challenge.getScene().getSceneTimeSeconds());
+                .peek(reactionTrigger -> reactionTrigger.getScore().set(0))
+                .peek(reactionTrigger -> reactionTrigger.onBegin(challenge))
+                .forEach(c -> challenge.setStartedAt(challenge.getScene().getSceneTimeSeconds()));
             return;
         }
 
-        if (isRUN_FAIL()) {
-            challenge.fail();
-        } else {
-            challenge.done();
-        }
+        if (isRUN_FAIL()) challenge.fail(); else challenge.done();
     }
 }

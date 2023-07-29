@@ -1,22 +1,25 @@
 package emu.grasscutter.game.managers.blossom;
 
+import emu.grasscutter.data.GameData;
+import emu.grasscutter.data.common.BaseBlossomROSData;
+import emu.grasscutter.data.excels.BlossomChestData;
 import emu.grasscutter.data.excels.BlossomGroupsData;
-import emu.grasscutter.data.excels.BlossomRefreshData;
+import emu.grasscutter.data.excels.WorldLevelData;
 import emu.grasscutter.game.managers.blossom.enums.BlossomRefreshType;
 import emu.grasscutter.net.proto.BlossomBriefInfoOuterClass.BlossomBriefInfo;
 import emu.grasscutter.net.proto.BlossomScheduleInfoOuterClass.BlossomScheduleInfo;
-import emu.grasscutter.scripts.data.SceneGadget;
+import emu.grasscutter.scripts.data.SceneGroup;
 import emu.grasscutter.utils.Position;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 @Setter
-public class BlossomSchedule {
+@Builder(builderMethodName="of", access=AccessLevel.PRIVATE, setterPrefix="set")
+@ToString
+public class BlossomSchedule implements BaseBlossomROSData {
     // brief info related
     private final int sceneId;
     private final int cityId;
@@ -32,49 +35,58 @@ public class BlossomSchedule {
     private int progress;
     private int round;
     private final int finishProgress;
-    private Set<Integer> remainingUid = new HashSet<>();
+    private final Set<Integer> remainingUid = new HashSet<>();
     // gadget info related
     private final int groupId;
+    private final int decorateGroupId;
     // extra
     private final BlossomRefreshType refreshType;
 
-    public BlossomSchedule(int sceneId, int cityId, Position position, int resin, int monsterLevel, int rewardId,
-                           int circleCampId, int refreshId, int finishProgress,
-                           int groupId, BlossomRefreshType refreshType) {
-        this.sceneId = sceneId;
-        this.cityId = cityId;
-        this.position = position;
-        this.resin = resin;
-        this.monsterLevel = monsterLevel;
-        this.rewardId = rewardId;
+    /**
+     * Builder function
+     * */
+    public static BlossomSchedule create(@NotNull BaseBlossomROSData baseData, @NotNull BlossomGroupsData groupsData,
+                                         int sceneId, int worldLevel) {
 
-        this.circleCampId = circleCampId;
-        this.refreshId = refreshId;
-        this.finishProgress = finishProgress;
-
-        this.groupId = groupId;
-
-        this.refreshType = refreshType;
+        return Optional.ofNullable(SceneGroup.of(groupsData.getNewGroupId()).load(sceneId))
+            .map(group -> group.gadgets)
+            .map(Map::values)
+            .stream().flatMap(Collection::stream)
+            .filter(gadget -> gadget.gadget_id == baseData.getRefreshType().getGadgetId())
+            .map(gadget -> BlossomSchedule.of()
+                .setSceneId(sceneId)
+                .setCityId(baseData.getCityId())
+                .setPosition(gadget.pos)
+                .setResin(getResinCost(baseData.getRefreshType()))
+                .setMonsterLevel(getMonsterLevel(worldLevel))
+                .setRewardId(baseData.getRewardId(worldLevel))
+                .setCircleCampId(groupsData.getId())
+                .setRefreshId(baseData.getRefreshId())
+                .setFinishProgress(groupsData.getFinishProgress())
+                .setGroupId(groupsData.getNewGroupId())
+                .setDecorateGroupId(groupsData.getDecorateGroupId())
+                .setRefreshType(baseData.getRefreshType())
+                .build())
+            .findFirst().orElse(null);
     }
 
-    public BlossomSchedule(@NotNull BlossomRefreshData refreshData, @NotNull BlossomGroupsData groupsData, SceneGadget gadgetData,
-                           int sceneId, int resin, int monsterLevel, int woldLevel, int groupId,
-                           BlossomRefreshType refreshType) {
-        this(sceneId, refreshData.getCityId(),
-            gadgetData == null ? new Position(0f, 0f, 0f) : gadgetData.pos,
-            resin, monsterLevel - refreshData.getReviseLevel(),
-            refreshData.getDropVec().get(woldLevel).getPreviewReward(),
-            groupsData.getId(), refreshData.getId(), groupsData.getFinishProgress(),
-            groupId, refreshType);
+    /**
+     * Get resin cost of current blossom camp
+     * */
+    public static int getResinCost(BlossomRefreshType refreshType) {
+        return GameData.getBlossomChestDataMap().values().stream()
+            .filter(c -> c.getBlossomRefreshType() == refreshType)
+            .map(BlossomChestData::getResin)
+            .findFirst().orElse(0);
     }
 
-    public BlossomSchedule(@NotNull BlossomSchedule oldSchedule, @NotNull BlossomGroupsData groupsData, SceneGadget gadgetData,
-                           int sceneId, int groupId) {
-        this(sceneId, oldSchedule.getCityId(),
-            gadgetData == null ? new Position(0f, 0f, 0f) : gadgetData.pos,
-            oldSchedule.getResin(), oldSchedule.getMonsterLevel(), oldSchedule.getRewardId(),
-            groupsData.getId(), oldSchedule.getRefreshId(), groupsData.getFinishProgress(),
-            groupId, oldSchedule.getRefreshType());
+    /**
+     * Get suitable monster level for player depending on his world level
+     * */
+    public static int getMonsterLevel(int worldLevel){
+        return Optional.ofNullable(GameData.getWorldLevelDataMap().get(worldLevel))
+            .map(WorldLevelData::getMonsterLevel)
+            .orElse(26);
     }
 
     /**
@@ -84,6 +96,13 @@ public class BlossomSchedule {
         if (getProgress() < getFinishProgress()) {
             this.progress += 1;
         }
+    }
+
+    /**
+     * Check if this blossom challenge has finished
+     * */
+    public boolean isFinished() {
+        return getProgress() >= getFinishProgress();
     }
 
     /**
@@ -113,7 +132,15 @@ public class BlossomSchedule {
             .setRewardId(getRewardId())
             .setCircleCampId(getCircleCampId())
             .setRefreshId(getRefreshId())
-            .setState(getState()) // 0: not interacted/started, 1: unknown, 2:started, 3: finished
+            .setState(getState()) // 0: loaded, 1: spawned, 2:started, 3: finished
             .build();
+    }
+
+    /**
+     * Morphic contract to cooperate with refresh data
+     * */
+    @Override
+    public int getRewardId(int worldLevel) {
+        return getRewardId();
     }
 }

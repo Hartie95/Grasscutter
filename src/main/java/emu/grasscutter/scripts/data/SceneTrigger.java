@@ -4,6 +4,7 @@ import lombok.*;
 
 @Data
 @NoArgsConstructor
+@ToString(exclude = "currentGroup")
 // todo find way to deserialize from lua with final fields, maybe with the help of Builder?
 public class SceneTrigger {
 	private String name;
@@ -16,14 +17,5 @@ public class SceneTrigger {
     private String tag;
     private String tlog_tag;
     public boolean forbid_guest;
-
 	public transient SceneGroup currentGroup;
-
-    /**
-     * To prevent unlimited recursion when logging
-     * */
-    public String toString(){
-        return "Name: " + this.name + ", ConfigId: " + this.config_id + ", Event: " + this.event
-            + ", Condition: " + this.condition + ", Action: " + this.action;
-    }
 }

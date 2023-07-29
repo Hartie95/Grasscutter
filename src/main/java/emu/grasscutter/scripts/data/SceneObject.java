@@ -4,7 +4,7 @@ import emu.grasscutter.utils.Position;
 import lombok.Setter;
 import lombok.ToString;
 
-@ToString
+@ToString(exclude = "group")
 @Setter
 public class SceneObject {
     public int level;
