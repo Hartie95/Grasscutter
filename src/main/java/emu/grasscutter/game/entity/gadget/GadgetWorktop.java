@@ -1,6 +1,7 @@
 package emu.grasscutter.game.entity.gadget;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import emu.grasscutter.game.entity.EntityGadget;
 import emu.grasscutter.game.entity.gadget.worktop.WorktopWorktopOptionHandler;
@@ -11,34 +12,29 @@ import emu.grasscutter.net.proto.SelectWorktopOptionReqOuterClass.SelectWorktopO
 import emu.grasscutter.net.proto.WorktopInfoOuterClass.WorktopInfo;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import lombok.Getter;
 
 public class GadgetWorktop extends GadgetContent {
-    private IntSet worktopOptions;
+    @Getter private final IntSet worktopOptions = new IntOpenHashSet();
     private WorktopWorktopOptionHandler handler;
 
     public GadgetWorktop(EntityGadget gadget) {
         super(gadget);
     }
 
-    public IntSet getWorktopOptions() {
-        if (this.worktopOptions == null) {
-            this.worktopOptions = new IntOpenHashSet();
-        }
-        return worktopOptions;
-    }
+//    public IntSet getWorktopOptions() {
+//        if (this.worktopOptions == null) {
+//            this.worktopOptions = new IntOpenHashSet();
+//        }
+//        return this.worktopOptions;
+//    }
 
     public void addWorktopOptions(int[] options) {
-        if (this.worktopOptions == null) {
-            this.worktopOptions = new IntOpenHashSet();
-        }
-        Arrays.stream(options).forEach(this.worktopOptions::add);
+        Arrays.stream(options).forEach(getWorktopOptions()::add);
     }
 
     public void removeWorktopOption(int option) {
-        if (this.worktopOptions == null) {
-            return;
-        }
-        this.worktopOptions.remove(option);
+        getWorktopOptions().remove(option);
     }
 
     public boolean onInteract(Player player, GadgetInteractReq req) {
@@ -46,24 +42,17 @@ public class GadgetWorktop extends GadgetContent {
     }
 
     public void onBuildProto(SceneGadgetInfo.Builder gadgetInfo) {
-        if (this.worktopOptions == null) {
-            return;
-        }
-
-        WorktopInfo worktop = WorktopInfo.newBuilder()
-                .addAllOptionList(getWorktopOptions() == null ? new IntOpenHashSet() : getWorktopOptions())
-                .build();
-
-        gadgetInfo.setWorktop(worktop);
+        gadgetInfo.setWorktop(WorktopInfo.newBuilder()
+            .addAllOptionList(getWorktopOptions())
+            .build());
     }
 
     public void setOnSelectWorktopOptionEvent(WorktopWorktopOptionHandler handler) {
         this.handler = handler;
     }
     public boolean onSelectWorktopOption(SelectWorktopOptionReq req) {
-        if (this.handler != null) {
-            this.handler.onSelectWorktopOption(this, req.getOptionId());
-        }
+        Optional.ofNullable(this.handler)
+            .ifPresent(h -> h.onSelectWorktopOption(this, req.getOptionId()));
         return false;
     }
 

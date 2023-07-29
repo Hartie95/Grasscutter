@@ -141,7 +141,7 @@ public class SceneScriptManager {
         logger.debug("Registered trigger {}", trigger.getName());
     }
 
-    public void deregisterTrigger(List<SceneTrigger> triggers) {
+    public void deregisterTriggers(Collection<SceneTrigger> triggers) {
         triggers.forEach(this::deregisterTrigger);
     }
     public void deregisterTrigger(SceneTrigger trigger) {
@@ -193,12 +193,18 @@ public class SceneScriptManager {
             refreshGroup(groupInstance, groupInstance.getActiveSuiteId(), false); //Refresh the last group triggers
         //}
     }
+
+    public int refreshGroup(int groupId, int suiteIndex, boolean excludePrevSuite) {
+        return refreshGroup(getGroupInstanceById(groupId), suiteIndex, excludePrevSuite);
+    }
+
     public int refreshGroup(SceneGroupInstance groupInstance, int suiteIndex, boolean excludePrevSuite) {
         return refreshGroup(groupInstance, suiteIndex, excludePrevSuite, null, false);
     }
     public int refreshGroup(SceneGroupInstance groupInstance, int suiteIndex, boolean excludePrevSuite, boolean dontLoad) {
         return refreshGroup(groupInstance, suiteIndex, excludePrevSuite, null, dontLoad);
     }
+
     public int refreshGroup(SceneGroupInstance groupInstance, int suiteIndex, boolean excludePrevSuite, List<GameEntity> entitiesAdded) {
         return refreshGroup(groupInstance, suiteIndex, excludePrevSuite, entitiesAdded, false);
     }
@@ -316,6 +322,11 @@ public class SceneScriptManager {
         suite.sceneRegions.stream().map(region -> new EntityRegion(this.getScene(), region))
             .forEach(this::registerRegion);
     }
+
+    public synchronized void deregisterRegions(Collection<SceneRegion> regions) {
+        regions.forEach(this::deregisterRegion);
+    }
+
     public synchronized void deregisterRegion(SceneRegion region) {
         var instance = regions.values().stream()
             .filter(r -> r.getConfigId() == region.config_id)
@@ -633,14 +644,14 @@ public class SceneScriptManager {
         registerRegionInGroupSuite(group, suite);
     }
     public void removeGroupSuite(SceneGroup group, SceneSuite suite) {
-        deregisterTrigger(suite.sceneTriggers);
+        deregisterTriggers(suite.sceneTriggers);
         removeMonstersInGroup(group, suite);
         removeGadgetsInGroup(group, suite);
 
         suite.sceneRegions.forEach(this::deregisterRegion);
     }
     public void killGroupSuite(SceneGroup group, SceneSuite suite) {
-        deregisterTrigger(suite.sceneTriggers);
+        deregisterTriggers(suite.sceneTriggers);
 
         killMonstersInGroup(group, suite);
         killGadgetsInGroup(group, suite);
