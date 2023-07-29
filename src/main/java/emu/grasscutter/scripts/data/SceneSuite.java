@@ -6,7 +6,7 @@ import java.util.List;
 import lombok.Setter;
 import lombok.ToString;
 
-@ToString
+@ToString(exclude = {"sceneMonsters", "sceneGadgets", "sceneTriggers", "sceneRegions"})
 @Setter
 public class SceneSuite {
     // make it refer the default empty list to avoid NPE caused by some group

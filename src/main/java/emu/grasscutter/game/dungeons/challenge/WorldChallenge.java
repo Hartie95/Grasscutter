@@ -83,6 +83,11 @@ public class WorldChallenge {
         if (inProgress()) childChallenge.start(); // some child challenges will be added after father challenge started
     }
 
+    public boolean isThisChallenge(int challengeIndex, int challengeId, int groupId) {
+        return getInfo().challengeIndex() == challengeIndex
+            && getInfo().challengeId() == challengeId && getGroupId() == groupId;
+    }
+
     /**
      * Starts the challenge
      */
@@ -127,13 +132,14 @@ public class WorldChallenge {
     /**
      * Fails the challenge
      */
-    public void fail(){
-        if(!inProgress()) return;
+    public boolean fail(){
+        if(!inProgress()) return false;
 
         finish(false);
-        this.getScene().getScriptManager().callEvent(new ScriptArgs(getGroupId(), EventType.EVENT_CHALLENGE_FAIL)
+        getScene().getScriptManager().callEvent(new ScriptArgs(getGroupId(), EventType.EVENT_CHALLENGE_FAIL)
             .setEventSource(Integer.toString(getInfo().challengeIndex())));
         getChildChallenge().forEach(WorldChallenge::fail);
+        return true;
     }
 
     /**

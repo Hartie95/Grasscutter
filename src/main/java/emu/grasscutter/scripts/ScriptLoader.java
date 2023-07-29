@@ -13,7 +13,6 @@ import emu.grasscutter.scripts.serializer.Serializer;
 import emu.grasscutter.utils.FileUtils;
 import lombok.Getter;
 
-import lombok.val;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -64,13 +63,12 @@ public class ScriptLoader {
         ctx.globals.set("require", new OneArgFunction() {
             @Override
             public LuaValue call(LuaValue filename) {
-                LuaValue result = LuaValue.ZERO;
-                try{
-                    val targetFullPath = FileUtils.getScriptPath("Common/" + filename + ".lua");
-                    result = ctx.globals.loadfile(targetFullPath.toString()).call();
+                try {
+                    return ctx.globals.loadfile(FileUtils.getScriptPath("Common/" + filename + ".lua").toString())
+                        .call(filename);
                 } catch (Exception ignored) {}
 
-                return result;
+                return LuaValue.ZERO;
             }
         });
 
@@ -85,7 +83,7 @@ public class ScriptLoader {
         addEnumByOrdinal(ctx, ChallengeEventMarkType.values(), "ChallengeEventMarkType");
         addEnumByOrdinal(ctx, VisionLevelType.values(), "VisionLevelType");
 
-        ctx.globals.set("EventType", CoerceJavaToLua.coerce(EventType.class)); // TODO - make static class to avoid instantiating a new class every scene
+        ctx.globals.set("EventType", CoerceJavaToLua.coerce(EventType.class));
         ctx.globals.set("GadgetState", CoerceJavaToLua.coerce(ScriptGadgetState.class));
         ctx.globals.set("RegionShape", CoerceJavaToLua.coerce(ScriptRegionShape.class));
 

@@ -2,60 +2,71 @@ package emu.grasscutter.data.excels;
 
 import java.util.List;
 
+import com.google.gson.annotations.SerializedName;
 import emu.grasscutter.data.GameResource;
 import emu.grasscutter.data.ResourceType;
+import emu.grasscutter.data.common.BaseBlossomROSData;
 import emu.grasscutter.game.managers.blossom.enums.BlossomClientShowType;
 import emu.grasscutter.game.managers.blossom.enums.BlossomRefreshCondType;
 import emu.grasscutter.game.managers.blossom.enums.BlossomRefreshType;
-import lombok.AccessLevel;
-import lombok.Getter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @ResourceType(name = "BlossomRefreshExcelConfigData.json")
-@Getter
-public class BlossomRefreshData extends GameResource {
+@EqualsAndHashCode(callSuper = false)
+@Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class BlossomRefreshData extends GameResource implements BaseBlossomROSData {
     @Getter(onMethod = @__(@Override))
-    private int id;
-    // Map details
-    // private long nameTextMapHash;
-    // private long descTextMapHash;
-    // private String icon;
-    private String clientShowType;  // BLOSSOM_SHOWTYPE_CHALLENGE, BLOSSOM_SHOWTYPE_NPCTALK
+    int id;
+    String clientShowType;  // BLOSSOM_SHOWTYPE_CHALLENGE, BLOSSOM_SHOWTYPE_NPCTALK
 
     // Refresh details
-    private String refreshType;  // Leyline blossoms, magical ore outcrops
-    private int refreshCount;  // Number of entries to spawn at refresh (1 for each leyline type for each city, 4 for magical ore for each city)
-    private String refreshTime;  // Server time-of-day to refresh at
-    private List<RefreshCond> refreshCondVec;  // AR requirements etc.
+    @SerializedName(value="refreshType")
+    String refreshTypeString;  // Leyline blossoms, magical ore outcrops
+    int refreshCount;  // Number of entries to spawn at refresh (1 for each leyline type for each city, 4 for magical ore for each city)
+    String refreshTime;  // Server time-of-day to refresh at
+    List<RefreshCond> refreshCondVec;  // AR requirements etc.
 
-    private int cityId;
-    private int blossomChestId;  // 1 for mora, 2 for exp
-    private List<Drop> dropVec;
+    int cityId;
+    int blossomChestId;  // 1 for mora, 2 for exp
+    List<Drop> dropVec;
 
     // Unknown details
-    @Getter private int reviseLevel;
-    @Getter private int campUpdateNeedCount;  // Always 1 if specified
+    int reviseLevel;
+    int campUpdateNeedCount;  // Always 1 if specified
 
-    private transient BlossomClientShowType blossomClientShowType;
+    transient BlossomClientShowType blossomClientShowType;
 
-    private transient BlossomRefreshType blossomRefreshType;
+    transient BlossomRefreshType refreshType;
 
     @Override
     public void onLoad() {
         this.blossomClientShowType = BlossomClientShowType.getTypeByName(this.clientShowType);
-        this.blossomRefreshType = BlossomRefreshType.getTypeByName(this.refreshType);
+        this.refreshType = BlossomRefreshType.getTypeByName(this.refreshTypeString);
         this.refreshCondVec = this.refreshCondVec.stream().filter(cond -> !cond.getParam().isEmpty()).toList();
         this.refreshCondVec.forEach(RefreshCond::onLoad);
     }
 
-    @Getter
+    @Override
+    public int getRefreshId() {
+        return getId();
+    }
+
+    @Override
+    public int getRewardId(int worldLevel) {
+        return getDropVec().get(worldLevel).getPreviewReward();
+    }
+
+    @FieldDefaults(level = AccessLevel.PRIVATE)
+    @Data
     public static class Drop {
         int dropId;
         int previewReward;
     }
 
-    @Getter
     @FieldDefaults(level = AccessLevel.PRIVATE)
+    @Data
     public static class RefreshCond {
         String type;
         List<Integer> param;
