@@ -87,7 +87,6 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static emu.grasscutter.config.Configuration.GAME_OPTIONS;
 
@@ -169,6 +168,7 @@ public class Player {
     @Getter private transient final PlayerBuffManager buffManager;
     @Getter private transient PlayerProgressManager progressManager;
     @Getter private transient final BlossomManager blossomManager;
+    @Getter private transient final DungeonEntryManager dungeonEntryManager;
 
     @Getter @Setter private transient Position lastCheckedPosition = null;
 
@@ -207,6 +207,7 @@ public class Player {
     @Getter private transient final MpSettingType mpSetting = MpSettingType.MP_SETTING_TYPE_ENTER_AFTER_APPLY;  // TODO
     @Getter private long playerGameTime = 540;
     @Getter private final PlayerProgress playerProgress;
+    @Getter private final DungeonEntryItem dungeonEntryItem;
     @Getter private final Set<Integer> activeQuestTimers;
 
     @Deprecated
@@ -253,6 +254,7 @@ public class Player {
         this.unlockedScenePoints = new HashMap<>();
         this.chatEmojiIdList = new ArrayList<>();
         this.playerProgress = new PlayerProgress();
+        this.dungeonEntryItem = new DungeonEntryItem();
         this.activeQuestTimers = new HashSet<>();
 
         this.attackResults = new LinkedBlockingQueue<>();
@@ -280,6 +282,7 @@ public class Player {
         this.cookingManager = new CookingManager(this);
         this.cookingCompoundManager = new CookingCompoundManager(this);
         this.blossomManager = new BlossomManager(this);
+        this.dungeonEntryManager = new DungeonEntryManager(this);
     }
 
     // On player creation
@@ -910,42 +913,24 @@ public class Player {
      * @param scene Current scene.
      */
     public void setAvatarsAbilityForScene(Scene scene){
-        SceneData sData = scene.getSceneData();
-        if (sData == null) return;
-
-        Optional.ofNullable(GameData.getConfigLevelEntityDataMap().get(sData.getLevelEntityConfig()))
-            .ifPresent(config -> {
-                List<EntityAvatar> activeTeam = getTeamManager().getActiveTeam();
-
+        Optional.ofNullable(scene.getSceneData())
+            .map(sData -> GameData.getConfigLevelEntityDataMap().get(sData.getLevelEntityConfig()))
+            .ifPresent(config -> Optional.ofNullable(scene.getSceneData().getSpecifiedAvatarList()).stream()
                 // so far only main character is specified, might be a problem if scene specific other character
-                List<EntityAvatar> specifiedAvatarList = Optional.ofNullable(sData.getSpecifiedAvatarList())
-                    .orElseGet(ArrayList::new).stream()
-                    .filter(id -> id == getMainCharacterId())
-                    .map(id -> getAvatars().getAvatarById(id))
-                    .filter(Objects::nonNull)
-                    .map(avatar -> new EntityAvatar(scene, avatar))
-                    .toList();
-
-                if (!specifiedAvatarList.isEmpty()) {
-                    // clear active team and add only the specific character
-                    activeTeam.clear();
-                    activeTeam.addAll(specifiedAvatarList);
-                }
-
+                .map(aList -> aList.stream().filter(id -> id == this.mainCharacterId).toList())
+                .map(aList -> aList.stream().map(id -> getAvatars().getAvatarById(id))
+                    .filter(Objects::nonNull).toList())
+                .map(aList -> aList.stream().map(avatar -> new EntityAvatar(scene, avatar)).toList())
+                // clear active team and add only the specific character
+                .peek(eList -> getTeamManager().getActiveTeam().clear())
+                .peek(getTeamManager().getActiveTeam()::addAll)
                 // rebuild active team with special abilities
-                activeTeam.stream()
-                    .map(EntityAvatar::getAvatar)
-                    .map(Avatar::getAvatarData)
-                    .filter(Objects::nonNull)
-                    .forEach(avatarData -> {
-                        avatarData.rebuildAbilityEmbryo();
-
-                        Optional.ofNullable(config.getAvatarAbilities())
-                            .orElseGet(ArrayList::new)
-                            .forEach(abilities -> avatarData.getAbilities()
-                                .add(Utils.abilityHash(abilities.getAbilityName())));
-                    });
-            });
+                .flatMap(List::stream).map(EntityAvatar::getAvatar)
+                .map(Avatar::getAvatarData).filter(Objects::nonNull)
+                .peek(AvatarData::rebuildAbilityEmbryo).map(AvatarData::getAbilities)
+                .filter(Objects::nonNull).forEach(abilities -> Optional.ofNullable(config.getAvatarAbilities())
+                    .stream().flatMap(List::stream)
+                    .forEach(configAbility -> abilities.add(Utils.abilityHash(configAbility.getAbilityName())))));
     }
     /**
      * Sends a message to another player.
@@ -1019,13 +1004,12 @@ public class Player {
     }
 
     public List<SocialShowAvatarInfo> socialShowAvatarListProto(List<Integer> avatarIds) {
-        return avatarIds == null ? List.of() : avatarIds.stream()
-            .map(avatarId -> SocialShowAvatarInfo.newBuilder()
-                .setAvatarId(avatarId)
-                .setLevel(getAvatars().getAvatarById(avatarId).getLevel())
-                .setCostumeId(getAvatars().getAvatarById(avatarId).getCostume())
-                .build())
-            .toList();
+        return avatarIds.stream().map(avatarId -> SocialShowAvatarInfo.newBuilder()
+            .setAvatarId(avatarId)
+            .setLevel(getAvatars().getAvatarById(avatarId).getLevel())
+            .setCostumeId(getAvatars().getAvatarById(avatarId).getCostume())
+            .build())
+        .toList();
     }
 
     public SocialDetail.Builder getSocialDetail() {
@@ -1073,8 +1057,7 @@ public class Player {
     }
 
     public List<Integer> getShowNameCardInfoList() {
-        return Optional.ofNullable(getShowNameCardList())
-            .orElseGet(ArrayList::new);
+        return Optional.ofNullable(getShowNameCardList()).orElseGet(ArrayList::new);
     }
 
     public PlayerWorldLocationInfo getWorldPlayerLocationInfo() {
@@ -1095,7 +1078,7 @@ public class Player {
     public void loadBattlePassManager() {
         if (getBattlePassManager() == null) {
             this.battlePassManager = DatabaseHelper.loadBattlePass(this);
-            getBattlePassManager().getMissions().values().removeIf(mission -> mission.getData() == null);
+            this.battlePassManager.getMissions().values().removeIf(mission -> mission.getData() == null);
         }
     }
 
@@ -1138,8 +1121,8 @@ public class Player {
             sendPacket(new PacketWorldPlayerRTTNotify(getWorld()));
 
             // Update player locations if in multiplayer every 5 seconds
-            long time = System.currentTimeMillis();
-            if (getWorld().isMultiplayer() && getScene() != null && time > this.nextSendPlayerLocTime) {
+            if (getWorld().isMultiplayer() && getScene() != null
+                && System.currentTimeMillis() > this.nextSendPlayerLocTime) {
                 sendPacket(new PacketWorldPlayerLocationNotify(getWorld()));
                 sendPacket(new PacketScenePlayerLocationNotify(getScene()));
                 resetSendPlayerLocTime();
@@ -1150,17 +1133,12 @@ public class Player {
         doDailyReset();
 
         // Expedition
-        int timeNow = Utils.getCurrentSeconds();
-        AtomicBoolean needNotify = new AtomicBoolean(false);
+        List<ExpeditionInfo> expeditionInfoList = getExpeditionInfo().values().stream()
+            .filter(e -> e.getState() == 1 && Utils.getCurrentSeconds() - e.getStartTime() >= (e.getHourTime() * 60 * 60))
+            .peek(e -> e.setState(2))
+            .toList();
 
-        getExpeditionInfo().values().stream()
-            .filter(e -> e.getState() == 1 && (timeNow - e.getStartTime() >= e.getHourTime() * 60 * 60))
-            .forEach(e -> {
-                e.setState(2);
-                needNotify.set(true);
-            });
-
-        if (needNotify.get()) {
+        if (!expeditionInfoList.isEmpty()) {
             save();
             sendPacket(new PacketAvatarExpeditionDataNotify(getExpeditionInfo()));
         }
@@ -1181,7 +1159,6 @@ public class Player {
 
         LocalDate currentDate = LocalDate.ofInstant(Instant.ofEpochSecond(currentTime), ZoneId.systemDefault());
         LocalDate lastResetDate = LocalDate.ofInstant(Instant.ofEpochSecond(getLastDailyReset()), ZoneId.systemDefault());
-
         if (!currentDate.isAfter(lastResetDate)) return;
 
         // We should - now execute all the resetting logic we need.
@@ -1196,9 +1173,8 @@ public class Player {
         getBattlePassManager().triggerMission(WatcherTriggerType.TRIGGER_LOGIN);
 
         // Reset weekly BP missions.
-        if (currentDate.getDayOfWeek() == DayOfWeek.MONDAY) {
-            getBattlePassManager().resetWeeklyMissions();
-        }
+        if (currentDate.getDayOfWeek() == DayOfWeek.MONDAY) getBattlePassManager().resetWeeklyMissions();
+
         // Reset resin-buying count.
         setResinBuyCount(0);
 
@@ -1224,15 +1200,11 @@ public class Player {
     // Called from tokenrsp
     public void loadFromDatabase() {
         // Make sure these exist
-        if (getTeamManager() == null) {
-            this.teamManager = new TeamManager(this);
-        }
-        if (getCodex() == null) {
-            this.codex = new PlayerCodex(this);
-        }
-        if (getProfile().getUid() == 0) {
-            getProfile().syncWithCharacter(this);
-        }
+        if (getTeamManager() == null) this.teamManager = new TeamManager(this);
+
+        if (getCodex() == null) this.codex = new PlayerCodex(this);
+
+        if (getProfile().getUid() == 0) getProfile().syncWithCharacter(this);
 
         // Load from db
         getAvatars().loadFromDatabase();
@@ -1281,6 +1253,9 @@ public class Player {
 
         // Rewind active quests, and put the player to a rewind position it finds (if any) of an active quest
         getQuestManager().onLogin();
+
+        // find out any new dungeon plot entries
+        getDungeonEntryManager().onLogin();
 
         // Packets
         getSession().send(new PacketPlayerDataNotify(this)); // Player data
@@ -1406,9 +1381,7 @@ public class Player {
     }
 
     public int getPropertyMax(PlayerProperty prop) {
-        if (!prop.isDynamicRange()) return prop.getMax();
-
-        return switch (prop) {
+        return !prop.isDynamicRange() ? prop.getMax() : switch (prop) {
             case PROP_CUR_SPRING_VOLUME -> getProperty(PlayerProperty.PROP_MAX_SPRING_VOLUME);
             case PROP_CUR_PERSIST_STAMINA -> getProperty(PlayerProperty.PROP_MAX_STAMINA);
             default -> 0;

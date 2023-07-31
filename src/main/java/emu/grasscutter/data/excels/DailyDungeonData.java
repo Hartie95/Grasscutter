@@ -12,14 +12,14 @@ import lombok.Getter;
 @ResourceType(name = "DailyDungeonConfigData.json")
 public class DailyDungeonData extends GameResource {
     @Getter(onMethod = @__(@Override))
-    private int id;
-    private int[] monday;
-    private int[] tuesday;
-    private int[] wednesday;
-    private int[] thursday;
-    private int[] friday;
-    private int[] saturday;
-    private int[] sunday;
+    int id;
+    int[] monday;
+    int[] tuesday;
+    int[] wednesday;
+    int[] thursday;
+    int[] friday;
+    int[] saturday;
+    int[] sunday;
 
     private static final int[] empty = new int[0];
     private final Int2ObjectMap<int[]> map;

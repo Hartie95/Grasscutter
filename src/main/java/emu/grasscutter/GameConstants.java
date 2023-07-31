@@ -1,5 +1,8 @@
 package emu.grasscutter;
 
+import java.time.DayOfWeek;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
 import emu.grasscutter.utils.Position;
@@ -24,6 +27,14 @@ public final class GameConstants {
     public static final int BATTLE_PASS_POINT_PER_WEEK = 10000;
     public static final int BATTLE_PASS_LEVEL_PRICE = 150;
     public static final int BATTLE_PASS_CURRENT_INDEX = 2;
+    public static final String TIME_ZONE = "Asia/Shanghai";
+    public static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    public static final ZoneId ZONE_ID = ZoneId.of(TIME_ZONE);
+    public static final DayOfWeek WEEKLY_BOSS_RESIN_DISCOUNT_REFRESH_DAY = DayOfWeek.MONDAY;
+    public static final int WEEKLY_BOSS_RESIN_DISCOUNT_REFRESH_DAY_INTERVAL = 7;
+    public static final int REFRESH_HOUR = 4;
+    public static final int WEEKLY_BOSS_RESIN_DISCOUNT_COUNT = 3;
+    public static final float WEEKLY_BOSS_RESIN_DISCOUNT_VALUE = 0.5f;
 
     // Default entity ability hashes.
     public static final String[] DEFAULT_ABILITY_STRINGS = {

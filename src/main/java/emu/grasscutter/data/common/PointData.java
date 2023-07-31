@@ -4,55 +4,43 @@ import com.google.gson.annotations.SerializedName;
 
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
-import emu.grasscutter.data.excels.DailyDungeonData;
 import emu.grasscutter.utils.Position;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
+import java.util.Arrays;
+import java.util.Objects;
+
+@Data
+@EqualsAndHashCode(callSuper = false)
+@SuppressWarnings(value = "SpellCheckingInspection")
 public class PointData {
-    @Getter @Setter private int id;
-    private String $type;
-    @Getter private Position tranPos;
-    @Getter private Position pos;
-    @Getter private Position rot;
-    @Getter private Position size;
+    private int id;
+    @SerializedName(value="type", alternate={"$type"})
+    private String type;
+    private Position tranPos;
+    private Position pos;
+    private Position rot;
+    private Position size;
 
     @SerializedName(value="dungeonIds", alternate={"JHHFPGJNMIN"})
-    @Getter private int[] dungeonIds;
-
+    private int[] dungeonIds;
     @SerializedName(value="dungeonRandomList", alternate={"OIBKFJNBLHO"})
-    @Getter private int[] dungeonRandomList;
-
+    private int[] dungeonRandomList;
+    private int[] dungeonRosterList;
     @SerializedName(value="groupIDs", alternate={"HFOBOOHKBGF"})
-    @Getter private int[] groupIDs;
-
+    private int[] groupIds;
     @SerializedName(value="tranSceneId", alternate={"JHBICGBAPIH"})
-    @Getter @Setter private int tranSceneId;
-
-    public String getType() {
-        return $type;
-    }
+    private int tranSceneId;
 
     public void updateDailyDungeon() {
-        if (this.dungeonRandomList == null || this.dungeonRandomList.length == 0) {
-            return;
+        if (this.dungeonRandomList != null && this.dungeonRandomList.length > 0) {
+            this.dungeonIds = Arrays.stream(this.dungeonRandomList)
+                .mapToObj(GameData.getDailyDungeonDataMap()::get).filter(Objects::nonNull)
+                .map(data -> data.getDungeonsByDay(Grasscutter.getCurrentDayOfWeek()))
+                .flatMapToInt(Arrays::stream)
+                .filter(GameData.getDungeonDataMap()::containsKey)
+                .toArray();
         }
-
-        IntList newDungeons = new IntArrayList();
-        int day = Grasscutter.getCurrentDayOfWeek();
-
-        for (int randomId : this.dungeonRandomList) {
-            DailyDungeonData data = GameData.getDailyDungeonDataMap().get(randomId);
-
-            if (data != null) {
-                for (int d : data.getDungeonsByDay(day)) {
-                    newDungeons.add(d);
-                }
-            }
-        }
-
-        this.dungeonIds = newDungeons.toIntArray();
     }
 }

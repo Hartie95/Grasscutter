@@ -1,43 +1,55 @@
 package emu.grasscutter.server.packet.send;
 
-import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.DungeonEntryData;
+import emu.grasscutter.game.player.Player;
+import emu.grasscutter.game.quest.GameQuest;
+import emu.grasscutter.game.quest.enums.LogicType;
+import emu.grasscutter.game.quest.enums.QuestState;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.packet.PacketOpcodes;
-import emu.grasscutter.net.proto.DailyDungeonEntryInfoOuterClass;
-import emu.grasscutter.net.proto.DungeonEntryInfoOuterClass;
-import emu.grasscutter.net.proto.GetDailyDungeonEntryInfoRspOuterClass;
+import emu.grasscutter.net.proto.DailyDungeonEntryInfoOuterClass.DailyDungeonEntryInfo;
+import emu.grasscutter.net.proto.GetDailyDungeonEntryInfoRspOuterClass.GetDailyDungeonEntryInfoRsp;
 
-import java.util.List;
+import java.util.*;
 
 public class PacketGetDailyDungeonEntryInfoRsp extends BasePacket {
 
-    public PacketGetDailyDungeonEntryInfoRsp(Integer sceneID) {
+    public PacketGetDailyDungeonEntryInfoRsp(Player player, int sceneId) {
         super(PacketOpcodes.GetDailyDungeonEntryInfoRsp);
 
-        var resp= GetDailyDungeonEntryInfoRspOuterClass.GetDailyDungeonEntryInfoRsp.newBuilder();
-
-        for (var info :  GameData.getDungeonEntryDataMap().values().parallelStream().filter(d -> d.getSceneId() == sceneID).map(this::getDungonEntryInfo).toList())
-            resp.addDailyDungeonInfoList(info);
-
-        this.setData(resp.build());
+        this.setData(GetDailyDungeonEntryInfoRsp.newBuilder()
+            .addAllDailyDungeonInfoList(GameData.getDungeonEntryDataMap().values().stream()
+                .filter(data -> data.getSceneId() == sceneId)
+                .filter(DungeonEntryData::isShowInAdvHandbook)
+                .filter(data -> isSatisfied(player, data.getCondComb(), data.getSatisfiedCond()))
+                .map(data -> getDungeonEntryInfo(player, data))
+                .filter(DailyDungeonEntryInfo::hasRecommendDungeonEntryInfo)
+                .sorted(Comparator.comparing(DailyDungeonEntryInfo::getDungeonEntryConfigId))
+                .toList()));
     }
 
-    private DailyDungeonEntryInfoOuterClass.DailyDungeonEntryInfo getDungonEntryInfo(DungeonEntryData data) {
-        var dungeonEntryId = data.getDungeonEntryId();
-        var id = data.getId();
+    private DailyDungeonEntryInfo getDungeonEntryInfo(Player player, DungeonEntryData entryData) {
+        DailyDungeonEntryInfo.Builder dailyEntryInfo = DailyDungeonEntryInfo.newBuilder();
+        player.getDungeonEntryManager().getDungeonEntries(entryData.getSceneId(), entryData.getDungeonEntryId()).stream()
+            .min(Comparator.comparingInt(data -> Math.abs(data.getLimitLevel() - player.getLevel())))
+            .ifPresent(dungeonData -> {
+                dailyEntryInfo.setRecommendDungeonId(dungeonData.getId());
+                dailyEntryInfo.setRecommendDungeonEntryInfo(player.getDungeonEntryManager().toProto(dungeonData));
+            });
 
-        // TODO
-        DungeonEntryInfoOuterClass.DungeonEntryInfo dungeonEntryInfo
-                = DungeonEntryInfoOuterClass.DungeonEntryInfo.newBuilder().setDungeonId(130).build();
-
-        var builder = DailyDungeonEntryInfoOuterClass.DailyDungeonEntryInfo.newBuilder();
-
-        builder.setDungeonEntryId(dungeonEntryId);
-        builder.setDungeonEntryConfigId(id);
-        builder.setRecommendDungeonEntryInfo(dungeonEntryInfo);
-        return builder.build();
+        return dailyEntryInfo.setDungeonEntryId(entryData.getDungeonEntryId()).setDungeonEntryConfigId(entryData.getId()).build();
     }
 
+    private boolean isSatisfied(Player player, LogicType condComb, List<DungeonEntryData.SatisfiedCond> conds) {
+        return LogicType.calculate(condComb, conds.stream()
+                .filter(cond -> Optional.ofNullable(cond).map(DungeonEntryData.SatisfiedCond::getType).isPresent())
+                .map(cond -> switch (cond.getType()) {
+                    case DUNGEON_ENTRY_CONDITION_LEVEL -> player.getLevel() >= cond.getParam1();
+                    case DUNGEON_ENTRY_CONDITION_QUEST -> Optional.ofNullable(player.getQuestManager().getQuestById(cond.getParam1()))
+                        .map(GameQuest::getState).filter(state -> state == QuestState.QUEST_STATE_FINISHED).isPresent();
+                    case DUNGEON_ENTRY_CONDITION_NONE -> true;})
+                .mapToInt(result -> result ? 1 : 0)
+                .toArray());
+    }
 }
