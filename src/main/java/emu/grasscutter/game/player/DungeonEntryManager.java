@@ -12,6 +12,7 @@ import emu.grasscutter.game.quest.GameQuest;
 import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.game.quest.enums.QuestState;
 import emu.grasscutter.net.proto.DungeonEntryInfoOuterClass.DungeonEntryInfo;
+import emu.grasscutter.net.proto.WeeklyBossResinDiscountInfoOuterClass.WeeklyBossResinDiscountInfo;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.NonNull;
 import lombok.val;
@@ -30,7 +31,7 @@ public class DungeonEntryManager extends BasePlayerManager {
     }
 
     public void onLogin() {
-        // find out any dungeon entries for specific quest
+        // find out quest specified dungeon entry
         this.player.getQuestManager().getMainQuests().values().parallelStream()
             .map(GameMainQuest::getChildQuests).map(Map::values).flatMap(Collection::stream)
             .filter(quest -> quest.getState() == QuestState.QUEST_STATE_UNFINISHED)
@@ -41,6 +42,7 @@ public class DungeonEntryManager extends BasePlayerManager {
                     .forEach(cond -> this.plotDungeonEntries.computeIfAbsent(
                         (sceneId << 16) + cond.getParam()[1], f -> new ArrayList<>()).add(cond.getParam()[0]))));
 
+        // builds weekly boss information if its missing
         if (Optional.ofNullable(this.player.getDungeonEntryItem().getBossRecordMap())
             .map(Map::keySet).filter(keys -> keys.containsAll(GameData.getDungeonSerialDataMap().keySet())).isEmpty()) {
             GameData.getDungeonDataMap().values().parallelStream().filter(data -> data.getSerialId() > 0)
@@ -66,7 +68,7 @@ public class DungeonEntryManager extends BasePlayerManager {
             .build();
     }
 
-    public void addPassedDungeons(DungeonData dungeonData){
+    public void updateDungeonEntryInfo(DungeonData dungeonData){
         this.player.getDungeonEntryItem().addDungeon(dungeonData.getId());
         this.player.getDungeonEntryItem().updateWeeklyBossInfo(dungeonData.getSerialId());
     }
@@ -75,28 +77,41 @@ public class DungeonEntryManager extends BasePlayerManager {
         return this.plotDungeonEntries.get((sceneId << 16) + pointId);
     }
 
+    public WeeklyBossResinDiscountInfo getWeeklyBossDiscountInfo(DungeonData dungeonData) {
+        return Optional.ofNullable(this.player.getDungeonEntryItem()).map(DungeonEntryItem::getBossRecordMap)
+            .map(recordMap -> recordMap.get(dungeonData.getSerialId()))
+            .filter(DungeonEntryItem.WeeklyBossRecord::canTakeReward)
+            .map(DungeonEntryItem.WeeklyBossRecord::toProto)
+            .orElse(null);
+    }
+
+    /**
+     * Get dungeon information for specific entries
+     * */
     public List<DungeonData> getDungeonEntries(int sceneId, int pointId) {
+        // basic dungeon entries including daily domains and weekly bosses
         val basicDungeons = Optional.ofNullable(GameData.getScenePointEntryById(sceneId, pointId))
             .map(ScenePointEntry::getPointData).map(PointData::getDungeonIds).stream().parallel()
             .flatMapToInt(Arrays::stream).mapToObj(GameData.getDungeonDataMap()::get)
             .filter(Objects::nonNull);
 
-        val plotDungeons = Optional.ofNullable(getPlotDungeonById(sceneId, pointId)).stream()
+        // quest entries
+        val plotDungeons = Optional.ofNullable(getPlotDungeonById(sceneId, pointId)).stream().parallel()
             .flatMap(List::stream).map(dungeonId -> GameData.getDungeonDataMap().get(dungeonId.intValue()))
             .filter(Objects::nonNull);
 
-        Stream<DungeonData> rosterDungeons;
+        Stream<DungeonData> rosterDungeons; // its dungeon that will rotate regularly, like Azhdaha boss
         DungeonEntryItem.WeeklyBossRecord bossRecord = this.player.getDungeonEntryItem().getBossRecordMap().values().stream()
             .filter(bossRecord1 -> bossRecord1.getRosterCycleRecord() != null).findFirst().orElse(null);
-        // assuming there is at least one roster dungeon
-        if (bossRecord != null) {
+
+        if (bossRecord != null) { // assuming there is at least one roster dungeon, get the information
             rosterDungeons = Optional.ofNullable(GameData.getScenePointEntryById(sceneId, pointId))
                 .map(ScenePointEntry::getPointData).map(PointData::getDungeonRosterList).stream().parallel()
                 .flatMapToInt(Arrays::stream).mapToObj(GameData.getDungeonRosterDataMap()::get).filter(Objects::nonNull)
                 .map(rosterData -> rosterData.getRosterPool().get(bossRecord.getRosterCycleRecord().getSelectedPool()))
                 .filter(Objects::nonNull).map(DungeonRosterData.RosterPool::getDungeonList).flatMapToInt(Arrays::stream)
                 .mapToObj(GameData.getDungeonDataMap()::get);
-        } else {
+        } else { // build and retrieve dungeon information if the player doesn't have it
             rosterDungeons = Optional.ofNullable(GameData.getScenePointEntryById(sceneId, pointId))
                 .map(ScenePointEntry::getPointData).map(PointData::getDungeonRosterList)
                 .map(Arrays::stream).map(rosterStream -> rosterStream.parallel()
@@ -121,7 +136,7 @@ public class DungeonEntryManager extends BasePlayerManager {
 
         return Stream.concat(Stream.concat(basicDungeons, plotDungeons), rosterDungeons).parallel()
             .filter(data -> this.player.getLevel() >= data.getLimitLevel())
-            .filter(data -> data.getId() != 69) // TODO, this is causing problem, find out why
+            .filter(data -> data.getId() != 69) // TODO, this dungeon is causing problem, find out why
             .toList();
     }
 }

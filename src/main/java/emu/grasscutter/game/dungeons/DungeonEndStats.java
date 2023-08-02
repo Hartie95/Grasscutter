@@ -3,16 +3,6 @@ package emu.grasscutter.game.dungeons;
 import emu.grasscutter.game.dungeons.dungeon_results.BaseDungeonResult;
 import lombok.Getter;
 
-public class DungeonEndStats {
-    @Getter private int killedMonsters;
-    @Getter private int timeTaken;
-    @Getter private int openChestCount;
-    @Getter private BaseDungeonResult.DungeonEndReason dungeonResult;
-
-    public DungeonEndStats(int killedMonsters, int timeTaken, int openChestCount, BaseDungeonResult.DungeonEndReason dungeonResult){
-        this.killedMonsters = killedMonsters;
-        this.timeTaken = timeTaken;
-        this.dungeonResult = dungeonResult;
-        this.openChestCount = openChestCount;
-    }
+public record DungeonEndStats(@Getter int killedMonsters, @Getter int timeTaken, @Getter int openChestCount,
+                              @Getter BaseDungeonResult.DungeonEndReason dungeonResult) {
 }

@@ -8,6 +8,7 @@ import emu.grasscutter.net.proto.WeeklyBossResinDiscountInfoOuterClass.WeeklyBos
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.val;
 
 import java.time.*;
 import java.time.temporal.TemporalAdjusters;
@@ -16,6 +17,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
+
+/**
+ * Holds dungeon entry information, including weekly boss discount information
+ * */
 @Entity
 public class DungeonEntryItem {
     @Getter private final Set<Integer> passedDungeons;
@@ -34,16 +39,17 @@ public class DungeonEntryItem {
     }
 
     public void updateWeeklyBossInfo(int dungeonSerialId) {
-        if (!this.bossRecordMap.containsKey(dungeonSerialId)) return;
+        val selectedDungeon = this.bossRecordMap.get(dungeonSerialId);
+        if (selectedDungeon == null || !selectedDungeon.canTakeReward()) return;
 
         this.bossRecordMap.get(dungeonSerialId).update();
         this.bossRecordMap.values().forEach(WeeklyBossRecord::sync);
     }
 
     public void resetWeeklyBoss(){
-        ZonedDateTime currentDateTime = ZonedDateTime.now(GameConstants.ZONE_ID);
         this.bossRecordMap.values().stream()
-            .filter(record ->  shouldReset(currentDateTime, toZonedDateTime(record.getLastCycledTime())))
+            .filter(record ->  shouldReset(ZonedDateTime.now(GameConstants.ZONE_ID),
+                toZonedDateTime(record.getLastCycledTime())))
             .forEach(WeeklyBossRecord::reset);
     }
 
@@ -54,6 +60,10 @@ public class DungeonEntryItem {
             .toDays() >= GameConstants.WEEKLY_BOSS_RESIN_DISCOUNT_REFRESH_DAY_INTERVAL;
     }
 
+    /**
+     * Convert string to ZoneDateTime,
+     * string should be in this format: yyyy-MM-dd HH:mm:ss
+     * */
     private static ZonedDateTime toZonedDateTime(String timeStr) {
         return ZonedDateTime.parse(timeStr, GameConstants.TIME_FORMATTER.withZone(GameConstants.ZONE_ID));
     }
@@ -131,11 +141,11 @@ public class DungeonEntryItem {
         }
 
         public void update() {
-            this.takeNum += 1;
+            if (canTakeReward()) this.takeNum += 1;
         }
 
         public void sync() {
-            this.discountNum += 1;
+            if(this.discountNum < this.discountNumLimit) this.discountNum += 1;
         }
 
         public void reset() {
@@ -147,6 +157,10 @@ public class DungeonEntryItem {
 
         private int getResinCost() {
             return this.discountNum < this.discountNumLimit ? this.resinCost : this.originalResinCost;
+        }
+
+        public boolean canTakeReward() {
+            return this.takeNum < this.maxTakeNumLimit;
         }
 
         public WeeklyBossResinDiscountInfo toProto() {

@@ -4,7 +4,6 @@ import emu.grasscutter.data.excels.DungeonData;
 import emu.grasscutter.game.dungeons.DungeonEndStats;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.tower.TowerManager;
-import emu.grasscutter.net.proto.DungeonSettleExhibitionInfoOuterClass;
 import emu.grasscutter.net.proto.DungeonSettleNotifyOuterClass;
 import emu.grasscutter.net.proto.ItemParamOuterClass;
 import emu.grasscutter.net.proto.TowerLevelEndNotifyOuterClass.TowerLevelEndNotify.ContinueStateType;
@@ -16,11 +15,11 @@ public class TowerResult extends BaseDungeonResult{
     boolean hasNextLevel;
     int nextFloorId;
     public TowerResult(DungeonData dungeonData, DungeonEndStats dungeonStats, TowerManager towerManager, WorldChallenge challenge) {
-        super(dungeonData, dungeonStats);
+        super(dungeonData, dungeonStats, challenge.getScene().getWorld().getHost());
         this.challenge = challenge;
         this.canJump = towerManager.hasNextFloor();
         this.hasNextLevel = towerManager.hasNextLevel();
-        this.nextFloorId = hasNextLevel ? 0 : towerManager.getNextFloorId();
+        this.nextFloorId = this.hasNextLevel ? 0 : towerManager.getNextFloorId();
     }
 
     @Override
