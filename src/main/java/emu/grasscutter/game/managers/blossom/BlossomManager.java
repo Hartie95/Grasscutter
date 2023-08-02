@@ -110,7 +110,7 @@ public class BlossomManager extends BasePlayerDataManager {
                 .setRefreshId(schedule.getRefreshId())
                 .setBlossomRefreshType(schedule.getRefreshType().getValue())
                 .build())
-            .findFirst().orElse(BlossomChestInfo.newBuilder().build());
+            .findFirst().orElse(null);
     }
 
     /**

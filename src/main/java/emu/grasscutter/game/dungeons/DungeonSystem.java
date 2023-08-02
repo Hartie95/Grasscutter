@@ -7,6 +7,7 @@ import emu.grasscutter.data.binout.ScenePointEntry;
 import emu.grasscutter.data.common.PointData;
 import emu.grasscutter.data.excels.DungeonData;
 import emu.grasscutter.data.excels.DungeonPassConfigData;
+import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.handlers.DungeonBaseHandler;
 import emu.grasscutter.game.dungeons.pass_condition.BaseCondition;
 import emu.grasscutter.game.player.Player;
@@ -92,7 +93,10 @@ public class DungeonSystem extends BaseGameSystem {
         return true;
     }
 
-    public void exitDungeon(Player player) {
+    /**
+     * Remove player from dungeon
+     * */
+    public void exitDungeon(Player player, boolean isQuitImmediately) {
         val scene = player.getScene();
         if (scene == null || scene.getSceneType() != SceneType.SCENE_DUNGEON) return;
 
@@ -101,20 +105,42 @@ public class DungeonSystem extends BaseGameSystem {
 
         // Get previous position
         val dungeonManager = scene.getDungeonManager();
-        DungeonData dungeonData = Optional.ofNullable(dungeonManager).map(DungeonManager::getDungeonData).orElse(null);
+        val dungeonData = Optional.ofNullable(dungeonManager).map(DungeonManager::getDungeonData).orElse(null);
         Position prevPos = new Position(GameConstants.START_POSITION);
+        int delayExitTime = 0;
 
         if (dungeonData != null) {
             Optional.ofNullable(GameData.getScenePointEntryById(prevScene, scene.getPrevScenePoint()))
                 .map(ScenePointEntry::getPointData).map(PointData::getTranPos).ifPresent(prevPos::set);
 
-            if(!dungeonManager.isFinishedSuccessfully()) dungeonManager.quitDungeon();
+            if(!dungeonManager.isFinishedSuccessfully() && dungeonManager.getDelayExitTaskId() < 0) {
+                // fail challenges if exist
+                val sceneChallenge = Optional.ofNullable(scene.getChallenge()).filter(WorldChallenge::inProgress);
+                if (sceneChallenge.isPresent()) {
+                    delayExitTime = dungeonData.getFailSettleCountdownTime();
+                    dungeonManager.failDungeon();
+                } else {
+                    delayExitTime = dungeonData.getQuitSettleCountdownTime();
+                    dungeonManager.quitDungeon();
+                }
+                sceneChallenge.ifPresent(WorldChallenge::fail);
+            }
         }
+        delayExitTime = isQuitImmediately ? 0 : delayExitTime;
         // clean temp team if it has
         player.getTeamManager().cleanTemporaryTeam();
         player.getTowerManager().clearEntry();
 
+        Optional.ofNullable(dungeonManager).filter(m -> m.getDelayExitTaskId() > 0)
+            .ifPresent(m -> {
+                Grasscutter.getGameServer().getScheduler().cancelTask(m.getDelayExitTaskId());
+                m.setDelayExitTaskId(-1);
+            });
+
         // Transfer player back to world
-        player.getWorld().transferPlayerToScene(player, prevScene, prevPos);
+        int delayTaskId = Grasscutter.getGameServer().getScheduler().scheduleDelayedTask(
+            () -> player.getWorld().transferPlayerToScene(player, prevScene, prevPos), delayExitTime-1);
+
+        Optional.ofNullable(dungeonManager).ifPresent(m -> m.setDelayExitTaskId(delayTaskId));
     }
 }

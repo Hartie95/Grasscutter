@@ -1,5 +1,6 @@
 package emu.grasscutter.data.excels;
 
+import com.google.gson.annotations.SerializedName;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.GameResource;
 import emu.grasscutter.data.ResourceType;
@@ -23,6 +24,7 @@ public class DungeonData extends GameResource {
     private int serialId;
 	private int sceneId;
 	private int showLevel;
+    private int levelRevise;
     private DungeonType type;
     private DungeonSubType subType;
     private DungeonPlayType playType;
@@ -34,7 +36,8 @@ public class DungeonData extends GameResource {
 	private int failSettleCountdownTime;
 	private int quitSettleCountdownTime;
 	private List<SettleShowType> settleShows;
-	private int passRewardPreviewID;
+    @SerializedName(value = "passRewardPreviewID", alternate = {"passRewardPreviewId"})
+	private int passRewardPreviewId;
     private int statueCostID;
     private int statueCostCount;
 
@@ -59,8 +62,7 @@ public class DungeonData extends GameResource {
 
 	@Override
 	public void onLoad() {
-		if (this.passRewardPreviewID > 0) {
-			this.rewardPreviewData = GameData.getRewardPreviewDataMap().get(this.passRewardPreviewID);
-		}
+        Optional.ofNullable(GameData.getRewardPreviewDataMap().get(this.passRewardPreviewId))
+            .ifPresent(d -> this.rewardPreviewData = d);
 	}
 }

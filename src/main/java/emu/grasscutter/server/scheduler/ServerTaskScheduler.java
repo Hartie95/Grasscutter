@@ -127,7 +127,7 @@ public final class ServerTaskScheduler {
      * @return The ID of the task.
      */
     public int scheduleRepeatingTask(Runnable runnable, int period) {
-        return this.scheduleDelayedRepeatingTask(runnable, period, 0);
+        return this.scheduleDelayedRepeatingTask(runnable, period, -1);
     }
 
     /**

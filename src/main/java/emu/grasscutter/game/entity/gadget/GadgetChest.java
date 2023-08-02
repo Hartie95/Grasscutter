@@ -1,6 +1,7 @@
 package emu.grasscutter.game.entity.gadget;
 
 import emu.grasscutter.Grasscutter;
+import emu.grasscutter.game.dungeons.DungeonManager;
 import emu.grasscutter.game.entity.EntityGadget;
 import emu.grasscutter.game.entity.gadget.chest.BossChestInteractHandler;
 import emu.grasscutter.game.player.Player;
@@ -15,7 +16,8 @@ import emu.grasscutter.scripts.constants.ScriptGadgetState;
 import emu.grasscutter.server.packet.send.PacketGadgetInteractRsp;
 import lombok.val;
 
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.Optional;
 
 public class GadgetChest extends GadgetContent {
@@ -51,19 +53,37 @@ public class GadgetChest extends GadgetContent {
         }
     }
 
+    /**
+     * Builds proto information for gadgets, note that
+     * it will override the gadget's properties even if the builder is empty
+     * */
     public void onBuildProto(SceneGadgetInfo.Builder gadgetInfo) {
-        List<Integer> playersUid = getGadget().getScene().getPlayers().stream().map(Player::getUid).toList();
+        val playersUid = getGadget().getScene().getPlayers().stream().map(Player::getUid).toList();
 
         Optional.ofNullable(getGadget().getMetaGadget())
             .map(g -> g.boss_chest)
-            .ifPresent(bossChest -> gadgetInfo.setBossChest(BossChestInfo.newBuilder()
-                .setMonsterConfigId(bossChest.monster_config_id)
-                .setResin(bossChest.resin)
-                .addAllQualifyUidList(playersUid)
-                .addAllRemainUidList(playersUid)
-                .build()));
+            .ifPresent(bossChest -> {
+                val chestProto = BossChestInfo.newBuilder()
+                    .setMonsterConfigId(bossChest.monster_config_id)
+                    .setResin(bossChest.resin);
+
+                // removing instead of creating new list directly below is because
+                // it also has to consider normal cases
+                val qualifiedUids = new ArrayList<>(playersUid);
+                // don't allow player to take again if he has taken weekly boss already
+                Optional.ofNullable(getGadget().getScene().getDungeonManager())
+                    .map(DungeonManager::getWeeklyBossUidInfo).map(chestProto::putAllUidDiscountMap)
+                    .map(BossChestInfo.Builder::getUidDiscountMapMap).map(Map::keySet)
+                    .ifPresent(qualifiedUids::retainAll);
+
+                gadgetInfo.setBossChest(chestProto
+                    .addAllQualifyUidList(playersUid)
+                    .addAllRemainUidList(qualifiedUids)
+                    .build());
+            });
 
         Optional.ofNullable(getGadget().getScene().getWorld().getOwner().getBlossomManager())
-            .ifPresent(manager -> gadgetInfo.setBlossomChest(manager.getChestInfo(getGadget().getConfigId(), playersUid)));
+            .map(m -> m.getChestInfo(getGadget().getConfigId(), playersUid))
+            .ifPresent(gadgetInfo::setBlossomChest);
     }
 }
