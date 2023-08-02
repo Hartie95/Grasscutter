@@ -10,10 +10,12 @@ public class BasicDungeonSettleListener implements DungeonSettleListener {
     public void onDungeonSettle(DungeonManager dungeonManager, BaseDungeonResult.DungeonEndReason endReason) {
         val scene = dungeonManager.getScene();
         val dungeonData = dungeonManager.getDungeonData();
-        val time = scene.getSceneTimeSeconds() - dungeonManager.getStartSceneTime() ;
-        // TODO time taken and chests handling
-        DungeonEndStats stats = new DungeonEndStats(scene.getKilledMonsterCount(), time, 0, endReason);
+        val time = scene.getSceneTimeSeconds() - dungeonManager.getStartSceneTime();
 
-        scene.broadcastPacket(new PacketDungeonSettleNotify(new BaseDungeonResult(dungeonData, stats)));
+        DungeonEndStats stats = new DungeonEndStats(
+            scene.getKilledMonsterCount(), time, scene.getKillChestCount(), endReason);
+
+        scene.broadcastPacket(new PacketDungeonSettleNotify(
+            new BaseDungeonResult(dungeonData, stats, scene.getWorld().getHost())));
     }
 }

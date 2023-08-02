@@ -71,6 +71,7 @@ public class Scene {
     @Getter @Setter private int prevScene; // Id of the previous scene
     @Getter @Setter private int prevScenePoint;
     @Getter @Setter private int killedMonsterCount;
+    @Getter @Setter private int killChestCount;
     private Set<SceneNpcBornEntry> npcBornEntrySet = ConcurrentHashMap.newKeySet();
     @Getter private boolean finishedLoading = false;
     @Getter private int tickCount = 0;
@@ -329,17 +330,22 @@ public class Scene {
         // Packet
         broadcastPacket(new PacketLifeStateChangeNotify(attackerId, target, LifeState.LIFE_DEAD));
 
-        // Reward drop
-        if (target instanceof EntityMonster monster && getSceneType() != SceneType.SCENE_DUNGEON) {
-            getWorld().getServer().getDropSystem().callDrop(monster);
-        }
-
         // Remove entity from world
         removeEntity(target);
 
         // Death event
         target.onDeath(attackerId);
-        triggerDungeonEvent(DungeonPassConditionType.DUNGEON_COND_KILL_MONSTER_COUNT, ++this.killedMonsterCount);
+        // Reward drop
+        if (target instanceof EntityMonster monster) {
+            if (getSceneType() != SceneType.SCENE_DUNGEON && attacker != null) {
+                getWorld().getServer().getDropSystem().callDrop(monster);
+            }
+            triggerDungeonEvent(DungeonPassConditionType.DUNGEON_COND_KILL_MONSTER_COUNT, ++this.killedMonsterCount);
+        } else if (target instanceof EntityGadget gadget) {
+            Optional.ofNullable(gadget.getGadgetData())
+                .filter(data -> data.getType() == EntityType.Chest)
+                .ifPresent(data -> this.killChestCount++);
+        }
     }
 
     public void onTick() {

@@ -919,6 +919,7 @@ public class Player {
                     .filter(Objects::nonNull).toList())
                 .map(aList -> aList.stream().map(avatar -> new EntityAvatar(scene, avatar)).toList())
                 // clear active team and add only the specific character
+                .filter(eList -> !eList.isEmpty())
                 .peek(eList -> getTeamManager().getActiveTeam().clear())
                 .peek(getTeamManager().getActiveTeam()::addAll)
                 // rebuild active team with special abilities
@@ -1001,12 +1002,13 @@ public class Player {
     }
 
     public List<SocialShowAvatarInfo> socialShowAvatarListProto(List<Integer> avatarIds) {
-        return avatarIds.stream().map(avatarId -> SocialShowAvatarInfo.newBuilder()
-            .setAvatarId(avatarId)
-            .setLevel(getAvatars().getAvatarById(avatarId).getLevel())
-            .setCostumeId(getAvatars().getAvatarById(avatarId).getCostume())
-            .build())
-        .toList();
+        return Optional.ofNullable(avatarIds).stream().flatMap(List::stream)
+            .map(avatarId -> SocialShowAvatarInfo.newBuilder()
+                .setAvatarId(avatarId)
+                .setLevel(getAvatars().getAvatarById(avatarId).getLevel())
+                .setCostumeId(getAvatars().getAvatarById(avatarId).getCostume())
+                .build())
+            .toList();
     }
 
     public SocialDetail.Builder getSocialDetail() {
@@ -1318,7 +1320,7 @@ public class Player {
             getStaminaManager().stopSustainedStaminaHandler();
 
             // force to leave the dungeon (inside has an "if")
-            getServer().getDungeonSystem().exitDungeon(this);
+            getServer().getDungeonSystem().exitDungeon(this, true);
 
             // Leave world
             if (getWorld() != null) {

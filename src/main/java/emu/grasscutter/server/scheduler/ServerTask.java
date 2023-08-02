@@ -24,8 +24,6 @@ public final class ServerTask implements Runnable {
 
     /* The amount of times the task has been run. */
     @Getter private int ticks = 0;
-    /* Should the check consider delay? */
-    private boolean considerDelay = true;
 
     /**
      * Cancels the task from running the next time.
@@ -37,12 +35,13 @@ public final class ServerTask implements Runnable {
     /**
      * Checks if the task should run at the current tick.
      * @return True if the task should run, false otherwise.
+     * Example delayed task:
+     * if scheduled at time 1690873237, delay 3s, then task should be executed in 1690873240
      */
     public boolean shouldRun() {
         // Increase tick count.
         var ticks = this.ticks++;
-        if(this.delay != -1 && this.considerDelay) {
-            this.considerDelay = false;
+        if(this.delay != -1) {
             return ticks == this.delay;
         } else if(this.period != -1)
             return ticks % this.period == 0;

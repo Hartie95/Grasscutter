@@ -250,7 +250,7 @@ public class EntityGadget extends EntityBaseGadget {
                 .setGroupId(getGroupId())
                 .setConfigId(getConfigId())
                 .setGadgetState(getState())
-                .setIsEnableInteract(getGadgetData().isInteractive())
+                .setIsEnableInteract(true)
                 .setAuthorityPeerId(getScene().getWorld().getHostPeerId());
 
         Optional.ofNullable(getMetaGadget()).map(g -> g.draft_id).ifPresent(gadgetInfo::setDraftId);
