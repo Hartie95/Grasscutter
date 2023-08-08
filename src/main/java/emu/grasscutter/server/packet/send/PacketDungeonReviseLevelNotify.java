@@ -10,7 +10,6 @@ public class PacketDungeonReviseLevelNotify extends BasePacket {
         super(PacketOpcodes.DungeonReviseLevelNotify);
         this.setData(DungeonReviseLevelNotify.newBuilder()
             .setDungeonId(dungeonData.getId())
-            .setReviseLevel(dungeonData.getLevelRevise())
-            .setShowLevel(dungeonData.getShowLevel()));
+            .setReviseLevel(dungeonData.getLevelRevise()));
     }
 }

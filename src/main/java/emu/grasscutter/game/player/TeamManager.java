@@ -27,6 +27,7 @@ import emu.grasscutter.server.event.player.PlayerTeamDeathEvent;
 import emu.grasscutter.server.packet.send.*;
 import emu.grasscutter.utils.Position;
 import emu.grasscutter.utils.Utils;
+import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -54,8 +55,7 @@ public class TeamManager extends BasePlayerDataManager {
     @Transient @Getter private final List<TeamInfo> temporaryTeam; // Temporary Team for tower
     @Transient @Getter @Setter private boolean useTrialTeam;
     @Transient @Getter @Setter private TeamInfo trialAvatarTeam;
-    // used to hold trial avatar's guid,
-    // normal avatar's guid should not come in here
+    // used to hold temp team's avatar guid, trial avatar, tower team etc
     @Transient @Getter private final LinkedHashMap<Integer, Long> entityGuids;
     @Transient @Getter @Setter private int previousIndex = -1; // index of character selection in team before adding trial avatar
 
@@ -268,20 +268,18 @@ public class TeamManager extends BasePlayerDataManager {
         if (getPlayer().getScene() == null) return;
 
         existingAvatars.values().forEach(entity -> getPlayer().getScene().removeEntity(entity));
+        if (!shouldReplace || currentEntity == getCurrentAvatarEntity()) return; // Check if character changed
 
-        // Check if character changed
-        if (currentEntity != getCurrentAvatarEntity() && shouldReplace) {
-            if (currentEntity == null) {
-                getPlayer().getScene().addEntity(getCurrentAvatarEntity());
-                return;
-            }
+        if (currentEntity == null) {
+            getPlayer().getScene().addEntity(getCurrentAvatarEntity());
+        } else {
             // Remove and Add
             getPlayer().getScene().replaceEntity(currentEntity, getCurrentAvatarEntity());
         }
     }
 
     public List<Integer> newTeam(@NotNull Collection<Long> guidList) {
-        return guidList.stream()
+        return guidList.stream().parallel()
             .map(guid -> getPlayer().getAvatars().getAvatarByGuid(guid))
             .filter(Objects::nonNull)
             .map(Avatar::getAvatarId).toList();
@@ -358,35 +356,39 @@ public class TeamManager extends BasePlayerDataManager {
 
     public void setupTemporaryTeam(@NotNull List<List<Long>> guidListList) {
         getTemporaryTeam().clear();
-        setPreviousIndex(getCurrentCharacterIndex());
         // Sanity checks
         // Set team data and convert to avatar ids
-        getTemporaryTeam().addAll(guidListList.stream()
-            .map(guidList -> (guidList.isEmpty() || guidList.size() > getMaxTeamSize()) ?
-                null : newTeam(guidList))
-            .filter(Objects::nonNull)
-            .filter(List::isEmpty)
+        getTemporaryTeam().addAll(guidListList.stream().parallel()
+            .filter(guidList -> !guidList.isEmpty()).filter(guidList -> guidList.size() <= getMaxTeamSize())
+            .map(this::newTeam).filter(Objects::nonNull).filter(l -> !l.isEmpty())
             .map(TeamInfo::new)
             .toList());
+
+        guidListList.stream().flatMap(List::stream)
+            .map(this.player.getAvatars()::getAvatarByGuid)
+            .forEachOrdered(avatar ->  getEntityGuids().put(avatar.getAvatarId(), avatar.getGuid()));
     }
 
     public void useTemporaryTeam(int index) {
         setTemporaryTeamIndex(index);
+        if (index == 0) {
+            if (getPreviousIndex() < 0) setPreviousIndex(getCurrentCharacterIndex());
+        } else {
+            getTemporaryTeam().iterator().next().getAvatars().forEach(getEntityGuids()::remove);
+        }
         setCurrentCharacterIndex(0);
-        updateTeamEntities(true);
+        updateTeamEntities(false);
     }
 
     public void cleanTemporaryTeam() {
         // check if using temporary team
-        if (getTemporaryTeamIndex() < 0) {
-            return;
-        }
+        if (getTemporaryTeamIndex() < 0) return;
 
         setTemporaryTeamIndex(-1);
         setCurrentCharacterIndex(getPreviousIndex());
         setPreviousIndex(-1);
         getTemporaryTeam().clear();
-        updateTeamEntities(true);
+        updateTeamEntities(false);
     }
 
     public synchronized boolean setCurrentTeam(int teamId) {

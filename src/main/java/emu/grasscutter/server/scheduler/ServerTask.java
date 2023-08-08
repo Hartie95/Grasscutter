@@ -42,7 +42,7 @@ public final class ServerTask implements Runnable {
         // Increase tick count.
         var ticks = this.ticks++;
         if(this.delay != -1) {
-            return ticks == this.delay;
+            return ticks == this.delay-1;
         } else if(this.period != -1)
             return ticks % this.period == 0;
         else return true;

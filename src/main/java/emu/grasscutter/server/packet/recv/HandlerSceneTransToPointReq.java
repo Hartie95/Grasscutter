@@ -9,25 +9,24 @@ import emu.grasscutter.net.packet.PacketHandler;
 import emu.grasscutter.server.event.player.PlayerTeleportEvent.TeleportType;
 import emu.grasscutter.server.game.GameSession;
 import emu.grasscutter.server.packet.send.PacketSceneTransToPointRsp;
+import lombok.val;
+
+import java.util.Optional;
 
 @Opcodes(PacketOpcodes.SceneTransToPointReq)
 public class HandlerSceneTransToPointReq extends PacketHandler {
 
     @Override
     public void handle(GameSession session, byte[] header, byte[] payload) throws Exception {
-        SceneTransToPointReq req = SceneTransToPointReq.parseFrom(payload);
-        var player = session.getPlayer();
+        val req = SceneTransToPointReq.parseFrom(payload);
+        val player = session.getPlayer();
+        val result = Optional.ofNullable(GameData.getScenePointEntryById(req.getSceneId(), req.getPointId()))
+            .map(ScenePointEntry::getPointData)
+            .filter(pointData -> player.getWorld().transferPlayerToScene(
+                player, req.getSceneId(), TeleportType.WAYPOINT, pointData.getTranPos(), pointData.getTranRot()))
+            .isPresent();
 
-        ScenePointEntry scenePointEntry = GameData.getScenePointEntryById(req.getSceneId(), req.getPointId());
-
-        if (scenePointEntry != null) {
-            if (player.getWorld().transferPlayerToScene(player, req.getSceneId(), TeleportType.WAYPOINT, scenePointEntry.getPointData().getTranPos().clone())) {
-                session.send(new PacketSceneTransToPointRsp(player, req.getPointId(), req.getSceneId()));
-                return;
-            }
-        }
-
-        session.send(new PacketSceneTransToPointRsp());
+        session.send(new PacketSceneTransToPointRsp(result, req.getPointId(), req.getSceneId()));
     }
 
 }

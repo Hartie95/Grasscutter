@@ -11,10 +11,13 @@ import emu.grasscutter.net.proto.DungeonSettleNotifyOuterClass.DungeonSettleNoti
 import emu.grasscutter.net.proto.ParamListOuterClass.ParamList;
 import emu.grasscutter.net.proto.StrengthenPointDataOuterClass.StrengthenPointData;
 import emu.grasscutter.utils.Utils;
+import lombok.Builder;
 import lombok.val;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static emu.grasscutter.game.dungeons.enums.DungeonInvolveType.INVOLVE_SINGLE_MULTIPLE;
 
 /**
  * Shows dungeon results
@@ -24,21 +27,26 @@ public class BaseDungeonResult {
     DungeonEndStats dungeonStats;
     Player player;
 
+    @Builder(builderMethodName = "BaseBuilder", setterPrefix = "set")
     public BaseDungeonResult(DungeonData dungeonData, DungeonEndStats dungeonStats, Player player){
         this.dungeonData = dungeonData;
         this.dungeonStats = dungeonStats;
         this.player = player;
     }
 
-    // other dungeons might not need to display this, that why I put it here
     /**
      * Could be different depending on dungeon types
      * */
-    protected void onProto(DungeonSettleNotify.Builder builder){
-        if (this.dungeonStats.dungeonResult().isSuccess()) return;
+    protected void onProto(DungeonSettleNotify.Builder builder){}
+
+    /**
+     * Show player's area to improve, not completed
+     * */
+    private void getStrengthenPointData(DungeonSettleNotify.Builder builder) {
+        if (this.dungeonStats.dungeonResult().isSuccess() ||
+            this.dungeonData.getInvolveType() != INVOLVE_SINGLE_MULTIPLE) return;
 
         val playerActiveTeam = this.player.getTeamManager().getActiveTeam();
-        // show player's area to improve
         builder.putAllStrengthenPointDataMap(Arrays.stream(StrengthenPointType.values()).collect(
             Collectors.toMap(StrengthenPointType::getValue, type -> switch (type){
                 case LEVEL -> StrengthenPointData.newBuilder()
@@ -80,7 +88,6 @@ public class BaseDungeonResult {
             .setResult(success ? 1 : 3)
             .setCreatePlayerUid(this.player.getUid());
 
-        // TODO check
         val tempSettleMap = new HashMap<Integer, ParamList.Builder>();
         Optional.ofNullable(this.dungeonData.getSettleShows()).stream()
             .flatMap(List::stream)
@@ -95,6 +102,7 @@ public class BaseDungeonResult {
         builder.putAllSettleShow(tempSettleMap.entrySet().stream()
             .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().build())));
 
+        getStrengthenPointData(builder);
         onProto(builder);
         return builder;
     }

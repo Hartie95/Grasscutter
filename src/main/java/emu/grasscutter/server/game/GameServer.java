@@ -2,7 +2,6 @@ package emu.grasscutter.server.game;
 
 import emu.grasscutter.GameConstants;
 import emu.grasscutter.Grasscutter;
-import emu.grasscutter.data.GameData;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.Account;
 import emu.grasscutter.game.battlepass.BattlePassSystem;
@@ -11,7 +10,6 @@ import emu.grasscutter.game.chat.ChatSystemHandler;
 import emu.grasscutter.game.combine.CombineManger;
 import emu.grasscutter.game.drop.DropSystem;
 import emu.grasscutter.game.dungeons.DungeonSystem;
-import emu.grasscutter.game.dungeons.challenge.DungeonChallenge;
 import emu.grasscutter.game.expedition.ExpeditionSystem;
 import emu.grasscutter.game.gacha.GachaSystem;
 import emu.grasscutter.game.managers.cooking.CookingCompoundManager;
@@ -25,7 +23,6 @@ import emu.grasscutter.game.systems.AnnouncementSystem;
 import emu.grasscutter.game.systems.InventorySystem;
 import emu.grasscutter.game.systems.MultiplayerSystem;
 import emu.grasscutter.game.tower.TowerSystem;
-import emu.grasscutter.game.world.SceneGroupInstance;
 import emu.grasscutter.game.world.World;
 import emu.grasscutter.game.world.WorldDataSystem;
 import emu.grasscutter.net.packet.PacketHandler;
@@ -125,7 +122,7 @@ public final class GameServer extends KcpServer {
         this.announcementSystem = new AnnouncementSystem(this);
         this.questSystem = new QuestSystem(this);
 
-        // Chata manager
+        // Chat manager
         this.chatManager = new ChatSystem(this);
 
         // Hook into shutdown event.
@@ -184,7 +181,7 @@ public final class GameServer extends KcpServer {
             return player;
         }
 
-        // Check database if character isnt here
+        // Check database if character isn't here
         if (player == null) {
             player = DatabaseHelper.getPlayerByUid(id);
         }

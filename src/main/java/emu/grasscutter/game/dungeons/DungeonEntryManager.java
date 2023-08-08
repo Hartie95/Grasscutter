@@ -1,4 +1,4 @@
-package emu.grasscutter.game.player;
+package emu.grasscutter.game.dungeons;
 
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.ScenePointEntry;
@@ -7,6 +7,8 @@ import emu.grasscutter.data.common.quest.SubQuestData;
 import emu.grasscutter.data.excels.DungeonData;
 import emu.grasscutter.data.excels.DungeonRosterData;
 import emu.grasscutter.data.excels.DungeonSerialData;
+import emu.grasscutter.game.player.BasePlayerManager;
+import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.quest.GameMainQuest;
 import emu.grasscutter.game.quest.GameQuest;
 import emu.grasscutter.game.quest.enums.QuestContent;
@@ -20,6 +22,9 @@ import lombok.val;
 import java.util.*;
 import java.util.stream.Stream;
 
+/**
+ * TODO sync resin usage with statue drops
+ * */
 public class DungeonEntryManager extends BasePlayerManager {
     /**
      * entry: [(sceneId << 16) + pointId, dungeonId]
@@ -30,47 +35,50 @@ public class DungeonEntryManager extends BasePlayerManager {
         super(player);
     }
 
+    private DungeonEntryItem getDungeonEntryItem() {
+        return this.player.getDungeonEntryItem();
+    }
+
+    private  Map<Integer, DungeonEntryItem.WeeklyBossRecord> getBossRecordMap() {
+        return Optional.ofNullable(getDungeonEntryItem()).map(DungeonEntryItem::getBossRecordMap).orElse(Map.of());
+    }
+
     public void onLogin() {
-        // find out quest specified dungeon entry
-        this.player.getQuestManager().getMainQuests().values().parallelStream()
+        // check if player needs quest dungeon entry
+        this.player.getQuestManager().getMainQuests().values().stream()
             .map(GameMainQuest::getChildQuests).map(Map::values).flatMap(Collection::stream)
             .filter(quest -> quest.getState() == QuestState.QUEST_STATE_UNFINISHED)
-            .map(GameQuest::getQuestData)
-            .forEach(data -> Optional.ofNullable(data.getGuide()).map(SubQuestData.Guide::getGuideScene)
-                .ifPresent(sceneId -> data.getFinishCond().stream()
-                    .filter(c -> c.getType() == QuestContent.QUEST_CONTENT_ENTER_DUNGEON)
-                    .forEach(cond -> this.plotDungeonEntries.computeIfAbsent(
-                        (sceneId << 16) + cond.getParam()[1], f -> new ArrayList<>()).add(cond.getParam()[0]))));
+            .map(GameQuest::getQuestData).map(SubQuestData::getFinishCond).flatMap(List::stream)
+            .filter(cond -> cond.getType() == QuestContent.QUEST_CONTENT_ENTER_DUNGEON)
+            .map(cond -> GameData.getDungeonEntriesMap().get(cond.getParam()[0]))
+            .forEach(entries -> this.plotDungeonEntries.computeIfAbsent(
+                entries.getEntryKey(), f -> new ArrayList<>()).add(entries.getDungeonId()));
 
         // builds weekly boss information if its missing
-        if (Optional.ofNullable(this.player.getDungeonEntryItem().getBossRecordMap())
-            .map(Map::keySet).filter(keys -> keys.containsAll(GameData.getDungeonSerialDataMap().keySet())).isEmpty()) {
-            GameData.getDungeonDataMap().values().parallelStream().filter(data -> data.getSerialId() > 0)
-                .map(data -> GameData.getDungeonSerialDataMap().get(data.getSerialId())).filter(Objects::nonNull)
-                .forEach(serialData -> this.player.getDungeonEntryItem().getBossRecordMap()
-                    .putIfAbsent(serialData.getId(), DungeonEntryItem.WeeklyBossRecord.create(serialData)));
-            this.player.save(); // TODO check if this is causing problem or anything
-        }
-        this.player.getDungeonEntryItem().resetWeeklyBoss();
+        getDungeonEntryItem().checkForNewBoss();
+        getDungeonEntryItem().resetWeeklyBoss();
     }
 
     public DungeonEntryInfo toProto(DungeonData data) {
         DungeonEntryInfo.Builder proto = DungeonEntryInfo.newBuilder();
         Optional.ofNullable(GameData.getDungeonSerialDataMap().get(data.getSerialId()))
-            .map(DungeonSerialData::getId).map(this.player.getDungeonEntryItem().getBossRecordMap()::get)
+            .map(DungeonSerialData::getId).map(getBossRecordMap()::get)
             .ifPresent(bossRecord -> proto.setWeeklyBossResinDiscountInfo(bossRecord.toProto())
                 .setBossChestNum(bossRecord.getTakeNum())
                 .setMaxBossChestNum(bossRecord.getMaxTakeNumLimit())
                 .setNextRefreshTime(bossRecord.getNextRefreshTime()));
 
         return proto.setDungeonId(data.getId())
-            .setIsPassed(this.player.getDungeonEntryItem().getPassedDungeons().contains(data.getId()))
+            .setIsPassed(getDungeonEntryItem().getPassedDungeons().contains(data.getId()))
             .build();
     }
 
+    /**
+     * Record weekly boss information after completing dungeon
+     * */
     public void updateDungeonEntryInfo(DungeonData dungeonData){
-        this.player.getDungeonEntryItem().addDungeon(dungeonData.getId());
-        this.player.getDungeonEntryItem().updateWeeklyBossInfo(dungeonData.getSerialId());
+        getDungeonEntryItem().addDungeon(dungeonData.getId());
+        getDungeonEntryItem().updateWeeklyBossInfo(dungeonData.getSerialId());
     }
 
     public List<Integer> getPlotDungeonById(int sceneId, int pointId){
@@ -78,10 +86,8 @@ public class DungeonEntryManager extends BasePlayerManager {
     }
 
     public WeeklyBossResinDiscountInfo getWeeklyBossDiscountInfo(DungeonData dungeonData) {
-        return Optional.ofNullable(this.player.getDungeonEntryItem()).map(DungeonEntryItem::getBossRecordMap)
-            .map(recordMap -> recordMap.get(dungeonData.getSerialId()))
-            .filter(DungeonEntryItem.WeeklyBossRecord::canTakeReward)
-            .map(DungeonEntryItem.WeeklyBossRecord::toProto)
+        return Optional.ofNullable(getBossRecordMap().get(dungeonData.getSerialId()))
+            .filter(DungeonEntryItem.WeeklyBossRecord::canTakeReward).map(DungeonEntryItem.WeeklyBossRecord::toProto)
             .orElse(null);
     }
 
@@ -89,52 +95,47 @@ public class DungeonEntryManager extends BasePlayerManager {
      * Get dungeon information for specific entries
      * */
     public List<DungeonData> getDungeonEntries(int sceneId, int pointId) {
-        // basic dungeon entries including daily domains and weekly bosses
+        // basic dungeon entries including daily domains and weekly bosses, not including Azhdaha here
         val basicDungeons = Optional.ofNullable(GameData.getScenePointEntryById(sceneId, pointId))
             .map(ScenePointEntry::getPointData).map(PointData::getDungeonIds).stream().parallel()
             .flatMapToInt(Arrays::stream).mapToObj(GameData.getDungeonDataMap()::get)
-            .filter(Objects::nonNull);
+            .filter(Objects::nonNull).toList();
 
         // quest entries
         val plotDungeons = Optional.ofNullable(getPlotDungeonById(sceneId, pointId)).stream().parallel()
             .flatMap(List::stream).map(dungeonId -> GameData.getDungeonDataMap().get(dungeonId.intValue()))
-            .filter(Objects::nonNull);
+            .filter(Objects::nonNull).toList();
 
-        Stream<DungeonData> rosterDungeons; // its dungeon that will rotate regularly, like Azhdaha boss
-        DungeonEntryItem.WeeklyBossRecord bossRecord = this.player.getDungeonEntryItem().getBossRecordMap().values().stream()
+        List<DungeonData> rosterDungeons; // dungeon that will rotate regularly, like Azhdaha weekly boss
+        val bossRecord = getBossRecordMap().values().stream()
             .filter(bossRecord1 -> bossRecord1.getRosterCycleRecord() != null).findFirst().orElse(null);
 
+        // TODO simplify
         if (bossRecord != null) { // assuming there is at least one roster dungeon, get the information
             rosterDungeons = Optional.ofNullable(GameData.getScenePointEntryById(sceneId, pointId))
                 .map(ScenePointEntry::getPointData).map(PointData::getDungeonRosterList).stream().parallel()
                 .flatMapToInt(Arrays::stream).mapToObj(GameData.getDungeonRosterDataMap()::get).filter(Objects::nonNull)
                 .map(rosterData -> rosterData.getRosterPool().get(bossRecord.getRosterCycleRecord().getSelectedPool()))
                 .filter(Objects::nonNull).map(DungeonRosterData.RosterPool::getDungeonList).flatMapToInt(Arrays::stream)
-                .mapToObj(GameData.getDungeonDataMap()::get);
+                .mapToObj(GameData.getDungeonDataMap()::get).toList();
         } else { // build and retrieve dungeon information if the player doesn't have it
             rosterDungeons = Optional.ofNullable(GameData.getScenePointEntryById(sceneId, pointId))
-                .map(ScenePointEntry::getPointData).map(PointData::getDungeonRosterList)
-                .map(Arrays::stream).map(rosterStream -> rosterStream.parallel()
-                    .mapToObj(GameData.getDungeonRosterDataMap()::get).filter(Objects::nonNull)
-                    .filter(DungeonRosterData::nowIsAfterOpenTime)
-                    .map(rosterData -> {
-                        val rosterPool = rosterData.getRosterPool();
-                        val serialId = rosterPool.stream().parallel().map(DungeonRosterData.RosterPool::getDungeonList)
-                            .flatMapToInt(Arrays::stream).mapToObj(GameData.getDungeonDataMap()::get)
-                            .filter(Objects::nonNull).map(DungeonData::getSerialId)
-                            .findFirst().orElse(0);
+                .map(ScenePointEntry::getPointData).map(PointData::getDungeonRosterList).stream()
+                .flatMapToInt(Arrays::stream).mapToObj(GameData.getDungeonRosterDataMap()::get).filter(Objects::nonNull)
+                .filter(DungeonRosterData::nowIsAfterOpenTime).map(rosterData -> {
+                    val rosterPool = rosterData.getRosterPool();
+                    val serialId = rosterPool.stream().parallel().map(DungeonRosterData.RosterPool::getDungeonList)
+                        .flatMapToInt(Arrays::stream).mapToObj(GameData.getDungeonDataMap()::get)
+                        .filter(Objects::nonNull).map(DungeonData::getSerialId).findFirst().orElse(0);
 
-                        int selectedPool = Optional.ofNullable(this.player.getDungeonEntryItem().getBossRecordMap().get(serialId))
-                            .map(bossRecord1 -> bossRecord1.getRosterRecord(rosterData.getId()))
-                            .map(DungeonEntryItem.RosterCycleRecord::getSelectedPool).orElse(-1);
-                        return selectedPool == -1 ? new int[]{} : rosterPool.get(selectedPool).getDungeonList();
-                    })
-                    .flatMapToInt(Arrays::stream)
-                    .mapToObj(GameData.getDungeonDataMap()::get)
-                    .filter(Objects::nonNull)).orElse(Stream.of());
+                    int selectedPool = Optional.ofNullable(getBossRecordMap().get(serialId))
+                        .map(bossRecord1 -> bossRecord1.getRosterRecord(rosterData.getId()))
+                        .map(DungeonEntryItem.RosterCycleRecord::getSelectedPool).orElse(-1);
+                    return selectedPool < 0 || selectedPool >= rosterPool.size() ? new int[]{} : rosterPool.get(selectedPool).getDungeonList();
+                }).flatMapToInt(Arrays::stream).mapToObj(GameData.getDungeonDataMap()::get).filter(Objects::nonNull).toList();
         }
 
-        return Stream.concat(Stream.concat(basicDungeons, plotDungeons), rosterDungeons).parallel()
+        return Stream.of(basicDungeons, plotDungeons, rosterDungeons).flatMap(Collection::stream)
             .filter(data -> this.player.getLevel() >= data.getLimitLevel())
             .filter(data -> data.getId() != 69) // TODO, this dungeon is causing problem, find out why
             .toList();

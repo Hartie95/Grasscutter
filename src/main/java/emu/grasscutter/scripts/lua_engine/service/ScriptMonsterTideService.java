@@ -8,13 +8,13 @@ import emu.grasscutter.scripts.data.SceneMonster;
 import emu.grasscutter.scripts.data.ScriptArgs;
 import emu.grasscutter.scripts.listener.ScriptMonsterListener;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ScriptMonsterTideService {
     private final SceneScriptManager sceneScriptManager;
+    private final int challengeIndex;
     private final SceneGroup currentGroup;
     private final AtomicInteger monsterAlive;
     private final AtomicInteger monsterTideCount;
@@ -25,9 +25,10 @@ public class ScriptMonsterTideService {
     private final OnMonsterCreated onMonsterCreated= new OnMonsterCreated();
     private final OnMonsterDead onMonsterDead= new OnMonsterDead();
 
-    public ScriptMonsterTideService(SceneScriptManager sceneScriptManager,
+    public ScriptMonsterTideService(SceneScriptManager sceneScriptManager, int challengeIndex,
                      SceneGroup group, int tideCount, int monsterSceneLimit, Integer[] ordersConfigId){
         this.sceneScriptManager = sceneScriptManager;
+        this.challengeIndex = challengeIndex;
         this.currentGroup = group;
         this.monsterSceneLimit = monsterSceneLimit;
         this.monsterTideCount = new AtomicInteger(tideCount);
@@ -80,7 +81,8 @@ public class ScriptMonsterTideService {
             }
             // spawn the last turn of monsters
             // fix the 5-2
-            sceneScriptManager.callEvent(new ScriptArgs(currentGroup.id, EventType.EVENT_MONSTER_TIDE_DIE, monsterKillCount.get()));
+            sceneScriptManager.callEvent(new ScriptArgs(currentGroup.id, EventType.EVENT_MONSTER_TIDE_DIE, monsterKillCount.get())
+                .setEventSource(String.valueOf(challengeIndex)));
         }
 
     }

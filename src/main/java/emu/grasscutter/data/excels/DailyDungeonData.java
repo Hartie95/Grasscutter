@@ -22,7 +22,7 @@ public class DailyDungeonData extends GameResource {
     int[] sunday;
 
     private static final int[] empty = new int[0];
-    private final Int2ObjectMap<int[]> map;
+    @Getter private final Int2ObjectMap<int[]> map;
 
     public DailyDungeonData() {
         this.map = new Int2ObjectOpenHashMap<>();

@@ -1,34 +1,30 @@
 package emu.grasscutter.server.packet.recv;
 
-import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.net.packet.Opcodes;
 import emu.grasscutter.net.packet.PacketHandler;
 import emu.grasscutter.net.packet.PacketOpcodes;
-import emu.grasscutter.net.proto.HomeSceneJumpReqOuterClass;
+import emu.grasscutter.net.proto.HomeSceneJumpReqOuterClass.HomeSceneJumpReq;
 import emu.grasscutter.server.game.GameSession;
 import emu.grasscutter.server.packet.send.PacketHomeSceneJumpRsp;
-import emu.grasscutter.utils.Position;
+import lombok.val;
 
 @Opcodes(PacketOpcodes.HomeSceneJumpReq)
 public class HandlerHomeSceneJumpReq extends PacketHandler {
-	
+
 	@Override
 	public void handle(GameSession session, byte[] header, byte[] payload) throws Exception {
-		var req = HomeSceneJumpReqOuterClass.HomeSceneJumpReq.parseFrom(payload);
+		val req = HomeSceneJumpReq.parseFrom(payload);
 
 		int realmId = 2000 + session.getPlayer().getCurrentRealmId();
-
-		var home = session.getPlayer().getHome();
-		var homeScene = home.getHomeSceneItem(realmId);
+        val home = session.getPlayer().getHome();
+        val homeScene = home.getHomeSceneItem(realmId);
 		home.save();
 
-		Scene scene = session.getPlayer().getWorld().getSceneById(req.getIsEnterRoomScene() ? homeScene.getRoomSceneId() : realmId);
-		Position pos = scene.getScriptManager().getConfig().born_pos;
-
+        // the function should be able to get pos and rot from scriptManager config
 		session.getPlayer().getWorld().transferPlayerToScene(
-				session.getPlayer(),
-				req.getIsEnterRoomScene() ? homeScene.getRoomSceneId() : realmId,
-				pos
+            session.getPlayer(),
+            req.getIsEnterRoomScene() ? homeScene.getRoomSceneId() : realmId,
+            null, null
 		);
 
 		session.send(new PacketHomeSceneJumpRsp(req.getIsEnterRoomScene()));

@@ -19,19 +19,13 @@ public final class DungeonReviseLevelNotifyOuterClass {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>uint32 revise_level = 10;</code>
+     * <code>uint32 revise_level = 7;</code>
      * @return The reviseLevel.
      */
     int getReviseLevel();
 
     /**
-     * <code>uint32 show_level = 5;</code>
-     * @return The showLevel.
-     */
-    int getShowLevel();
-
-    /**
-     * <code>uint32 dungeon_id = 3;</code>
+     * <code>uint32 dungeon_id = 14;</code>
      * @return The dungeonId.
      */
     int getDungeonId();
@@ -88,19 +82,14 @@ public final class DungeonReviseLevelNotifyOuterClass {
             case 0:
               done = true;
               break;
-            case 24: {
-
-              dungeonId_ = input.readUInt32();
-              break;
-            }
-            case 40: {
-
-              showLevel_ = input.readUInt32();
-              break;
-            }
-            case 80: {
+            case 56: {
 
               reviseLevel_ = input.readUInt32();
+              break;
+            }
+            case 112: {
+
+              dungeonId_ = input.readUInt32();
               break;
             }
             default: {
@@ -135,10 +124,10 @@ public final class DungeonReviseLevelNotifyOuterClass {
               emu.grasscutter.net.proto.DungeonReviseLevelNotifyOuterClass.DungeonReviseLevelNotify.class, emu.grasscutter.net.proto.DungeonReviseLevelNotifyOuterClass.DungeonReviseLevelNotify.Builder.class);
     }
 
-    public static final int REVISE_LEVEL_FIELD_NUMBER = 10;
+    public static final int REVISE_LEVEL_FIELD_NUMBER = 7;
     private int reviseLevel_;
     /**
-     * <code>uint32 revise_level = 10;</code>
+     * <code>uint32 revise_level = 7;</code>
      * @return The reviseLevel.
      */
     @java.lang.Override
@@ -146,21 +135,10 @@ public final class DungeonReviseLevelNotifyOuterClass {
       return reviseLevel_;
     }
 
-    public static final int SHOW_LEVEL_FIELD_NUMBER = 5;
-    private int showLevel_;
-    /**
-     * <code>uint32 show_level = 5;</code>
-     * @return The showLevel.
-     */
-    @java.lang.Override
-    public int getShowLevel() {
-      return showLevel_;
-    }
-
-    public static final int DUNGEON_ID_FIELD_NUMBER = 3;
+    public static final int DUNGEON_ID_FIELD_NUMBER = 14;
     private int dungeonId_;
     /**
-     * <code>uint32 dungeon_id = 3;</code>
+     * <code>uint32 dungeon_id = 14;</code>
      * @return The dungeonId.
      */
     @java.lang.Override
@@ -182,14 +160,11 @@ public final class DungeonReviseLevelNotifyOuterClass {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (dungeonId_ != 0) {
-        output.writeUInt32(3, dungeonId_);
-      }
-      if (showLevel_ != 0) {
-        output.writeUInt32(5, showLevel_);
-      }
       if (reviseLevel_ != 0) {
-        output.writeUInt32(10, reviseLevel_);
+        output.writeUInt32(7, reviseLevel_);
+      }
+      if (dungeonId_ != 0) {
+        output.writeUInt32(14, dungeonId_);
       }
       unknownFields.writeTo(output);
     }
@@ -200,17 +175,13 @@ public final class DungeonReviseLevelNotifyOuterClass {
       if (size != -1) return size;
 
       size = 0;
-      if (dungeonId_ != 0) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeUInt32Size(3, dungeonId_);
-      }
-      if (showLevel_ != 0) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeUInt32Size(5, showLevel_);
-      }
       if (reviseLevel_ != 0) {
         size += com.google.protobuf.CodedOutputStream
-          .computeUInt32Size(10, reviseLevel_);
+          .computeUInt32Size(7, reviseLevel_);
+      }
+      if (dungeonId_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(14, dungeonId_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -229,8 +200,6 @@ public final class DungeonReviseLevelNotifyOuterClass {
 
       if (getReviseLevel()
           != other.getReviseLevel()) return false;
-      if (getShowLevel()
-          != other.getShowLevel()) return false;
       if (getDungeonId()
           != other.getDungeonId()) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
@@ -246,8 +215,6 @@ public final class DungeonReviseLevelNotifyOuterClass {
       hash = (19 * hash) + getDescriptor().hashCode();
       hash = (37 * hash) + REVISE_LEVEL_FIELD_NUMBER;
       hash = (53 * hash) + getReviseLevel();
-      hash = (37 * hash) + SHOW_LEVEL_FIELD_NUMBER;
-      hash = (53 * hash) + getShowLevel();
       hash = (37 * hash) + DUNGEON_ID_FIELD_NUMBER;
       hash = (53 * hash) + getDungeonId();
       hash = (29 * hash) + unknownFields.hashCode();
@@ -392,8 +359,6 @@ public final class DungeonReviseLevelNotifyOuterClass {
         super.clear();
         reviseLevel_ = 0;
 
-        showLevel_ = 0;
-
         dungeonId_ = 0;
 
         return this;
@@ -423,7 +388,6 @@ public final class DungeonReviseLevelNotifyOuterClass {
       public emu.grasscutter.net.proto.DungeonReviseLevelNotifyOuterClass.DungeonReviseLevelNotify buildPartial() {
         emu.grasscutter.net.proto.DungeonReviseLevelNotifyOuterClass.DungeonReviseLevelNotify result = new emu.grasscutter.net.proto.DungeonReviseLevelNotifyOuterClass.DungeonReviseLevelNotify(this);
         result.reviseLevel_ = reviseLevel_;
-        result.showLevel_ = showLevel_;
         result.dungeonId_ = dungeonId_;
         onBuilt();
         return result;
@@ -476,9 +440,6 @@ public final class DungeonReviseLevelNotifyOuterClass {
         if (other.getReviseLevel() != 0) {
           setReviseLevel(other.getReviseLevel());
         }
-        if (other.getShowLevel() != 0) {
-          setShowLevel(other.getShowLevel());
-        }
         if (other.getDungeonId() != 0) {
           setDungeonId(other.getDungeonId());
         }
@@ -513,7 +474,7 @@ public final class DungeonReviseLevelNotifyOuterClass {
 
       private int reviseLevel_ ;
       /**
-       * <code>uint32 revise_level = 10;</code>
+       * <code>uint32 revise_level = 7;</code>
        * @return The reviseLevel.
        */
       @java.lang.Override
@@ -521,61 +482,30 @@ public final class DungeonReviseLevelNotifyOuterClass {
         return reviseLevel_;
       }
       /**
-       * <code>uint32 revise_level = 10;</code>
+       * <code>uint32 revise_level = 7;</code>
        * @param value The reviseLevel to set.
        * @return This builder for chaining.
        */
       public Builder setReviseLevel(int value) {
-        
+
         reviseLevel_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>uint32 revise_level = 10;</code>
+       * <code>uint32 revise_level = 7;</code>
        * @return This builder for chaining.
        */
       public Builder clearReviseLevel() {
-        
-        reviseLevel_ = 0;
-        onChanged();
-        return this;
-      }
 
-      private int showLevel_ ;
-      /**
-       * <code>uint32 show_level = 5;</code>
-       * @return The showLevel.
-       */
-      @java.lang.Override
-      public int getShowLevel() {
-        return showLevel_;
-      }
-      /**
-       * <code>uint32 show_level = 5;</code>
-       * @param value The showLevel to set.
-       * @return This builder for chaining.
-       */
-      public Builder setShowLevel(int value) {
-        
-        showLevel_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>uint32 show_level = 5;</code>
-       * @return This builder for chaining.
-       */
-      public Builder clearShowLevel() {
-        
-        showLevel_ = 0;
+        reviseLevel_ = 0;
         onChanged();
         return this;
       }
 
       private int dungeonId_ ;
       /**
-       * <code>uint32 dungeon_id = 3;</code>
+       * <code>uint32 dungeon_id = 14;</code>
        * @return The dungeonId.
        */
       @java.lang.Override
@@ -583,22 +513,22 @@ public final class DungeonReviseLevelNotifyOuterClass {
         return dungeonId_;
       }
       /**
-       * <code>uint32 dungeon_id = 3;</code>
+       * <code>uint32 dungeon_id = 14;</code>
        * @param value The dungeonId to set.
        * @return This builder for chaining.
        */
       public Builder setDungeonId(int value) {
-        
+
         dungeonId_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>uint32 dungeon_id = 3;</code>
+       * <code>uint32 dungeon_id = 14;</code>
        * @return This builder for chaining.
        */
       public Builder clearDungeonId() {
-        
+
         dungeonId_ = 0;
         onChanged();
         return this;
@@ -658,7 +588,7 @@ public final class DungeonReviseLevelNotifyOuterClass {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_DungeonReviseLevelNotify_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_DungeonReviseLevelNotify_fieldAccessorTable;
 
@@ -670,10 +600,10 @@ public final class DungeonReviseLevelNotifyOuterClass {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\036DungeonReviseLevelNotify.proto\"X\n\030Dung" +
-      "eonReviseLevelNotify\022\024\n\014revise_level\030\n \001" +
-      "(\r\022\022\n\nshow_level\030\005 \001(\r\022\022\n\ndungeon_id\030\003 \001" +
-      "(\rB\033\n\031emu.grasscutter.net.protob\006proto3"
+      "\n\036DungeonReviseLevelNotify.proto\"D\n\030Dung" +
+      "eonReviseLevelNotify\022\024\n\014revise_level\030\007 \001" +
+      "(\r\022\022\n\ndungeon_id\030\016 \001(\rB\033\n\031emu.grasscutte" +
+      "r.net.protob\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -684,7 +614,7 @@ public final class DungeonReviseLevelNotifyOuterClass {
     internal_static_DungeonReviseLevelNotify_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_DungeonReviseLevelNotify_descriptor,
-        new java.lang.String[] { "ReviseLevel", "ShowLevel", "DungeonId", });
+        new java.lang.String[] { "ReviseLevel", "DungeonId", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -5,10 +5,12 @@ import emu.grasscutter.game.dungeons.DungeonEndStats;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.net.proto.DungeonSettleNotifyOuterClass;
 import emu.grasscutter.net.proto.TrialAvatarFirstPassDungeonNotifyOuterClass.TrialAvatarFirstPassDungeonNotify;
+import lombok.Builder;
 
 public class TrialAvatarDungeonResult extends BaseDungeonResult {
     int trialCharacterIndexId;
 
+    @Builder(builderMethodName = "TrialAvatarBuilder", setterPrefix = "set")
     public TrialAvatarDungeonResult(DungeonData dungeonData, DungeonEndStats dungeonStats, Player player, int trialCharacterIndexId) {
         super(dungeonData, dungeonStats, player);
         this.trialCharacterIndexId = trialCharacterIndexId;
