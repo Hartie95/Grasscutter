@@ -7,17 +7,11 @@ import emu.grasscutter.net.proto.TowerCurLevelRecordOuterClass.TowerCurLevelReco
 
 public class PacketTowerCurLevelRecordChangeNotify extends BasePacket {
 
-	public PacketTowerCurLevelRecordChangeNotify(int curFloorId, int curLevelIndex) {
+	public PacketTowerCurLevelRecordChangeNotify(TowerCurLevelRecord recordProto) {
 		super(PacketOpcodes.TowerCurLevelRecordChangeNotify);
 
-		TowerCurLevelRecordChangeNotify proto = TowerCurLevelRecordChangeNotify.newBuilder()
-				.setCurLevelRecord(TowerCurLevelRecord.newBuilder()
-						.setCurFloorId(curFloorId)
-						.setCurLevelIndex(curLevelIndex)
-						// TODO team info
-						.build())
-				.build();
-		
-		this.setData(proto);
+		this.setData(TowerCurLevelRecordChangeNotify.newBuilder()
+            .setCurLevelRecord(recordProto)
+            .build());
 	}
 }

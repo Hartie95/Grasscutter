@@ -60,7 +60,7 @@ public class Avatar {
     @Getter @Setter private int satiation; // ?
     @Getter @Setter private int satiationPenalty; // ?
     @Getter @Setter private float currentHp;
-    private float currentEnergy;
+    @Getter private float currentEnergy;
 
     @Transient @Getter private final Int2ObjectMap<GameItem> equips;
     @Transient @Getter private final Int2FloatOpenHashMap fightProperties;
@@ -69,9 +69,9 @@ public class Avatar {
 
     private List<Integer> fetters;
 
-    private Map<Integer, Integer> skillLevelMap = new Int2IntArrayMap(7); // Talent levels
-    @Transient @Getter private Map<Integer, Integer> skillExtraChargeMap = new Int2IntArrayMap(2); // Charges
-    @Transient private Map<Integer, Integer> proudSkillBonusMap = new Int2IntArrayMap(2); // Talent bonus levels (from const)
+    private final Map<Integer, Integer> skillLevelMap = new Int2IntArrayMap(7); // Talent levels
+    @Transient @Getter private final Map<Integer, Integer> skillExtraChargeMap = new Int2IntArrayMap(2); // Charges
+    @Transient private final Map<Integer, Integer> proudSkillBonusMap = new Int2IntArrayMap(2); // Talent bonus levels (from const)
     @Getter private int skillDepotId;
     private Set<Integer> talentIdList; // Constellation id list
     @Getter private Set<Integer> proudSkillList; // Character passives
@@ -86,7 +86,7 @@ public class Avatar {
     @Getter @Setter private int nameCardRewardId;
     @Getter @Setter private int nameCardId;
 
-    @Deprecated // Do not use. Morhpia only!
+    @Deprecated // Do not use. Morphia only!
     public Avatar() {
         this.equips = new Int2ObjectOpenHashMap<>();
         this.fightProperties = new Int2FloatOpenHashMap();
@@ -271,6 +271,10 @@ public class Avatar {
         if (GAME_OPTIONS.energyUsage) {
             this.setFightProperty(curEnergyProp, currentEnergy);
             this.currentEnergy = currentEnergy;
+            if (getPlayer() != null && getPlayer().hasSentLoginPackets()) {
+                getPlayer().sendPacket(new PacketAvatarFightPropUpdateNotify(this, curEnergyProp));
+            }
+
             this.save();
         }
     }
@@ -635,11 +639,9 @@ public class Avatar {
             // Packet
             Stream.of(entry.getSkillPointModifiers())
                 .mapToInt(SkillPointModifier::getSkillId)
-                .forEach(skillId -> {
-                    this.getPlayer().sendPacket(
-                        new PacketAvatarSkillMaxChargeCountNotify(this, skillId, this.getSkillExtraChargeMap().getOrDefault(skillId, 0))
-                    );
-                });
+                .forEach(skillId -> this.getPlayer().sendPacket(
+                    new PacketAvatarSkillMaxChargeCountNotify(this, skillId, this.getSkillExtraChargeMap().getOrDefault(skillId, 0))
+                ));
         }
     }
 

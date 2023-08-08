@@ -14,6 +14,8 @@ import emu.grasscutter.game.avatar.Avatar;
 import emu.grasscutter.game.avatar.AvatarStorage;
 import emu.grasscutter.game.avatar.TrialAvatar;
 import emu.grasscutter.game.battlepass.BattlePassManager;
+import emu.grasscutter.game.dungeons.DungeonEntryItem;
+import emu.grasscutter.game.dungeons.DungeonEntryManager;
 import emu.grasscutter.game.entity.EntityAvatar;
 import emu.grasscutter.game.expedition.ExpeditionInfo;
 import emu.grasscutter.game.friends.FriendsList;
@@ -915,23 +917,26 @@ public class Player {
     public void setAvatarsAbilityForScene(Scene scene){
         Optional.ofNullable(scene.getSceneData())
             .map(sData -> GameData.getConfigLevelEntityDataMap().get(sData.getLevelEntityConfig()))
-            .ifPresent(config -> Optional.ofNullable(scene.getSceneData().getSpecifiedAvatarList()).stream()
-                // so far only main character is specified, might be a problem if scene specific other character
-                .map(aList -> aList.stream().filter(id -> id == this.mainCharacterId).toList())
-                .map(aList -> aList.stream().map(id -> getAvatars().getAvatarById(id))
-                    .filter(Objects::nonNull).toList())
-                .map(aList -> aList.stream().map(avatar -> new EntityAvatar(scene, avatar)).toList())
-                // clear active team and add only the specific character
-                .filter(eList -> !eList.isEmpty())
-                .peek(eList -> getTeamManager().getActiveTeam().clear())
-                .peek(getTeamManager().getActiveTeam()::addAll)
+            .ifPresent(config -> {
+                // check if its considering specific avatars
+                Optional.ofNullable(scene.getSceneData().getSpecifiedAvatarList())
+                    // so far only main character is specified, might be a problem if scene specific other character
+                    .map(aList -> aList.stream().filter(id -> id == this.mainCharacterId).toList())
+                    .map(aList -> aList.stream().map(id -> getAvatars().getAvatarById(id))
+                        .filter(Objects::nonNull).toList())
+                    .map(aList -> aList.stream().map(avatar -> new EntityAvatar(scene, avatar)).toList())
+                    // clear active team and add only the specific character
+                    .filter(eList -> !eList.isEmpty()).stream() // should only be one list at this point
+                    .peek(eList -> getTeamManager().getActiveTeam().clear())
+                    .forEach(getTeamManager().getActiveTeam()::addAll);
+
                 // rebuild active team with special abilities
-                .flatMap(List::stream).map(EntityAvatar::getAvatar)
-                .map(Avatar::getAvatarData).filter(Objects::nonNull)
-                .peek(AvatarData::rebuildAbilityEmbryo).map(AvatarData::getAbilities)
-                .filter(Objects::nonNull).forEach(abilities -> Optional.ofNullable(config.getAvatarAbilities())
-                    .stream().flatMap(List::stream)
-                    .forEach(configAbility -> abilities.add(Utils.abilityHash(configAbility.getAbilityName())))));
+                getTeamManager().getActiveTeam().stream().map(EntityAvatar::getAvatar).map(Avatar::getAvatarData)
+                    .filter(Objects::nonNull).peek(AvatarData::rebuildAbilityEmbryo).map(AvatarData::getAbilities)
+                    .filter(Objects::nonNull).forEach(abilities -> Optional.ofNullable(config.getAvatarAbilities())
+                        .stream().flatMap(List::stream).forEach(configAbility ->
+                            abilities.add(Utils.abilityHash(configAbility.getAbilityName()))));
+            });
     }
     /**
      * Sends a message to another player.
@@ -1276,6 +1281,9 @@ public class Player {
         getSession().send(new PacketWidgetGadgetAllDataNotify());
         getSession().send(new PacketCombineDataNotify(getUnlockedCombines()));
         getSession().send(new PacketGetChatEmojiCollectionRsp(getChatEmojiIdList()));
+
+        getTowerManager().onLogin();
+        getSession().send(new PacketTowerBriefDataNotify(this));
 
         getForgingManager().sendForgeDataNotify();
         getResinManager().onPlayerLogin();

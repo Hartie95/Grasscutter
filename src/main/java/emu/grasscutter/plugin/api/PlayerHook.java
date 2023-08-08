@@ -39,7 +39,7 @@ public final class PlayerHook {
      * @param sceneId The scene to send the player to.
      */
     public void changeScenes(int sceneId) {
-        this.player.getWorld().transferPlayerToScene(this.player, sceneId, this.player.getPosition());
+        this.player.getWorld().transferPlayerToScene(this.player, sceneId, this.player.getPosition(), this.player.getRotation());
     }
 
     /**

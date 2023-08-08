@@ -6,80 +6,79 @@ import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.TowerScheduleData;
 import emu.grasscutter.server.game.BaseGameSystem;
 import emu.grasscutter.server.game.GameServer;
+import emu.grasscutter.utils.DateHelper;
+import lombok.Getter;
+import lombok.val;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class TowerSystem extends BaseGameSystem {
+    @Getter private final static TowerScheduleConfig towerScheduleConfig;
 
     public TowerSystem(GameServer server) {
         super(server);
-        this.load();
     }
 
-    private TowerScheduleConfig towerScheduleConfig;
-
-    public synchronized void load() {
+    static {
+        TowerScheduleConfig temp = null;
         try {
-            towerScheduleConfig = DataLoader.loadClass("TowerSchedule.json", TowerScheduleConfig.class);
+            temp = DataLoader.loadClass("TowerSchedule.json", TowerScheduleConfig.class);
         } catch (Exception e) {
             Grasscutter.getLogger().error("Unable to load tower schedule config.", e);
         }
-    }
-
-    public TowerScheduleConfig getTowerScheduleConfig() {
-        return towerScheduleConfig;
+        towerScheduleConfig = temp;
     }
 
     public TowerScheduleData getCurrentTowerScheduleData() {
-        var data = GameData.getTowerScheduleDataMap().get(towerScheduleConfig.getScheduleId());
+        val data = GameData.getTowerScheduleDataMap().get(getScheduleId());
         if (data == null) {
-            Grasscutter.getLogger().error("Could not get current tower schedule data by schedule id {}, please check your resource files",
-                    towerScheduleConfig.getScheduleId());
+            Grasscutter.getLogger().error(
+                "Could not get current tower schedule data by schedule id {}, please check your resource files", getScheduleId());
         }
 
         return data;
     }
 
-    public List<Integer> getAllFloors() {
-        List<Integer> floors = new ArrayList<>(this.getCurrentTowerScheduleData().getEntranceFloorId());
-        floors.addAll(this.getScheduleFloors());
-        return floors;
+    public List<Integer> getEntranceFloor() {
+        return Optional.ofNullable(getCurrentTowerScheduleData()).map(TowerScheduleData::getEntranceFloorId)
+            .stream().flatMap(List::stream).toList();
     }
 
     public List<Integer> getScheduleFloors() {
-        return getCurrentTowerScheduleData().getSchedules().get(0).getFloorList();
+        return Optional.ofNullable(getCurrentTowerScheduleData()).map(TowerScheduleData::getSchedules)
+            .stream().flatMap(List::stream).map(TowerScheduleData.ScheduleDetail::getFloorList).flatMap(List::stream)
+            .toList();
+    }
+
+    public List<Integer> getAllFloors() {
+        return Stream.of(getEntranceFloor(), getScheduleFloors()).flatMap(Collection::stream).toList();
     }
 
     public int getNextFloorId(int floorId) {
-        var entranceFloors = getCurrentTowerScheduleData().getEntranceFloorId();
-        var scheduleFloors = getScheduleFloors();
-        var nextId = 0;
-
-        // find in entrance floors first
-        for (int i=0;i<entranceFloors.size()-1;i++) {
-            if (floorId == entranceFloors.get(i)) {
-                nextId = entranceFloors.get(i+1);
-            }
-        }
-
-        if (floorId == entranceFloors.get(entranceFloors.size()-1)) {
-            nextId = scheduleFloors.get(0);
-        }
-
-        if (nextId != 0) {
-            return nextId;
-        }
-
-        // find in schedule floors
-        for (int i=0; i < scheduleFloors.size() - 1; i++) {
-            if (floorId == scheduleFloors.get(i)) {
-                nextId = scheduleFloors.get(i + 1);
-            }
-        }return nextId;
+        val allFloors = getAllFloors();
+        return IntStream.range(0, allFloors.size() - 1)
+            .filter(i -> floorId == allFloors.get(i))
+            .mapToObj(i -> allFloors.get(i + 1))
+            .findFirst().orElse(0);
     }
 
-    public Integer getLastEntranceFloor() {
-        return getCurrentTowerScheduleData().getEntranceFloorId().get(getCurrentTowerScheduleData().getEntranceFloorId().size() - 1);
+    public int getLastEntranceFloor() {
+        return getEntranceFloor().stream().reduce((first, second) -> second).orElse(0);
+    }
+
+    public int getScheduleId() {
+        return Optional.ofNullable(towerScheduleConfig).map(TowerScheduleConfig::getScheduleId).orElse(0);
+    }
+
+    public int getScheduleStartDate() {
+        return Optional.ofNullable(towerScheduleConfig).map(TowerScheduleConfig::getScheduleStartTime)
+            .map(DateHelper::getUnixTime).orElse(0);
+    }
+
+    public int getScheduleChangeDate() {
+        return Optional.ofNullable(towerScheduleConfig).map(TowerScheduleConfig::getNextScheduleChangeTime)
+            .map(DateHelper::getUnixTime).orElse(0);
     }
 }

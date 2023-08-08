@@ -6,12 +6,10 @@ import emu.grasscutter.net.proto.TowerTeamSelectRspOuterClass.TowerTeamSelectRsp
 
 public class PacketTowerTeamSelectRsp extends BasePacket {
 
-	public PacketTowerTeamSelectRsp() {
+	public PacketTowerTeamSelectRsp(boolean result) {
 		super(PacketOpcodes.TowerTeamSelectRsp);
 
-		TowerTeamSelectRsp proto = TowerTeamSelectRsp.newBuilder()
-				.build();
-		
-		this.setData(proto);
+		this.setData(TowerTeamSelectRsp.newBuilder()
+            .setRetcode(result ? 0 : 1));
 	}
 }

@@ -41,10 +41,10 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * TODO handle time limits
  * TODO handle respawn points
  * TODO handle team wipes and respawns
  * TODO check monster level and levelConfigMap
+ * TODO find out how to show leyline disorder notification, probably has to do with levelConfigMap
  */
 public class DungeonManager {
 
@@ -147,6 +147,9 @@ public class DungeonManager {
         return true;
     }
 
+    /**
+     * Generate random dungeon statue rewards
+     * */
     private List<GameItem> rollRewards(boolean useCondensed) {
         List<GameItem> rewards = new ArrayList<>();
         int dungeonId = this.dungeonData.getId();
@@ -195,9 +198,12 @@ public class DungeonManager {
                 .forEach(rewards::add);
         }
 
-        return rewards;
+        return rewards.stream().sorted(Comparator.comparing(GameItem::getItemId)).toList();
     }
 
+    /**
+     * Build specific trial team for player depending on dungeon entries
+     * */
     public void applyTrialTeam(Player player) {
         if (getDungeonData() == null) return;
 
@@ -272,6 +278,7 @@ public class DungeonManager {
     }
 
     public void sendDungeonInfoPacket() {
+        // TODO these packet are sent by official, this is only place holder, not fixed
         this.scene.broadcastPacket(new PacketDungeonReviseLevelNotify(this.dungeonData));
         this.scene.broadcastPacket(new PacketDungeonDataNotify(this.dungeonData));
     }
@@ -292,14 +299,8 @@ public class DungeonManager {
      * Get weekly boss chest information for qualified player
      * */
     public Map<Integer, WeeklyBossResinDiscountInfo> getWeeklyBossUidInfo() {
-        val infoMap = new HashMap<Integer, WeeklyBossResinDiscountInfo>();
-        getScene().getPlayers().forEach(p -> {
-            val info = p.getDungeonEntryManager().getWeeklyBossDiscountInfo(this.dungeonData);
-            if (info == null) return;
-
-            infoMap.put(p.getUid(), info);
-        });
-        Grasscutter.getLogger().info("{}", infoMap);
-        return infoMap;
+        return getScene().getPlayers().stream()
+            .filter(p ->  p.getDungeonEntryManager().getWeeklyBossDiscountInfo(this.dungeonData) != null)
+            .collect(Collectors.toMap(Player::getUid, p -> p.getDungeonEntryManager().getWeeklyBossDiscountInfo(this.dungeonData)));
     }
 }

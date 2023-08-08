@@ -1,4 +1,4 @@
-package emu.grasscutter.game.player;
+package emu.grasscutter.game.dungeons;
 
 import dev.morphia.annotations.Entity;
 import emu.grasscutter.GameConstants;
@@ -12,10 +12,7 @@ import lombok.val;
 
 import java.time.*;
 import java.time.temporal.TemporalAdjusters;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 
 /**
@@ -44,6 +41,15 @@ public class DungeonEntryItem {
 
         this.bossRecordMap.get(dungeonSerialId).update();
         this.bossRecordMap.values().forEach(WeeklyBossRecord::sync);
+    }
+
+    public void checkForNewBoss() {
+        if (!this.bossRecordMap.keySet().containsAll(GameData.getDungeonSerialDataMap().keySet())) {
+            GameData.getDungeonDataMap().values().stream().filter(data -> data.getSerialId() > 0)
+                .map(data -> GameData.getDungeonSerialDataMap().get(data.getSerialId())).filter(Objects::nonNull)
+                .forEach(serialData -> this.bossRecordMap.putIfAbsent(
+                    serialData.getId(), DungeonEntryItem.WeeklyBossRecord.create(serialData)));
+        }
     }
 
     public void resetWeeklyBoss(){
@@ -90,7 +96,7 @@ public class DungeonEntryItem {
                 .build();
         }
 
-        public void reset() {
+        private void reset() {
             Optional.ofNullable(GameData.getDungeonRosterDataMap().get(this.rosterId))
                 .ifPresent(data -> this.selectedPool = data.getNextPool(this.selectedPool));
             this.lastCycledTime = getLastRefreshTimeStr();
@@ -140,11 +146,11 @@ public class DungeonEntryItem {
             return (int) Instant.now().plus(Duration.between(now, nextMonday)).getEpochSecond();
         }
 
-        public void update() {
+        private void update() {
             if (canTakeReward()) this.takeNum += 1;
         }
 
-        public void sync() {
+        private void sync() {
             if(this.discountNum < this.discountNumLimit) this.discountNum += 1;
         }
 

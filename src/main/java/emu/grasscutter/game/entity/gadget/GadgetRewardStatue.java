@@ -20,15 +20,21 @@ public class GadgetRewardStatue extends GadgetContent {
 		super(gadget);
 	}
 
+    /**
+     * The client will automatically send INTER_OP_TYPE_START and INTER_OP_TYPE_FINISH
+     * when player interact with reward statue, the client should invoke INTER_OP_TYPE_START,
+     * and a window should pop up and ask player to pay by condense or resin,
+     * after player selected payment type, the client will only then send INTER_OP_TYPE_FINISH,
+     * that's when we want to roll reward and give player the rewards
+     * */
 	public boolean onInteract(Player player, GadgetInteractReq req) {
-        boolean result = Optional.ofNullable(player.getScene().getDungeonManager())
-            .map(m -> m.getStatueDrops(player, req.getResinCostType() == RESIN_COST_TYPE_CONDENSE,
-                getGadget().getGroupId()))
-            .orElse(false);
+        if (req.getOpType() == InterOpType.INTER_OP_TYPE_FINISH) {
+            boolean useCondense = req.getResinCostType() == RESIN_COST_TYPE_CONDENSE;
+            Optional.ofNullable(player.getScene().getDungeonManager()).ifPresent(m ->
+                m.getStatueDrops(player, useCondense, getGadget().getGroupId()));
+        }
 
-		player.sendPacket(new PacketGadgetInteractRsp(getGadget(),
-            InteractType.INTERACT_TYPE_OPEN_STATUE, result ? InterOpType.INTER_OP_TYPE_FINISH : req.getOpType()));
-
+        player.sendPacket(new PacketGadgetInteractRsp(getGadget(), InteractType.INTERACT_TYPE_OPEN_STATUE, req.getOpType()));
 		return false;
 	}
 
