@@ -1,38 +1,48 @@
 package emu.grasscutter.game.dungeons.challenge.factory;
 
 import emu.grasscutter.data.GameData;
+import emu.grasscutter.data.excels.DungeonChallengeConfigData;
+import emu.grasscutter.game.dungeons.challenge.ChallengeInfo;
+import emu.grasscutter.game.dungeons.challenge.ChallengeScoreInfo;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.scripts.data.SceneGroup;
-import lombok.val;
+import lombok.Getter;
+import org.reflections.Reflections;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import static emu.grasscutter.game.dungeons.challenge.enums.ChallengeType.CHALLENGE_NONE;
 
 public class ChallengeFactory {
-
     private static final List<ChallengeFactoryHandler> challengeFactoryHandlers = new ArrayList<>();
 
     static {
-        challengeFactoryHandlers.add(new KillAndGuardChallengeFactoryHandler());
-        challengeFactoryHandlers.add(new KillMonsterCountChallengeFactoryHandler());
-        challengeFactoryHandlers.add(new KillMonsterInTimeChallengeFactoryHandler());
-        challengeFactoryHandlers.add(new KillMonsterTimeChallengeFactoryHandler());
-        challengeFactoryHandlers.add(new SurviveChallengeFactoryHandler());
-        challengeFactoryHandlers.add(new TriggerInTimeChallengeFactoryHandler());
-        challengeFactoryHandlers.add(new KillMonsterCountInTimeIncChallengeFactoryHandler());
+        // Use reflection to scan and find the classes that implement the interface
+        Reflections reflections = new Reflections(ChallengeFactory.class.getPackage().getName());
+
+        // Instantiate objects of those classes dynamically
+        reflections.getSubTypesOf(ChallengeFactoryHandler.class).forEach(clazz -> {
+            try {
+                challengeFactoryHandlers.add(clazz.getDeclaredConstructor().newInstance());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
-    public static WorldChallenge getChallenge(int localChallengeId, int challengeDataId, int param3, int param4, int param5, int param6, Scene scene, SceneGroup group){
-        val challengeData = GameData.getDungeonChallengeConfigDataMap().get(challengeDataId);
-        val challengeType = challengeData.getChallengeType();
-
-        for(var handler : challengeFactoryHandlers){
-            if(!handler.isThisType(challengeType)){
-                continue;
-            }
-            return handler.build(localChallengeId, challengeDataId, param3, param4, param5, param6, scene, group);
-        }
-        return null;
+    /**
+     * challengeInfo: currentChallengeIndex, currentChallengeId, fatherChallengeIndex
+     * */
+    public static WorldChallenge getChallenge(ChallengeInfo challengeInfo, List<Integer> params, ChallengeScoreInfo scoreInfo, Scene scene, SceneGroup group){
+        return challengeFactoryHandlers.stream()
+            .filter(handler -> handler.isThisType(
+                Optional.ofNullable(GameData.getDungeonChallengeConfigDataMap().get(challengeInfo.challengeId()))
+                    .map(DungeonChallengeConfigData::getChallengeType)
+                    .orElse(CHALLENGE_NONE)))
+            .map(handler -> handler.build(challengeInfo, params, scoreInfo, scene, group))
+            .findFirst().orElse(null);
     }
 }

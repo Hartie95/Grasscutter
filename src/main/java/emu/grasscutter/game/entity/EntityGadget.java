@@ -2,19 +2,17 @@ package emu.grasscutter.game.entity;
 
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
-import emu.grasscutter.data.binout.AbilityData;
 import emu.grasscutter.data.binout.config.ConfigEntityGadget;
 import emu.grasscutter.data.binout.config.fields.ConfigAbilityData;
 import emu.grasscutter.data.excels.GadgetData;
-import emu.grasscutter.game.ability.AbilityManager;
+import emu.grasscutter.data.server.GadgetMapping;
 import emu.grasscutter.game.entity.gadget.*;
 import emu.grasscutter.game.entity.gadget.platform.BaseRoute;
-import emu.grasscutter.game.entity.interfaces.ConfigAbilityDataAbilityEntity;
+import emu.grasscutter.game.managers.blossom.BlossomManager;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.EntityIdType;
 import emu.grasscutter.game.props.PlayerProperty;
 import emu.grasscutter.game.world.Scene;
-import emu.grasscutter.game.world.SceneGroupInstance;
 import emu.grasscutter.net.proto.AbilitySyncStateInfoOuterClass.AbilitySyncStateInfo;
 import emu.grasscutter.net.proto.AnimatorParameterValueInfoPairOuterClass.AnimatorParameterValueInfoPair;
 import emu.grasscutter.net.proto.EntityAuthorityInfoOuterClass.EntityAuthorityInfo;
@@ -29,7 +27,6 @@ import emu.grasscutter.net.proto.SceneEntityAiInfoOuterClass.SceneEntityAiInfo;
 import emu.grasscutter.net.proto.SceneEntityInfoOuterClass.SceneEntityInfo;
 import emu.grasscutter.net.proto.SceneGadgetInfoOuterClass.SceneGadgetInfo;
 import emu.grasscutter.net.proto.VectorOuterClass.Vector;
-import emu.grasscutter.net.proto.VisionTypeOuterClass.VisionType;
 import emu.grasscutter.net.proto.VisionTypeOuterClass;
 import emu.grasscutter.scripts.EntityControllerScriptManager;
 import emu.grasscutter.scripts.constants.EventType;
@@ -46,14 +43,13 @@ import it.unimi.dsi.fastutil.ints.Int2FloatOpenHashMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.val;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @ToString(callSuper = true)
-public class EntityGadget extends EntityBaseGadget implements ConfigAbilityDataAbilityEntity {
+public class EntityGadget extends EntityBaseGadget {
     @Getter private final GadgetData gadgetData;
     @Getter(onMethod = @__(@Override)) @Setter
     private int gadgetId;
@@ -61,7 +57,6 @@ public class EntityGadget extends EntityBaseGadget implements ConfigAbilityDataA
     @Getter private final Position bornRot;
     @Getter @Setter private GameEntity owner = null;
     @Getter @Setter private List<GameEntity> children = new ArrayList<>();
-
     @Getter private int state;
     @Getter @Setter private int pointType;
     @Getter private GadgetContent content;
@@ -71,13 +66,9 @@ public class EntityGadget extends EntityBaseGadget implements ConfigAbilityDataA
     @Nullable @Getter
     private ConfigEntityGadget configGadget;
     @Getter @Setter private BaseRoute routeConfig;
-
-    @Getter @Setter private int stopValue = 0; //Controller related, inited to zero
-    @Getter @Setter private int startValue = 0; //Controller related, inited to zero
+    @Getter @Setter private int stopValue = 0; // Controller related, inited to zero
+    @Getter @Setter private int startValue = 0; // Controller related, inited to zero
     @Getter @Setter private int ticksSinceChange;
-
-    @Getter private boolean interactEnabled = true;
-
 
     public EntityGadget(Scene scene, int gadgetId, Position pos) {
         this(scene, gadgetId, pos, null, null);
@@ -87,166 +78,144 @@ public class EntityGadget extends EntityBaseGadget implements ConfigAbilityDataA
         this(scene, gadgetId, pos, rot, null);
     }
 
-    public EntityGadget(Scene scene, int gadgetId, Position pos, Position rot, int campId, int campType) {
-        this(scene, gadgetId, pos, rot, null, campId, campType);
-    }
-
     public EntityGadget(Scene scene, int gadgetId, Position pos, Position rot, GadgetContent content) {
-        this(scene, gadgetId, pos, rot, content, 0, 0);
-    }
-
-    public EntityGadget(Scene scene, int gadgetId, Position pos, Position rot, GadgetContent content, int campId, int campType) {
-        super(scene, pos, rot, campId, campType);
+        super(scene, pos, rot);
         this.gadgetData = GameData.getGadgetDataMap().get(gadgetId);
-        if (gadgetData!=null && gadgetData.getJsonName()!=null) {
-            this.configGadget = GameData.getGadgetConfigData().get(gadgetData.getJsonName());
-        }
-        this.id = this.getScene().getWorld().getNextEntityId(EntityIdType.GADGET);
+        this.id = getScene().getWorld().getNextEntityId(EntityIdType.GADGET);
         this.gadgetId = gadgetId;
         this.content = content;
-        this.bornPos = this.getPosition().clone();
-        this.bornRot = this.getRotation().clone();
-        fillFightProps(configGadget);
-        if(GameData.getGadgetMappingMap().containsKey(gadgetId)) {
-            String controllerName = GameData.getGadgetMappingMap().get(gadgetId).getServerController();
-            setEntityController(EntityControllerScriptManager.getGadgetController(controllerName));
-            if(getEntityController() == null) {
-                Grasscutter.getLogger().warn("Gadget controller {} not found", controllerName);
-            }
-        }
+        this.bornPos = getPosition().clone();
+        this.bornRot = getRotation().clone();
 
-        initAbilities(); //TODO: move this
+        Optional.ofNullable(getGadgetData())
+            .map(GadgetData::getJsonName)
+            .ifPresent(jsonName -> this.configGadget = GameData.getGadgetConfigData().get(jsonName));
+
+        fillFightProps(this.configGadget);
+
+        Optional.ofNullable(GameData.getGadgetMappingMap().get(gadgetId))
+            .map(GadgetMapping::getServerController)
+            .map(EntityControllerScriptManager::getGadgetController)
+            .ifPresent(this::setEntityController);
+
+        addConfigAbilities();
     }
 
-
-    //TODO: handle predynamic, static and dynamic here
-    @Override
-    public Collection<ConfigAbilityData> getAbilityData() {
-        return this.configGadget != null ? this.configGadget.getAbilities() : null;
+    private void addConfigAbilities(){
+        Optional.ofNullable(getConfigGadget())
+            .map(ConfigEntityGadget::getAbilities).stream()
+            .flatMap(Collection::stream)
+            .forEach(this::addConfigAbility);
     }
 
-    @Override
-    public AbilityManager getAbilityTargetManager() {
-        return getWorld().getHost().getAbilityManager();
-    }
-
-    public void setInteractEnabled(boolean enable) {
-        this.interactEnabled = enable;
-        this.getScene().broadcastPacket(new PacketGadgetStateNotify(this, this.getState())); //Update the interact
+    private void addConfigAbility(ConfigAbilityData abilityData){
+        Optional.ofNullable(GameData.getAbilityData(abilityData.getAbilityName()))
+            .ifPresent(data -> getScene().getWorld().getHost().getAbilityManager()
+                .addAbilityToEntity(this, data, abilityData.getAbilityID()));
     }
 
     public void setState(int state) {
         this.state = state;
-        //Cache the gadget state
-        if(metaGadget != null && metaGadget.group != null) {
-            var instance = getScene().getScriptManager().getCachedGroupInstanceById(metaGadget.group.id);
-            if(instance != null) instance.cacheGadgetState(metaGadget, state);
-        }
+        Optional.ofNullable(getMetaGadget()) // Cache the gadget state
+            .map(g -> g.group).map(g -> g.id)
+            .map(getScene().getScriptManager()::getCachedGroupInstanceById)
+            .ifPresent(instance -> instance.cacheGadgetState(getMetaGadget(), state));
     }
 
     public void updateState(int state) {
-        if(state == this.getState()) return; //Don't triggers events
+        if(state == getState()) return; //Don't triggers events
 
-        this.setState(state);
-        ticksSinceChange = getScene().getSceneTimeSeconds();
-        this.getScene().broadcastPacket(new PacketGadgetStateNotify(this, state));
-        getScene().getScriptManager().callEvent(new ScriptArgs(this.getGroupId(), EventType.EVENT_GADGET_STATE_CHANGE, state, this.getConfigId()));
+        setState(state);
+        setTicksSinceChange(getScene().getSceneTimeSeconds());
+        getScene().broadcastPacket(new PacketGadgetStateNotify(this, state));
+        getScene().getScriptManager().callEvent(new ScriptArgs(getGroupId(), EventType.EVENT_GADGET_STATE_CHANGE, state, getConfigId()));
     }
 
     @Deprecated(forRemoval = true) // Dont use!
     public void setContent(GadgetContent content) {
-        this.content = this.content == null ? content : this.content;
+        this.content = Optional.ofNullable(this.content).orElse(content);
     }
 
     // TODO refactor
     public void buildContent() {
-        if (this.getContent() != null || this.getGadgetData() == null || this.getGadgetData().getType() == null) {
-            return;
-        }
+        if (getContent() != null || getGadgetData() == null || getGadgetData().getType() == null) return;
 
-        this.content = switch (this.getGadgetData().getType()) {
+        this.content = switch (getGadgetData().getType()) {
             case GatherPoint -> new GadgetGatherPoint(this);
             case GatherObject -> new GadgetGatherObject(this);
             case Worktop, SealGadget -> new GadgetWorktop(this);
             case RewardStatue -> new GadgetRewardStatue(this);
             case Chest -> new GadgetChest(this);
             case Gadget -> new GadgetObject(this);
-            case Screen -> new GadgetScreen(this);
             default -> null;
         };
     }
 
     @Override
     public void onInteract(Player player, GadgetInteractReq interactReq) {
-        if(!interactEnabled) return;
-
-        if (this.getContent() == null) {
-            return;
-        }
-
-        boolean shouldDelete = this.getContent().onInteract(player, interactReq);
-
-        if (shouldDelete) {
-            this.getScene().killEntity(this);
-        }
+        Optional.ofNullable(getContent())
+            .filter(c -> c.onInteract(player, interactReq))
+            .ifPresent(s -> getScene().killEntity(this));
     }
 
     @Override
     public void onCreate() {
         // Lua event
-        getScene().getScriptManager().callEvent(new ScriptArgs(this.getGroupId(), EventType.EVENT_GADGET_CREATE, this.getConfigId())
-            .setSourceEntityId(this.getId()));
+        getScene().getScriptManager().callEvent(new ScriptArgs(getGroupId(), EventType.EVENT_GADGET_CREATE, getConfigId()));
     }
 
     @Override
     public void onRemoved() {
         super.onRemoved();
-        if(!children.isEmpty()) {
-            getScene().removeEntities(children, VisionTypeOuterClass.VisionType.VISION_TYPE_REMOVE);
-            children.clear();
-        }
+        if(this.children.isEmpty()) return;
+
+        getScene().removeEntities(this.children, VisionTypeOuterClass.VisionType.VISION_TYPE_REMOVE);
+        this.children.clear();
     }
 
     @Override
     public void onDeath(int killerId) {
         super.onDeath(killerId); // Invoke super class's onDeath() method.
 
-        if (this.getSpawnEntry() != null) {
-            this.getScene().getDeadSpawnedEntities().add(getSpawnEntry());
-        }
-        getScene().getScriptManager().callEvent(new ScriptArgs(this.getGroupId(), EventType.EVENT_ANY_GADGET_DIE, this.getConfigId()));
+        Optional.ofNullable(getSpawnEntry()).ifPresent(getScene().getDeadSpawnedEntities()::add);
+        getScene().getScriptManager().callEvent(new ScriptArgs(getGroupId(), EventType.EVENT_ANY_GADGET_DIE, getConfigId()));
 
-        SceneGroupInstance groupInstance = getScene().getScriptManager().getCachedGroupInstanceById(this.getGroupId());
-        if(groupInstance != null && metaGadget != null)
-            groupInstance.getDeadEntities().add(metaGadget.config_id);
+        Optional.ofNullable(getScene().getScriptManager().getCachedGroupInstanceById(getGroupId()))
+            .ifPresent(groupInstance -> Optional.ofNullable(getMetaGadget())
+                .map(g -> g.config_id)
+                .ifPresent(groupInstance.getDeadEntities()::add));
+
+        BlossomManager hostBlossom = getScene().getWorld().getHost().getBlossomManager();
+        val removedChest = Optional.ofNullable(hostBlossom)
+            .map(BlossomManager::getSpawnedChest)
+            .map(chestMap -> chestMap.remove(getConfigId()));
+        if (removedChest.isPresent()) {
+            Grasscutter.getLogger().info("[EntityGadget] Removing Blossom Chest: {}, {}", getGroupId(), getConfigId());
+            getScene().unregisterDynamicGroup(getGroupId());
+            getScene().getScriptManager().callEvent(
+                new ScriptArgs(getGroupId(), EventType.EVENT_BLOSSOM_CHEST_DIE, getConfigId()));
+            hostBlossom.buildNextCamp(getGroupId());
+        }
     }
 
     public boolean startPlatform(){
-        if(routeConfig == null){
-            return false;
-        }
+        if(getRouteConfig() == null) return false;
 
-        if(routeConfig.isStarted()){
-            return true;
-        }
+        if(getRouteConfig().isStarted()) return true;
+
         getScene().broadcastPacket(new PacketSceneTimeNotify(getScene()));
-        routeConfig.startRoute(getScene());
+        getRouteConfig().startRoute(getScene());
         getScene().broadcastPacket(new PacketPlatformStartRouteNotify(this));
-
         return true;
     }
 
     public boolean stopPlatform(){
-        if(routeConfig == null){
-            return false;
-        }
+        if(getRouteConfig() == null) return false;
 
-        if(!routeConfig.isStarted()){
-            return true;
-        }
-        routeConfig.stopRoute(getScene());
+        if(!getRouteConfig().isStarted()) return true;
+
+        getRouteConfig().stopRoute(getScene());
         getScene().broadcastPacket(new PacketPlatformStopRouteNotify(this));
-
         return true;
     }
 
@@ -268,51 +237,32 @@ public class EntityGadget extends EntityBaseGadget implements ConfigAbilityDataA
                 .setEntityAuthorityInfo(authority)
                 .setLifeState(1);
 
-        PropPair pair = PropPair.newBuilder()
-                .setType(PlayerProperty.PROP_LEVEL.getId())
-                .setPropValue(ProtoHelper.newPropValue(PlayerProperty.PROP_LEVEL, 1))
-                .build();
-        entityInfo.addPropList(pair);
+        entityInfo.addPropList(PropPair.newBuilder()
+            .setType(PlayerProperty.PROP_LEVEL.getId())
+            .setPropValue(ProtoHelper.newPropValue(PlayerProperty.PROP_LEVEL, 1))
+            .build());
 
         // We do not use the getter to null check because the getter will create a fight prop map if it is null
-        if (this.fightProperties != null) {
-            addAllFightPropsToEntityInfo(entityInfo);
-        }
+        Optional.ofNullable(this.fightProperties).ifPresent(s -> addAllFightPropsToEntityInfo(entityInfo));
 
         SceneGadgetInfo.Builder gadgetInfo = SceneGadgetInfo.newBuilder()
-                .setGadgetId(this.getGadgetId())
-                .setGroupId(this.getGroupId())
-                .setConfigId(this.getConfigId())
-                .setGadgetState(this.getState())
-                .setIsEnableInteract(this.interactEnabled)
-                .setAuthorityPeerId(this.getScene().getWorld().getHostPeerId());
+                .setGadgetId(getGadgetId())
+                .setGroupId(getGroupId())
+                .setConfigId(getConfigId())
+                .setGadgetState(getState())
+                .setIsEnableInteract(true)
+                .setAuthorityPeerId(getScene().getWorld().getHostPeerId());
 
-        if (this.metaGadget != null) {
-            gadgetInfo.setDraftId(this.metaGadget.draft_id);
-        }
-
-        if(owner != null){
-            gadgetInfo.setOwnerEntityId(owner.getId());
-        }
-
-        if (this.getContent() != null) {
-            this.getContent().onBuildProto(gadgetInfo);
-        }
-
-        if(routeConfig!=null){
-            gadgetInfo.setPlatform(getPlatformInfo());
-        }
-
-        entityInfo.setGadget(gadgetInfo);
-
-        return entityInfo.build();
+        Optional.ofNullable(getMetaGadget()).map(g -> g.draft_id).ifPresent(gadgetInfo::setDraftId);
+        Optional.ofNullable(getOwner()).map(GameEntity::getId).ifPresent(gadgetInfo::setOwnerEntityId);
+        Optional.ofNullable(getContent()).ifPresent(c -> c.onBuildProto(gadgetInfo));
+        Optional.ofNullable(getRouteConfig()).ifPresent(s -> gadgetInfo.setPlatform(getPlatformInfo()));
+        return entityInfo.setGadget(gadgetInfo).build();
     }
 
     public PlatformInfoOuterClass.PlatformInfo.Builder getPlatformInfo(){
-        if(routeConfig != null){
-            return routeConfig.toProto();
-        }
-
-        return PlatformInfoOuterClass.PlatformInfo.newBuilder();
+        return Optional.ofNullable(getRouteConfig())
+                .map(BaseRoute::toProto)
+                .orElse(PlatformInfoOuterClass.PlatformInfo.newBuilder());
     }
 }

@@ -3,8 +3,6 @@ package emu.grasscutter.game.world;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.DungeonData;
 import emu.grasscutter.data.excels.SceneData;
-import emu.grasscutter.game.entity.EntityTeam;
-import emu.grasscutter.game.entity.EntityWorld;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.player.Player.SceneLoadState;
 import emu.grasscutter.game.props.EnterReason;
@@ -26,11 +24,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static emu.grasscutter.server.event.player.PlayerTeleportEvent.TeleportType.SCRIPT;
@@ -41,7 +35,7 @@ public class World implements Iterable<Player> {
     @Getter private final List<Player> players;
     @Getter private final Int2ObjectMap<Scene> scenes;
 
-    @Getter private EntityWorld entity;
+    @Getter private int levelEntityId;
     private int nextEntityId = 0;
     private int nextPeerId = 0;
     @Getter private int worldLevel;
@@ -54,9 +48,8 @@ public class World implements Iterable<Player> {
     @Getter private boolean isGameTimeLocked = false;
     private long lastUpdateTime;
     @Getter private long currentWorldTime = 0;
-    @Getter private long currentGameTime = 540;
 
-    @Getter private Random worldRandomGenerator;
+    @Getter private long currentGameTime = 540;
 
     public World(Player player) {
         this(player, false);
@@ -68,15 +61,12 @@ public class World implements Iterable<Player> {
         this.players = Collections.synchronizedList(new ArrayList<>());
         this.scenes = Int2ObjectMaps.synchronize(new Int2ObjectOpenHashMap<>());
 
-        //this.levelEntityId = this.getNextEntityId(EntityIdType.MPLEVEL);
-        this.entity = new EntityWorld(this);
+        this.levelEntityId = this.getNextEntityId(EntityIdType.MPLEVEL);
         this.worldLevel = player.getWorldLevel();
         this.isMultiplayer = isMultiplayer;
         this.lastUpdateTime = System.currentTimeMillis();
         this.currentGameTime = owner.getPlayerGameTime();
         this.isGameTimeLocked = owner.getBoolProperty(PlayerProperty.PROP_IS_GAME_TIME_LOCKED);
-
-        this.worldRandomGenerator = new Random();
 
         this.owner.getServer().registerWorld(this);
     }
@@ -93,11 +83,6 @@ public class World implements Iterable<Player> {
 
     public Player getHost() {
         return owner;
-    }
-
-
-    public int getLevelEntityId() {
-        return entity.getId();
     }
 
     public int getHostPeerId() {
@@ -138,7 +123,7 @@ public class World implements Iterable<Player> {
     }
 
     public int getNextEntityId(EntityIdType idType) {
-        return idType.toTypedEntityId(++this.nextEntityId);
+        return (idType.getId() << 24) + ++this.nextEntityId;
     }
 
     public synchronized void addPlayer(Player player) {
@@ -158,8 +143,7 @@ public class World implements Iterable<Player> {
 
         // Set player variables
         player.setPeerId(this.getNextPeerId());
-        player.getTeamManager().setEntity(new EntityTeam(player));
-        //player.getTeamManager().setEntityId(this.getNextEntityId(EntityIdType.TEAM));
+        player.getTeamManager().setEntityId(this.getNextEntityId(EntityIdType.TEAM));
 
         // Copy main team to multiplayer team
         if (this.isMultiplayer()) {
@@ -182,7 +166,7 @@ public class World implements Iterable<Player> {
         player.sendPacket(
                 new PacketDelTeamEntityNotify(
                         player.getSceneId(),
-                    this.getPlayers().stream().map(p -> p.getTeamManager().getEntity() == null ? 0 : p.getTeamManager().getEntity().getId()).collect(Collectors.toList())
+                    this.getPlayers().stream().map(p -> p.getTeamManager().getEntityId()).collect(Collectors.toList())
                 )
         );
 
@@ -224,43 +208,44 @@ public class World implements Iterable<Player> {
         this.getScenes().values().forEach(Scene::saveGroups);
     }
 
-    public boolean transferPlayerToScene(Player player, int sceneId, Position pos) {
-        return this.transferPlayerToScene(player, sceneId, TeleportType.INTERNAL, null, pos);
+    public boolean transferPlayerToScene(Player player, int sceneId, Position pos, Position rot) {
+        return this.transferPlayerToScene(player, sceneId, TeleportType.INTERNAL, null, pos, rot);
     }
 
-    public boolean transferPlayerToScene(Player player, int sceneId, TeleportType teleportType, Position pos) {
-        return this.transferPlayerToScene(player, sceneId, teleportType, null, pos);
+    public boolean transferPlayerToScene(Player player, int sceneId, TeleportType teleportType, Position pos, Position rot) {
+        return this.transferPlayerToScene(player, sceneId, teleportType, null, pos, rot);
     }
 
     public boolean transferPlayerToScene(Player player, int sceneId, DungeonData data) {
-        return this.transferPlayerToScene(player, sceneId, TeleportType.DUNGEON, data, null);
+        return this.transferPlayerToScene(player, sceneId, TeleportType.DUNGEON, data, null, null);
     }
 
-    public boolean transferPlayerToScene(Player player, int sceneId, TeleportType teleportType, DungeonData dungeonData, Position teleportTo) {
+    public boolean transferPlayerToScene(Player player, int sceneId, TeleportType teleportType, DungeonData dungeonData, Position teleportTo, Position newRot) {
         EnterReason enterReason = switch (teleportType) {
             // shouldn't affect the teleportation, but its clearer when inspecting the packets
             // TODO add more conditions for different reason.
-            case INTERNAL -> EnterReason.TransPoint;
-            case WAYPOINT -> EnterReason.TransPoint;
-            case MAP -> EnterReason.TransPoint;
+            case INTERNAL, WAYPOINT, MAP -> EnterReason.TransPoint;
             case COMMAND -> EnterReason.Gm;
             case SCRIPT -> EnterReason.Lua;
             case CLIENT -> EnterReason.ClientTransmit;
             case DUNGEON -> EnterReason.DungeonEnter;
             default -> EnterReason.None;
         };
-        return transferPlayerToScene(player, sceneId, teleportType, enterReason, dungeonData, teleportTo);
+        return transferPlayerToScene(player, sceneId, teleportType, enterReason, dungeonData, teleportTo, newRot);
     }
 
-
-    public boolean transferPlayerToScene(Player player, int sceneId, TeleportType teleportType, EnterReason enterReason, DungeonData dungeonData, Position teleportTo) {
+    public boolean transferPlayerToScene(Player player, int sceneId, TeleportType teleportType, EnterReason enterReason, DungeonData dungeonData, Position teleportTo, Position newRot) {
         // Get enter types
         val teleportProps = TeleportProperties.builder()
             .sceneId(sceneId)
             .teleportType(teleportType)
             .enterReason(enterReason)
             .teleportTo(teleportTo)
-            .enterType(EnterType.ENTER_TYPE_JUMP);
+            .teleportRot(newRot)
+            .dungeonId(Optional.ofNullable(dungeonData).map(DungeonData::getId).orElse(0))
+            .enterType(EnterType.ENTER_TYPE_JUMP)
+            .prevPos(player.getPosition())
+            .prevSceneId(player.getSceneId());
 
         val sceneData = GameData.getSceneDataMap().get(sceneId);
         if (dungeonData != null) {
@@ -304,35 +289,21 @@ public class World implements Iterable<Player> {
         Scene newScene = this.getSceneById(teleportProperties.getSceneId());
         newScene.addPlayer(player);
         player.setAvatarsAbilityForScene(newScene);
-        // Dungeon
-        // Dungeon system is handling this already
-        // if(dungeonData!=null){
-        //     var dungeonManager = new DungeonManager(newScene, dungeonData);
-        //     dungeonManager.startDungeon();
-        // }
+
         SceneConfig config = newScene.getScriptManager().getConfig();
         if (teleportProperties.getTeleportTo() == null && config != null) {
-            if (config.born_pos != null) {
-                teleportProperties.setTeleportTo(newScene.getScriptManager().getConfig().born_pos);
-            }
-            if (config.born_rot != null) {
-                teleportProperties.setTeleportRot(config.born_rot);
-            }
+            Optional.ofNullable(config.born_pos).ifPresent(teleportProperties::setTeleportTo);
+            Optional.ofNullable(config.born_rot).ifPresent(teleportProperties::setTeleportRot);
         }
 
         // Set player position and rotation
-        if(teleportProperties.getTeleportTo() != null) {
-            player.getPosition().set(teleportProperties.getTeleportTo());
-        }
-        if(teleportProperties.getTeleportRot()!=null) {
-            player.getRotation().set(teleportProperties.getTeleportRot());
-        }
+        Optional.ofNullable(teleportProperties.getTeleportTo()).ifPresent(player.getPosition()::set);
+        Optional.ofNullable(teleportProperties.getTeleportRot()).ifPresent(player.getRotation()::set);
 
         if (oldScene != null && newScene != oldScene) {
             newScene.setPrevScene(oldScene.getId());
             oldScene.setDontDestroyWhenEmpty(false);
         }
-
 
         // Teleport packet
         player.sendPacket(new PacketPlayerEnterSceneNotify(player, teleportProperties));
@@ -394,7 +365,7 @@ public class World implements Iterable<Player> {
             players.forEach(p -> p.sendPacket(new PacketPlayerGameTimeNotify(p)));
             isGameTimeLocked = getHost().getBoolProperty(PlayerProperty.PROP_IS_GAME_TIME_LOCKED);
         }
-        // store updated world time every 60 seconds (ingame hour)
+        // store updated world time every 60 seconds (in-game hour)
         if(tickCount%60 == 0){
             this.owner.updatePlayerGameTime(currentGameTime);
         }
@@ -442,14 +413,14 @@ public class World implements Iterable<Player> {
     }
 
     /**
-     * Returns the current in game days world time in ingame minutes (0-1439)
+     * Returns the current in game days world time in in-game minutes (0-1439)
      */
     public int getGameTime() {
         return (int)(currentGameTime % 1440);
     }
 
     /**
-     * Returns the current in game days world time in ingame hours (0-23)
+     * Returns the current in game days world time in in-game hours (0-23)
      */
     public int getGameTimeHours() {
         return getGameTime() / 60 ;
@@ -470,14 +441,14 @@ public class World implements Iterable<Player> {
     }
 
     /**
-     * Returns the total amount of ingame minutes that got completed since the beginning of the game
+     * Returns the total amount of in-game minutes that got completed since the beginning of the game
      */
     public long getTotalGameTimeMinutes() {
         return currentGameTime;
     }
 
     /**
-     * Returns the ingame world time in irl millis
+     * Returns the in-game world time in irl millis
      */
     public long getWorldTime() {
         if(!isPaused) {
