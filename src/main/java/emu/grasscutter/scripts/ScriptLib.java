@@ -5,7 +5,6 @@ import emu.grasscutter.data.GameData;
 import emu.grasscutter.game.activity.ActivityManager;
 import emu.grasscutter.game.dungeons.challenge.ChallengeInfo;
 import emu.grasscutter.game.dungeons.challenge.ChallengeScoreInfo;
-import emu.grasscutter.game.dungeons.challenge.DungeonChallenge;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.challenge.enums.FatherChallengeProperty;
 import emu.grasscutter.game.dungeons.challenge.factory.ChallengeFactory;
@@ -242,7 +241,7 @@ public class ScriptLib {
 			return 1;
 		}
 
-		this.getSceneScriptManager().startMonsterTideInGroup(group, ordersConfigId, tideCount, sceneLimit);
+		this.getSceneScriptManager().startMonsterTideInGroup(challengeIndex, group, ordersConfigId, tideCount, sceneLimit);
 
 		return 0;
 	}
@@ -344,16 +343,9 @@ public class ScriptLib {
                 List.of(timeLimitOrGroupId, groupId, objectiveKills, param5),
                 new ChallengeScoreInfo(0, 0),
 				getSceneScriptManager().getScene(),
-                getCurrentGroup().isPresent() ? getCurrentGroup().get() : null
-				);
+                getCurrentGroup().orElse(null));
 
 		if(challenge == null) return 1;
-
-		if(challenge instanceof DungeonChallenge dungeonChallenge){
-			// set if tower first stage (6-1)
-			dungeonChallenge.setStage(Objects.requireNonNull(
-                getSceneScriptManager().getVariables(groupId)).getOrDefault("stage", -1) == 0);
-		}
 
 		getSceneScriptManager().getScene().setChallenge(challenge);
 		challenge.start();
@@ -574,10 +566,10 @@ public class ScriptLib {
     }
 
 	public int GetGroupVariableValueByGroup(String name, int groupId){
-		logger.debug("[LUA] Call GetGroupVariableValueByGroup with {},{}",
-				name,groupId);
-        val variables = getSceneScriptManager().getVariables(groupId);
-		return variables == null ? 1 : variables.getOrDefault(name, 0);
+		logger.debug("[LUA] Call GetGroupVariableValueByGroup with {},{}", name,groupId);
+
+		return Optional.ofNullable(getSceneScriptManager().getVariables(groupId))
+            .map(variables -> variables.getOrDefault(name, 0)).orElse(1);
 	}
 	public int ChangeGroupVariableValueByGroup(String name, int value, int groupId){
 		logger.debug("[LUA] Call ChangeGroupVariableValueByGroup with {},{}",
@@ -645,7 +637,7 @@ public class ScriptLib {
 				team,var1);
 
 		getSceneScriptManager().unloadCurrentMonsterTide();
-		getSceneScriptManager().getScene().getPlayers().get(0).getTowerManager().mirrorTeamSetUp(team-1);
+		getSceneScriptManager().getScene().getWorld().getHost().getTowerManager().mirrorTeamSetUp(team-1);
 
 		return 0;
 	}

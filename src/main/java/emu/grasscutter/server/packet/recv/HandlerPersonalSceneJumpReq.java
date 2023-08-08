@@ -8,7 +8,9 @@ import emu.grasscutter.net.packet.PacketOpcodes;
 import emu.grasscutter.net.proto.PersonalSceneJumpReqOuterClass.PersonalSceneJumpReq;
 import emu.grasscutter.server.game.GameSession;
 import emu.grasscutter.server.packet.send.PacketPersonalSceneJumpRsp;
-import emu.grasscutter.utils.Position;
+import lombok.val;
+
+import java.util.Optional;
 
 
 @Opcodes(PacketOpcodes.PersonalSceneJumpReq)
@@ -16,17 +18,19 @@ public class HandlerPersonalSceneJumpReq extends PacketHandler {
 
     @Override
     public void handle(GameSession session, byte[] header, byte[] payload) throws Exception {
-        PersonalSceneJumpReq req = PersonalSceneJumpReq.parseFrom(payload);
-        var player = session.getPlayer();
+        val req = PersonalSceneJumpReq.parseFrom(payload);
+        val player = session.getPlayer();
 
         // get the scene point
-        ScenePointEntry scenePointEntry = GameData.getScenePointEntryById(player.getSceneId(), req.getPointId());
+        val pointData = Optional.ofNullable(GameData.getScenePointEntryById(player.getSceneId(), req.getPointId()))
+            .map(ScenePointEntry::getPointData).orElse(null);
 
-        if (scenePointEntry != null) {
-            Position pos = scenePointEntry.getPointData().getTranPos().clone();  // This might not need cloning
-            int sceneId = scenePointEntry.getPointData().getTranSceneId();
+        if (pointData != null) {
+            val pos = pointData.getTranPos();
+            val rot = pointData.getTranRot();
+            int sceneId = pointData.getTranSceneId();
 
-            player.getWorld().transferPlayerToScene(player, sceneId, pos);
+            player.getWorld().transferPlayerToScene(player, sceneId, pos, rot);
             session.send(new PacketPersonalSceneJumpRsp(sceneId, pos));
         }
 

@@ -2,6 +2,7 @@ package emu.grasscutter.game.dungeons.challenge;
 
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.game.dungeons.challenge.trigger.ChallengeTrigger;
+import emu.grasscutter.game.dungeons.challenge.trigger.TimeTrigger;
 import emu.grasscutter.game.dungeons.enums.DungeonPassConditionType;
 import emu.grasscutter.game.entity.EntityGadget;
 import emu.grasscutter.game.entity.EntityMonster;
@@ -22,6 +23,7 @@ import lombok.val;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
 @Setter
@@ -88,6 +90,10 @@ public class WorldChallenge {
             && getInfo().challengeId() == challengeId && getGroupId() == groupId;
     }
 
+    public int getTimeTaken() {
+        return this.finishedTime - this.startedAt;
+    }
+
     /**
      * Starts the challenge
      */
@@ -118,15 +124,16 @@ public class WorldChallenge {
                 String.valueOf(getInfo().challengeId())
             ));
         }
-        getScene().getScriptManager().callEvent(
-                // TODO record the time in PARAM2 and used in action
-                new ScriptArgs(getGroupId(), EventType.EVENT_CHALLENGE_SUCCESS)
-                    .setParam2(getFinishedTime())
-                    .setEventSource(Integer.toString(getInfo().challengeIndex())
-                    ));
+        // required for tower challenges, bringing remaining time to next level, might be different for other challenges
+        int remainingTime = this.challengeTriggers.stream().filter(TimeTrigger.class::isInstance)
+                .map(TimeTrigger.class::cast).findFirst().map(TimeTrigger::getGoal).map(AtomicInteger::get)
+                .map(goalTime -> goalTime - getTimeTaken()).orElse(getFinishedTime());
+        getScene().getScriptManager().callEvent(new ScriptArgs(getGroupId(), EventType.EVENT_CHALLENGE_SUCCESS)
+            .setParam2(remainingTime)
+            .setEventSource(Integer.toString(getInfo().challengeIndex())));
+
         getScene().triggerDungeonEvent(
-            DungeonPassConditionType.DUNGEON_COND_FINISH_CHALLENGE,
-            getInfo().challengeId(), getInfo().challengeIndex());
+            DungeonPassConditionType.DUNGEON_COND_FINISH_CHALLENGE, getInfo().challengeId(), getInfo().challengeIndex());
     }
 
     /**
@@ -150,6 +157,7 @@ public class WorldChallenge {
         setProgress(false);
         setSuccess(success);
         setFinishedTime(getScene().getSceneTimeSeconds() - getStartedAt());
+        getScene().getScriptManager().unloadCurrentMonsterTide();
         getScene().broadcastPacket(new PacketDungeonChallengeFinishNotify(this));
         Optional.ofNullable(getFatherChallenge()).ifPresent(fc ->
             fc.onIncFailSuccScore(success, getScoreInfo().get(success)));

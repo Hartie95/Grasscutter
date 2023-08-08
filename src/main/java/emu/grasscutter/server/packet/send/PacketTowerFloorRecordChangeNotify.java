@@ -1,30 +1,22 @@
 package emu.grasscutter.server.packet.send;
 
+import emu.grasscutter.game.tower.TowerData;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.packet.PacketOpcodes;
 import emu.grasscutter.net.proto.TowerFloorRecordChangeNotifyOuterClass.TowerFloorRecordChangeNotify;
 import emu.grasscutter.net.proto.TowerFloorRecordOuterClass.TowerFloorRecord;
-import emu.grasscutter.net.proto.TowerLevelRecordOuterClass.TowerLevelRecord;
+
+import java.util.Optional;
 
 public class PacketTowerFloorRecordChangeNotify extends BasePacket {
 
-	public PacketTowerFloorRecordChangeNotify(int floorId, int stars, boolean canEnterScheduleFloor) {
+	public PacketTowerFloorRecordChangeNotify(TowerData.TowerFloorRecordInfo info, boolean canEnterScheduleFloor) {
 		super(PacketOpcodes.TowerFloorRecordChangeNotify);
 
-		TowerFloorRecordChangeNotify proto = TowerFloorRecordChangeNotify.newBuilder()
-				.addTowerFloorRecordList(TowerFloorRecord.newBuilder()
-						.setFloorId(floorId)
-						.setFloorStarRewardProgress(stars)
-						.addPassedLevelRecordList(TowerLevelRecord.newBuilder()
-								.setLevelId(1)
-								.addSatisfiedCondList(1)
-								.addSatisfiedCondList(2)
-								.addSatisfiedCondList(3)
-								.build())
-						.build())
-				.setIsFinishedEntranceFloor(canEnterScheduleFloor)
-				.build();
-		
-		this.setData(proto);
+		this.setData(TowerFloorRecordChangeNotify.newBuilder()
+            .addTowerFloorRecordList(Optional.ofNullable(info).map(TowerData.TowerFloorRecordInfo::toProto)
+                .orElse(TowerFloorRecord.newBuilder().build()))
+            .setIsFinishedEntranceFloor(canEnterScheduleFloor)
+            .build());
 	}
 }

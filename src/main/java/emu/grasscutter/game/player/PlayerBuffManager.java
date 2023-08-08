@@ -1,13 +1,15 @@
 package emu.grasscutter.game.player;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.BuffData;
+import emu.grasscutter.game.ability.AbilityManager;
 import emu.grasscutter.game.avatar.Avatar;
-import emu.grasscutter.game.props.FightProperty;
+import emu.grasscutter.game.entity.GameEntity;
 import emu.grasscutter.net.proto.ServerBuffChangeNotifyOuterClass.ServerBuffChangeNotify.ServerBuffChangeType;
 import emu.grasscutter.net.proto.ServerBuffOuterClass.ServerBuff;
 import emu.grasscutter.server.packet.send.PacketServerBuffChangeNotify;
@@ -16,6 +18,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 import lombok.Getter;
+import lombok.val;
 
 public class PlayerBuffManager extends BasePlayerManager {
     private int nextBuffUid;
@@ -37,6 +40,10 @@ public class PlayerBuffManager extends BasePlayerManager {
         return ++nextBuffUid;
     }
 
+    private AbilityManager getAbilityManager() {
+        return this.player.getAbilityManager();
+    }
+
     /**
      * Returns true if the player has a buff with this group id
      * @param groupId Buff group id
@@ -51,12 +58,19 @@ public class PlayerBuffManager extends BasePlayerManager {
      */
     public synchronized void clearBuffs() {
         // Remove from player
-        getPlayer().sendPacket(
-            new PacketServerBuffChangeNotify(getPlayer(), ServerBuffChangeType.SERVER_BUFF_CHANGE_TYPE_DEL_SERVER_BUFF, this.buffs.values())
-        );
+        getPlayer().sendPacket(new PacketServerBuffChangeNotify(
+            getPlayer(), ServerBuffChangeType.SERVER_BUFF_CHANGE_TYPE_DEL_SERVER_BUFF, this.buffs.values()));
 
         // Clear
         this.buffs.clear();
+    }
+
+    private void onAddAbility(GameEntity targetEntity, BuffData buffData) {
+        Optional.ofNullable(targetEntity.getAbilities().get(buffData.getAbilityName()))
+            .ifPresent(ability -> Optional.ofNullable(ability.getData()).map(abilityData -> abilityData.modifiers)
+                .map(modifiersMap -> modifiersMap.get(buffData.getModifierName()))
+                .map(abilityModifier -> abilityModifier.onAdded).stream().flatMap(Arrays::stream)
+                .forEach(modifierAction -> getAbilityManager().executeAction(ability, modifierAction)));
     }
 
     /**
@@ -90,44 +104,29 @@ public class PlayerBuffManager extends BasePlayerManager {
         BuffData buffData = GameData.getBuffDataMap().get(buffId);
         if (buffData == null) return false;
 
-        boolean success = false;
+        // Add buffs to target
+        switch (buffData.getServerBuffType()) {
+            case SERVER_BUFF_AVATAR -> {
+                if (target == null) break;
 
-        // Perform onAdded actions
-        success |= Optional.ofNullable(GameData.getAbilityData(buffData.getAbilityName()))
-            .map(data -> data.modifiers.get(buffData.getModifierName()))
-            .map(modifier -> modifier.onAdded)
-            .map(onAdded -> {
-                System.out.println("onAdded exists");
-                boolean s = false;
-                for (var a: onAdded) {
-                    switch (a.type) {
-                        case HealHP:
-                            System.out.println("Attempting heal");
-                            if (target == null) break;
-                            float maxHp = target.getFightProperty(FightProperty.FIGHT_PROP_MAX_HP);
-                            float amount = a.amount.get() + a.amountByTargetMaxHPRatio.get() * maxHp;
-                            target.getAsEntity().heal(amount);
-                            s = true;
-                            System.out.printf("Healed {}", amount);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                return s;
-            })
-            .orElse(false);
-        System.out.println("Oh no");
+                getAbilityManager().addAbilityToEntity(target.getAsEntity(), buffData.getAbilityName());
+                onAddAbility(target.getAsEntity(), buffData);
+            }
+            case SERVER_BUFF_TEAM -> this.player.getTeamManager().getActiveTeam().forEach(entityAvatar -> {
+                getAbilityManager().addAbilityToEntity(entityAvatar, buffData.getAbilityName());
+                onAddAbility(entityAvatar, buffData);
+            });
+        }
 
         // Set duration
         if (duration < 0f) {
             duration = buffData.getTime();
         }
 
-        // Dont add buff if duration is equal or less than 0
-        if (duration <= 0) {
-            return success;
-        }
+        // Don't add buff if duration is equal or less than 0
+//        if (duration <= 0) {
+//            return success;
+//        }
 
         // Clear previous buff if it exists
         this.removeBuff(buffData.getGroupId());
@@ -137,7 +136,8 @@ public class PlayerBuffManager extends BasePlayerManager {
         this.buffs.put(buff.getGroupId(), buff);
 
         // Packet
-        getPlayer().sendPacket(new PacketServerBuffChangeNotify(getPlayer(), ServerBuffChangeType.SERVER_BUFF_CHANGE_TYPE_ADD_SERVER_BUFF, buff));
+        getPlayer().sendPacket(new PacketServerBuffChangeNotify(
+            getPlayer(), ServerBuffChangeType.SERVER_BUFF_CHANGE_TYPE_ADD_SERVER_BUFF, buff));
 
         return true;
     }
@@ -145,30 +145,22 @@ public class PlayerBuffManager extends BasePlayerManager {
     /**
      * Removes a buff by its group id
      * @param buffGroupId Server buff group id
-     * @return True if a buff was remove
      */
-    public synchronized boolean removeBuff(int buffGroupId) {
-        PlayerBuff buff = this.buffs.remove(buffGroupId);
-
-        if (buff != null) {
-            getPlayer().sendPacket(
-                new PacketServerBuffChangeNotify(getPlayer(), ServerBuffChangeType.SERVER_BUFF_CHANGE_TYPE_DEL_SERVER_BUFF, buff)
-            );
-            return true;
-        }
-
-        return false;
+    public synchronized void removeBuff(int buffGroupId) {
+        val buff = Optional.ofNullable(this.buffs.remove(buffGroupId));
+        buff.ifPresent(playerBuff ->
+            getPlayer().sendPacket(new PacketServerBuffChangeNotify(
+                getPlayer(), ServerBuffChangeType.SERVER_BUFF_CHANGE_TYPE_DEL_SERVER_BUFF, playerBuff)));
+//        return buff.isPresent();
     }
 
     public synchronized void onTick() {
         // Skip if no buffs
         if (this.buffs.isEmpty()) return;
 
-        long currentTime = System.currentTimeMillis();
-
         // Add to pending buffs to remove if buff has expired
         this.buffs.values().removeIf(buff -> {
-            if (currentTime <= buff.getEndTime())
+            if (System.currentTimeMillis() <= buff.getEndTime())
                 return false;
             this.pendingBuffs.add(buff);
             return true;
@@ -176,9 +168,8 @@ public class PlayerBuffManager extends BasePlayerManager {
 
         if (this.pendingBuffs.size() > 0) {
             // Send packet
-            getPlayer().sendPacket(
-                new PacketServerBuffChangeNotify(getPlayer(), ServerBuffChangeType.SERVER_BUFF_CHANGE_TYPE_DEL_SERVER_BUFF, this.pendingBuffs)
-            );
+            getPlayer().sendPacket(new PacketServerBuffChangeNotify(
+                getPlayer(), ServerBuffChangeType.SERVER_BUFF_CHANGE_TYPE_DEL_SERVER_BUFF, this.pendingBuffs));
             this.pendingBuffs.clear();
         }
     }

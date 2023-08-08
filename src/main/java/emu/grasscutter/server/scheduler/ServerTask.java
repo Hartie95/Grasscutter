@@ -42,7 +42,7 @@ public final class ServerTask implements Runnable {
         // Increase tick count.
         var ticks = this.ticks++;
         if(this.delay != -1) {
-            return ticks == this.delay;
+            return ticks == this.delay-1;
         } else if(this.period != -1)
             return ticks % this.period == 0;
         else return true;
@@ -53,7 +53,7 @@ public final class ServerTask implements Runnable {
      * @return True if the task should be canceled, false otherwise.
      */
     public boolean shouldCancel() {
-        return this.period == -1 && ticks >= delay;
+        return this.period == -1 && ticks > delay;
     }
 
     /**

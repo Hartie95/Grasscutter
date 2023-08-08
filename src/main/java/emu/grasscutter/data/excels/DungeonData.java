@@ -40,6 +40,7 @@ public class DungeonData extends GameResource {
 	private int passRewardPreviewId;
     private int statueCostID;
     private int statueCostCount;
+    private String stateType;
 
     // not part of DungeonExcelConfigData
     private RewardPreviewData rewardPreviewData;

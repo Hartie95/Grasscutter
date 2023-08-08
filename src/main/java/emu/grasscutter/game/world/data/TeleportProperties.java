@@ -16,4 +16,7 @@ public class TeleportProperties {
     private Position teleportTo;
     private Position teleportRot;
     private EnterTypeOuterClass.EnterType enterType;
+    private final int dungeonId;
+    private final Position prevPos;
+    private final int prevSceneId;
 }

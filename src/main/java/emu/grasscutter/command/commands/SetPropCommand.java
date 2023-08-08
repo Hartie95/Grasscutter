@@ -9,14 +9,14 @@ import emu.grasscutter.command.CommandHandler;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.PlayerProperty;
-import emu.grasscutter.game.tower.TowerLevelRecord;
 import emu.grasscutter.server.packet.send.PacketOpenStateChangeNotify;
 import emu.grasscutter.server.packet.send.PacketSceneAreaUnlockNotify;
 import emu.grasscutter.server.packet.send.PacketScenePointUnlockNotify;
+import lombok.val;
 
 @Command(label = "setProp", aliases = {"prop"}, usage = {"<prop> <value>"}, permission = "player.setprop", permissionTargeted = "player.setprop.others")
 public final class SetPropCommand implements CommandHandler {
-    static enum PseudoProp {
+    enum PseudoProp {
         NONE,
         WORLD_LEVEL,
         TOWER_LEVEL,
@@ -140,10 +140,8 @@ public final class SetPropCommand implements CommandHandler {
             return;
         }
 
-        boolean success = false;
         Prop prop = props.get(propStr);
-
-        success = switch (prop.pseudoProp) {
+        boolean success = switch (prop.pseudoProp) {
             case WORLD_LEVEL -> targetPlayer.setWorldLevel(value);
             case BP_LEVEL -> targetPlayer.getBattlePassManager().setLevel(value);
             case TOWER_LEVEL -> this.setTowerLevel(sender, targetPlayer, value);
@@ -177,23 +175,21 @@ public final class SetPropCommand implements CommandHandler {
             return false;
         }
 
-        Map<Integer, TowerLevelRecord> recordMap = targetPlayer.getTowerManager().getRecordMap();
+        val recordMap = targetPlayer.getTowerManager().getRecordMap();
         // Add records for each unlocked floor
-        for (int floor : floorIds.subList(0, topFloor)) {
-            if (!recordMap.containsKey(floor)) {
-                recordMap.put(floor, new TowerLevelRecord(floor));
-            }
-        }
+//        for (int floor : floorIds.subList(0, topFloor)) {
+//            if (!recordMap.containsKey(floor)) {
+//                recordMap.put(floor, new TowerLevelRecord(floor));
+//            }
+//        }
         // Remove records for each floor past our target
         for (int floor : floorIds.subList(topFloor, floorIds.size())) {
-            if (recordMap.containsKey(floor)) {
-                recordMap.remove(floor);
-            }
+            recordMap.remove(floor);
         }
         // Six stars required on Floor 8 to unlock Floor 9+
-        if (topFloor > 8) {
-            recordMap.get(floorIds.get(7)).setLevelStars(0, 6);  // levelIds seem to start at 1 for Floor 1 Chamber 1, so this doesn't get shown at all
-        }
+//        if (topFloor > 8) {
+//            recordMap.get(floorIds.get(7)).setLevelStars(0, 6);  // levelIds seem to start at 1 for Floor 1 Chamber 1, so this doesn't get shown at all
+//        }
         return true;
     }
 
@@ -211,17 +207,12 @@ public final class SetPropCommand implements CommandHandler {
         };
 
         switch (pseudoProp) {
-            case GOD_MODE:
-                targetPlayer.setGodmode(enabled);
-                break;
-            case UNLIMITED_STAMINA:
-                targetPlayer.setUnlimitedStamina(enabled);
-                break;
-            case UNLIMITED_ENERGY:
-                targetPlayer.getEnergyManager().setEnergyUsage(!enabled);
-                break;
-            default:
+            case GOD_MODE -> targetPlayer.setGodmode(enabled);
+            case UNLIMITED_STAMINA -> targetPlayer.setUnlimitedStamina(enabled);
+            case UNLIMITED_ENERGY -> targetPlayer.getEnergyManager().setEnergyUsage(!enabled);
+            default -> {
                 return false;
+            }
         }
         return true;
     }

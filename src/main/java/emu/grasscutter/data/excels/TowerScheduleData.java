@@ -2,16 +2,20 @@ package emu.grasscutter.data.excels;
 
 import emu.grasscutter.data.GameResource;
 import emu.grasscutter.data.ResourceType;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
 @ResourceType(name = "TowerScheduleExcelConfigData.json")
+@Data
+@EqualsAndHashCode(callSuper = false)
 public class TowerScheduleData extends GameResource {
     private int scheduleId;
     private List<Integer> entranceFloorId;
     private List<ScheduleDetail> schedules;
     private int monthlyLevelConfigId;
-    
+
     @Override
     public int getId() {
         return scheduleId;
@@ -19,33 +23,13 @@ public class TowerScheduleData extends GameResource {
 
     @Override
     public void onLoad() {
-        super.onLoad();
         this.schedules = this.schedules.stream()
-                .filter(item -> item.getFloorList().size() > 0)
-                .toList();
+            .filter(item -> !item.getFloorList().isEmpty())
+            .toList();
     }
 
-    public int getScheduleId() {
-        return scheduleId;
-    }
-
-    public List<Integer> getEntranceFloorId() {
-        return entranceFloorId;
-    }
-
-    public List<ScheduleDetail> getSchedules() {
-        return schedules;
-    }
-    
-    public int getMonthlyLevelConfigId() {
-        return monthlyLevelConfigId;
-    }
-
+    @Data
     public static class ScheduleDetail{
         private List<Integer> floorList;
-
-        public List<Integer> getFloorList() {
-            return floorList;
-        }
     }
 }
