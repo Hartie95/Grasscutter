@@ -8,14 +8,17 @@ import emu.grasscutter.game.ability.Ability;
 import emu.grasscutter.game.entity.EntityAvatar;
 import emu.grasscutter.game.entity.EntityItem;
 import emu.grasscutter.game.entity.GameEntity;
+import emu.grasscutter.game.entity.create_config.CreateGadgetEntityConfig;
+import emu.grasscutter.game.props.ItemUseOp;
 import emu.grasscutter.game.props.SceneType;
 import emu.grasscutter.utils.Position;
 import org.anime_game_servers.multi_proto.gi.messages.ability.action.AbilityActionGenerateElemBall;
+import lombok.val;
 
 @AbilityAction(AbilityModifierAction.Type.GenerateElemBall)
 public class ActionGenerateElemBall extends AbilityActionHandler {
     @Override
-    public boolean execute(Ability ability, AbilityModifierAction action, byte[] abilityData, GameEntity target) {
+    public boolean execute(Ability ability, AbilityModifierAction action, byte[] abilityData, GameEntity<?> target) {
         GameEntity owner = ability.getOwner();
 
         AbilityActionGenerateElemBall generateElemBall;
@@ -72,7 +75,12 @@ public class ActionGenerateElemBall extends AbilityActionHandler {
 
         logger.debug("Generating {} of {} element balls", amountGenerated, action.configID);
         for(int i = 0; i < amountGenerated; i++) {
-            EntityItem energyBall = new EntityItem(owner.getScene(), (owner instanceof EntityAvatar avatar) ? avatar.getPlayer() : null, itemData, new Position(generateElemBall.getPos()), new Position(generateElemBall.getRot()), 1);
+            val createConfig = new CreateGadgetEntityConfig(itemData, 1)
+                .setPlayerOwner((owner instanceof EntityAvatar avatar) ? avatar.getPlayer() : null)
+                .setBornPos(new Position(generateElemBall.getPos()))
+                .setBornRot(new Position(generateElemBall.getRot()));
+
+            EntityItem energyBall = new EntityItem(owner.getScene(), createConfig);
             owner.getScene().addEntity(energyBall);
         }
 

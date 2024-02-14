@@ -1,6 +1,6 @@
 package emu.grasscutter.game.entity.gadget.chest;
 
-import emu.grasscutter.game.entity.gadget.GadgetChest;
+import emu.grasscutter.game.entity.gadget.content.GadgetChest;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.world.ChestReward;
 

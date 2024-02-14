@@ -18,8 +18,11 @@ import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.enums.DungeonPassConditionType;
 import emu.grasscutter.game.dungeons.settle_listeners.DungeonSettleListener;
 import emu.grasscutter.game.entity.*;
-import emu.grasscutter.game.entity.gadget.GadgetWorktop;
 import emu.grasscutter.game.entity.gadget.platform.ConfigRoute;
+import emu.grasscutter.game.entity.create_config.CreateEntityConfig;
+import emu.grasscutter.game.entity.create_config.CreateGadgetEntityConfig;
+import emu.grasscutter.game.entity.create_config.CreateMonsterEntityConfig;
+import emu.grasscutter.game.entity.gadget.content.GadgetWorktop;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.player.TeamInfo;
 import emu.grasscutter.game.props.*;
@@ -64,8 +67,8 @@ public class Scene {
     @Getter private final SceneData sceneData;
     @Getter private final SceneInstanceData sceneInstanceData;
     @Getter private final List<Player> players = new CopyOnWriteArrayList<>();
-    @Getter private final Map<Integer, GameEntity> entities = new ConcurrentHashMap<>();
-    @Getter private final Map<Integer, GameEntity> weaponEntities = new ConcurrentHashMap<>();
+    @Getter private final Map<Integer, GameEntity<?>> entities = new ConcurrentHashMap<>();
+    @Getter private final Map<Integer, GameEntity<?>> weaponEntities = new ConcurrentHashMap<>();
     private final Set<SpawnDataEntry> spawnedEntities = ConcurrentHashMap.newKeySet();
     @Getter private final Set<SpawnDataEntry> deadSpawnedEntities = ConcurrentHashMap.newKeySet();
     private final Set<SceneBlock> loadedBlocks = ConcurrentHashMap.newKeySet();
@@ -130,30 +133,32 @@ public class Scene {
         return this.players.size();
     }
 
-    public GameEntity getEntityById(int id) {
+    public GameEntity<?> getEntityById(int id) {
         if (id == 0x13800001) return this.sceneEntity;
         else if (id == this.world.getLevelEntityId()) return this.world.getEntity();
 
         val teamEntityPlayer = this.players.stream().filter(p -> p.getTeamManager().getEntity().getId() == id).findAny();
         if(teamEntityPlayer.isPresent()) return teamEntityPlayer.get().getTeamManager().getEntity();
-
-        Optional<GameEntity> entity = Optional.ofNullable(this.entities.get(id)).or(() -> Optional.ofNullable(this.weaponEntities.get(id)));
-        if (entity.isEmpty() && EntityIdType.idFromEntityId(id) == EntityIdType.AVATAR.getId()) {
+        GameEntity<?> entity = this.entities.get(id);
+        if (entity == null) entity = this.weaponEntities.get(id);
+        if (entity == null && EntityIdType.idFromEntityId(id) == EntityIdType.AVATAR.getId()) {
             entity = this.players.stream().map(p -> p.getTeamManager().getActiveTeam()).flatMap(List::stream)
-                .filter(entityAvatar -> entityAvatar.getId() == id).findFirst().map(GameEntity.class::cast);
+                .filter(entityAvatar -> entityAvatar.getId() == id)
+                .findFirst()
+                .map(GameEntity.class::cast).orElse(null);
         }
 
-        return entity.orElse(null);
+        return entity;
     }
 
-    public GameEntity getEntityByConfigId(int configId) {
+    public GameEntity<?> getEntityByConfigId(int configId) {
         return this.entities.values().stream()
             .filter(x -> x.getConfigId() == configId)
             .findFirst()
             .orElse(null);
     }
 
-    public GameEntity getEntityByConfigId(int configId, int groupId) {
+    public GameEntity<?> getEntityByConfigId(int configId, int groupId) {
         return this.entities.values().stream()
             .filter(x -> x.getConfigId() == configId && x.getGroupId() == groupId)
             .findFirst()
@@ -278,6 +283,22 @@ public class Scene {
         broadcastPacket(new PacketSceneEntityAppearNotify(entity));
         entity.afterCreate(this.players);
     }
+    public synchronized void addEntity(CreateEntityConfig config) {
+        GameEntity<?> entity = null;
+        if(config.getClass() == CreateMonsterEntityConfig.class) {
+            entity = new EntityMonster(this, (CreateMonsterEntityConfig) config);
+        } else if(config.getClass() == CreateGadgetEntityConfig.class) {
+            entity = new EntityGadget(this, (CreateGadgetEntityConfig) config);
+        }
+
+        if(entity == null) {
+            Grasscutter.getLogger().warn("Unknown/Unhandled entity config type: {}", config.getClass());
+            return;
+        }
+
+        addEntityDirectly(entity);
+        broadcastPacket(new PacketSceneEntityAppearNotify(entity));
+    }
 
     public synchronized void addEntityToSingleClient(Player player, GameEntity entity) {
         addEntityDirectly(entity);
@@ -397,7 +418,7 @@ public class Scene {
             if (attacker instanceof EntityClientGadget gadgetAttacker) {
                 val clientGadgetOwner = getEntityById(gadgetAttacker.getOwnerEntityId());
                 if (clientGadgetOwner instanceof EntityAvatar) {
-                    ((EntityClientGadget) attacker).getOwner().getCodex().checkAnimal(target, CodexAnimalData.CountType.CODEX_COUNT_TYPE_KILL);
+                    gadgetAttacker.getOwner().getCodex().checkAnimal(target, CodexAnimalData.CountType.CODEX_COUNT_TYPE_KILL);
                 }
             } else if (attacker instanceof EntityAvatar avatarAttacker) {
                 avatarAttacker.getPlayer().getCodex().checkAnimal(target, CodexAnimalData.CountType.CODEX_COUNT_TYPE_KILL);
@@ -569,33 +590,20 @@ public class Scene {
             // If spawn entry is in our view and hasn't been spawned/killed yet, we should spawn it
             if (spawnedEntities.contains(entry) || this.deadSpawnedEntities.contains(entry)) continue;
             // Entity object holder
-            GameEntity entity = null;
+            GameEntity<?> entity = null;
 
             // Check if spawn entry is monster or gadget
             if (entry.getMonsterId() > 0) {
-                val data = GameData.getMonsterDataMap().get(entry.getMonsterId());
+                final int level = getEntityLevel(entry.getLevel(), worldLevelOverride);
+                val config = new CreateMonsterEntityConfig(entry)
+                    .setLevel(level);
+                val data = config.getMonsterData();
                 if (data == null) continue;
 
-                final int level = getEntityLevel(entry.getLevel(), worldLevelOverride);
-
-                val monster = new EntityMonster(this, data, entry.getPos(), level);
-                monster.getRotation().set(entry.getRot());
-                monster.setGroupId(entry.getGroup().getGroupId());
-                monster.setPoseId(entry.getPoseId());
-                monster.setConfigId(entry.getConfigId());
-                monster.setSpawnEntry(entry);
-
-                entity = monster;
+                entity = new EntityMonster(this, config);
             } else if (entry.getGadgetId() > 0) {
-                val gadget = new EntityGadget(this, entry.getGadgetId(), entry.getPos(), entry.getRot());
-                gadget.setGroupId(entry.getGroup().getGroupId());
-                gadget.setConfigId(entry.getConfigId());
-                gadget.setSpawnEntry(entry);
-                int state = entry.getGadgetState();
-                if (state > 0) {
-                    gadget.setState(state);
-                }
-                gadget.buildContent();
+                val createConfig = new CreateGadgetEntityConfig(entry);
+                val gadget = new EntityGadget(this, createConfig);
 
                 gadget.setFightProperty(FightProperty.FIGHT_PROP_BASE_HP, Float.POSITIVE_INFINITY);
                 gadget.setFightProperty(FightProperty.FIGHT_PROP_CUR_HP, Float.POSITIVE_INFINITY);
@@ -795,8 +803,8 @@ public class Scene {
 
         // Spawn gadgets AFTER triggers are added
         // TODO
-        val entities = new ArrayList<GameEntity>();
-        val entitiesBorn = new ArrayList<GameEntity>();
+        val entities = new ArrayList<GameEntity<?>>();
+        val entitiesBorn = new ArrayList<GameEntity<?>>();
         groups.stream().filter(group -> !this.loadedGroups.contains(group)).filter(group -> group.getInitConfig() != null)
             .map(group -> Optional.ofNullable(this.scriptManager.getCachedGroupInstanceById(group.getGroupInfo().getId()))
                 .stream().peek(cachedInstance -> cachedInstance.setLuaGroup(group))
@@ -898,10 +906,14 @@ public class Scene {
             val range = (1.5f + (.05f * amount));
             for (int i = 0; i < amount; i++) {
                 val pos = bornForm.getPosition().nearby2d(range).addZ(.9f);  // Why Z?
-                addEntity(new EntityItem(this, null, itemData, pos, 1));
+                val createConfig = new CreateGadgetEntityConfig(itemData, 1)
+                    .setBornPos(pos);
+                addEntity(new EntityItem(this, createConfig));
             }
         } else {
-            addEntity(new EntityItem(this, null, itemData, bornForm.getPosition().clone().addZ(.9f), amount));
+            val createConfig = new CreateGadgetEntityConfig(itemData, amount)
+                .setBornPos(bornForm.getPosition().clone().addZ(.9f));
+            addEntity(new EntityItem(this, createConfig));
         }
     }
 

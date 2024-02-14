@@ -9,7 +9,7 @@ import emu.grasscutter.game.props.FightProperty;
 @AbilityAction(AbilityModifierAction.Type.HealHP)
 public class ActionHealHP extends AbilityActionHandler {
     @Override
-    public boolean execute(Ability ability, AbilityModifierAction action, byte[] abilityData, GameEntity target) {
+    public boolean execute(Ability ability, AbilityModifierAction action, byte[] abilityData, GameEntity<?> target) {
         logger.info("Heal ability action executing 1\n");
 
         GameEntity owner = ability.getOwner();

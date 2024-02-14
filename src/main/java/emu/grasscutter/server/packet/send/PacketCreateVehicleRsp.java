@@ -1,5 +1,6 @@
 package emu.grasscutter.server.packet.send;
 
+import emu.grasscutter.game.entity.create_config.CreateGadgetEntityConfig;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.entity.EntityVehicle;
 import emu.grasscutter.game.entity.GameEntity;
@@ -10,6 +11,7 @@ import emu.grasscutter.utils.Position;
 import org.anime_game_servers.multi_proto.gi.messages.gadget.CreateVehicleRsp;
 import org.anime_game_servers.multi_proto.gi.messages.gadget.VehicleInteractType;
 import org.anime_game_servers.multi_proto.gi.messages.general.vehicle.VehicleMember;
+import lombok.val;
 
 import java.util.List;
 
@@ -19,7 +21,7 @@ public class PacketCreateVehicleRsp extends BaseTypedPacket<CreateVehicleRsp> {
         super(new CreateVehicleRsp());
 
         // Eject vehicle members and Kill previous vehicles if there are any
-        List<GameEntity> previousVehicles = player.getScene().getEntities().values().stream()
+        List<GameEntity<?>> previousVehicles = player.getScene().getEntities().values().stream()
                 .filter(entity -> entity instanceof EntityVehicle
                         && ((EntityVehicle) entity).getGadgetId() == vehicleId
                         && ((EntityVehicle) entity).getOwner().equals(player))
@@ -35,7 +37,11 @@ public class PacketCreateVehicleRsp extends BaseTypedPacket<CreateVehicleRsp> {
             player.getScene().killEntity(entity, 0);
         });
 
-        EntityVehicle vehicle = new EntityVehicle(player.getScene(), player, vehicleId, pointId, pos, rot);
+        val config = new CreateGadgetEntityConfig(vehicleId)
+            .setBornPos(pos)
+            .setBornRot(rot);
+
+        EntityVehicle vehicle = new EntityVehicle(player.getScene(), player, config);
         player.getScene().addEntity(vehicle);
 
         proto.setVehicleId(vehicleId);

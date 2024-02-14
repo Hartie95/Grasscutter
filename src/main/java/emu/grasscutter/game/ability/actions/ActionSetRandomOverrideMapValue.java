@@ -8,7 +8,7 @@ import org.anime_game_servers.multi_proto.gi.messages.ability.action.AbilityActi
 @AbilityAction(AbilityModifierAction.Type.SetRandomOverrideMapValue)
 public class ActionSetRandomOverrideMapValue extends AbilityActionHandler {
     @Override
-    public boolean execute(Ability ability, AbilityModifierAction action, byte[] abilityData, GameEntity target) {
+    public boolean execute(Ability ability, AbilityModifierAction action, byte[] abilityData, GameEntity<?> target) {
         AbilityActionSetRandomOverrideMapValue valueProto;
         try {
             valueProto = AbilityActionSetRandomOverrideMapValue.parseBy(abilityData, ability.getPlayerOwner().getSession().getVersion());

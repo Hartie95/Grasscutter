@@ -9,7 +9,7 @@ import emu.grasscutter.game.quest.enums.QuestContent;
 @AbilityAction(AbilityModifierAction.Type.AvatarSkillStart)
 public class ActionAvatarSkillStart extends AbilityActionHandler {
     @Override
-    public boolean execute(Ability ability, AbilityModifierAction action,byte[] abilityData, GameEntity target) {
+    public boolean execute(Ability ability, AbilityModifierAction action,byte[] abilityData, GameEntity<?> target) {
         GameEntity owner = ability.getOwner();
         if(owner instanceof EntityAvatar avatar) {
             avatar.getPlayer().getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_SKILL, action.skillID);

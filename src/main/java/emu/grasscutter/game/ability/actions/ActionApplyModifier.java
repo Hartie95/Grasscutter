@@ -1,18 +1,13 @@
 package emu.grasscutter.game.ability.actions;
 
-import com.google.protobuf.ByteString;
-
-import emu.grasscutter.Grasscutter;
-
 import emu.grasscutter.data.binout.AbilityModifier.AbilityModifierAction;
 import emu.grasscutter.game.ability.Ability;
-import emu.grasscutter.game.ability.AbilityModifierController;
 import emu.grasscutter.game.entity.GameEntity;
 
 @AbilityAction(AbilityModifierAction.Type.ApplyModifier)
 public class ActionApplyModifier extends AbilityActionHandler {
     @Override
-    public boolean execute(Ability ability, AbilityModifierAction action, byte[] abilityData, GameEntity target) {
+    public boolean execute(Ability ability, AbilityModifierAction action, byte[] abilityData, GameEntity<?> target) {
         //var modifierData = ability.getData().modifiers.get(action.modifierName);
         //if(modifierData == null) {
         //    Grasscutter.getLogger().debug("Modifier {} not found", action.modifierName);

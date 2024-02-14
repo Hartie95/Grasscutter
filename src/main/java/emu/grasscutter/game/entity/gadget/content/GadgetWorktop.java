@@ -1,8 +1,10 @@
-package emu.grasscutter.game.entity.gadget;
+package emu.grasscutter.game.entity.gadget.content;
 
 import java.util.Arrays;
 
 import emu.grasscutter.game.entity.EntityGadget;
+import emu.grasscutter.game.entity.create_config.CreateGadgetEntityConfig;
+import emu.grasscutter.game.entity.gadget.content.GadgetContent;
 import emu.grasscutter.game.entity.gadget.worktop.WorktopWorktopOptionHandler;
 import emu.grasscutter.game.player.Player;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -19,6 +21,10 @@ public class GadgetWorktop extends GadgetContent {
 
     public GadgetWorktop(EntityGadget gadget) {
         super(gadget);
+        val config = gadget.getSpawnConfig();
+        if (config.getWorktopOptions() != null) {
+            this.worktopOptions = new IntOpenHashSet(config.getWorktopOptions());
+        }
     }
 
     public IntSet getWorktopOptions() {

@@ -11,7 +11,8 @@ import emu.grasscutter.game.entity.EntityAvatar;
 import emu.grasscutter.game.entity.EntityGadget;
 import emu.grasscutter.game.entity.EntityMonster;
 import emu.grasscutter.game.entity.GameEntity;
-import emu.grasscutter.game.entity.gadget.GadgetWorktop;
+import emu.grasscutter.game.entity.*;
+import emu.grasscutter.game.entity.gadget.content.GadgetWorktop;
 import emu.grasscutter.game.entity.gadget.platform.ConfigRoute;
 import emu.grasscutter.game.entity.gadget.platform.PointArrayRoute;
 import emu.grasscutter.game.managers.blossom.BlossomSchedule;
@@ -67,7 +68,7 @@ public class ScriptLibHandler extends BaseHandler implements org.anime_game_serv
             return null;
         }
 
-        val entity = sceneScriptManager.createGadget(groupId, groupBlockId, gadget);
+        val entity = sceneScriptManager.createGadget(gadget);
         if(entity==null){
             logger.warn("[LUA] Create gadget null with cid: {} gid: {} bid: {}", configId, groupId, groupBlockId);
             return null;
@@ -1002,7 +1003,7 @@ public class ScriptLibHandler extends BaseHandler implements org.anime_game_serv
         if (currentGroup == null) return 1;
 
         val gadget = currentGroup.getGadgets().get(chestConfigId);
-        val chestGadget = context.getSceneScriptManager().createGadget(actualGroupId, currentGroup.getGroupInfo().getBlockId(), gadget);
+        val chestGadget = context.getSceneScriptManager().createGadget(gadget);
         if (chestGadget == null) return 1;
 
         val blossomManager = context.getSceneScriptManager().getScene().getWorld().getHost().getBlossomManager();

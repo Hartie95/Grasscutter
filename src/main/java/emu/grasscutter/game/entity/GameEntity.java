@@ -3,6 +3,8 @@ package emu.grasscutter.game.entity;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.game.ability.Ability;
 import emu.grasscutter.game.ability.AbilityModifierController;
+import emu.grasscutter.game.entity.create_config.CreateEntityConfig;
+import emu.grasscutter.game.entity.create_config.CreateGadgetEntityConfig;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.*;
 import emu.grasscutter.game.world.Scene;
@@ -28,10 +30,11 @@ import org.anime_game_servers.multi_proto.gi.messages.scene.entity.SceneEntityIn
 import javax.annotation.Nullable;
 import java.util.*;
 
-public abstract class GameEntity {
+public abstract class GameEntity<T extends CreateEntityConfig> {
     @Getter private final Scene scene;
     @Getter protected int id;
     @Getter @Setter private SpawnDataEntry spawnEntry;
+    @Getter @Setter private T spawnConfig;
 
     @Getter @Setter private int blockId;
     @Getter @Setter private int configId;
@@ -42,6 +45,7 @@ public abstract class GameEntity {
     @Getter @Setter private int lastMoveReliableSeq;
 
     @Getter @Setter private boolean lockHP;
+    @Getter @Setter private int level = 0;
 
     // Lua controller for specific actions
     @Getter @Setter private EntityController entityController;
@@ -51,9 +55,19 @@ public abstract class GameEntity {
     @Getter private Int2ObjectMap<AbilityModifierController> instancedModifiers = new Int2ObjectOpenHashMap<>();
     @Getter private Map<String, Float> globalAbilityValues = new HashMap<>();
 
-    public GameEntity(Scene scene) {
+    protected GameEntity(Scene scene) {
         this.scene = scene;
         this.motionState = MotionState.MOTION_NONE;
+    }
+
+    protected GameEntity(Scene scene, T createConfig) {
+        this.scene = scene;
+        this.spawnConfig = createConfig;
+        this.motionState = MotionState.MOTION_NONE;
+        this.configId = createConfig.getConfigId();
+        this.groupId = createConfig.getGroupId();
+        this.blockId = createConfig.getBlockId();
+        this.level = createConfig.getLevel();
     }
 
     public EntityType getEntityType() {
@@ -289,13 +303,10 @@ public abstract class GameEntity {
         }
 
         for (var entry : itemsToDrop.int2ObjectEntrySet()) {
-            EntityItem item = new EntityItem(
-                scene,
-                null,
-                GameData.getItemDataMap().get(entry.getIntKey()),
-                getPosition().nearby2d(1f).addY(0.5f),
-                entry.getValue(),
-                true);
+            val itemData = GameData.getItemDataMap().get(entry.getIntKey());
+            val createConfig = new CreateGadgetEntityConfig(itemData, entry.getValue())
+                .setBornPos(getPosition().nearby2d(1f).addY(0.5f));
+            EntityItem item = new EntityItem(scene, createConfig);
 
             scene.addEntity(item);
         }

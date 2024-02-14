@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 
 public class Ability {
     @Getter private AbilityData data;
-    @Getter private GameEntity owner;
+    @Getter private GameEntity<?> owner;
     @Getter private Player playerOwner;
 
     @Getter private AbilityManager manager;
@@ -28,7 +28,7 @@ public class Ability {
 
     @Getter private int hash;
 
-    public Ability(AbilityData data, GameEntity owner, Player playerOwner) {
+    public Ability(AbilityData data, GameEntity<?> owner, Player playerOwner) {
         this.data = data;
         this.owner = owner;
         this.manager = owner.getWorld().getHost().getAbilityManager();

@@ -6,6 +6,7 @@ import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.ItemData;
 import emu.grasscutter.game.entity.EntityItem;
 import emu.grasscutter.game.entity.EntityMonster;
+import emu.grasscutter.game.entity.create_config.CreateGadgetEntityConfig;
 import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.inventory.ItemType;
 import emu.grasscutter.game.player.Player;
@@ -17,6 +18,7 @@ import emu.grasscutter.utils.Position;
 import emu.grasscutter.utils.Utils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import lombok.val;
 
 import java.util.List;
 
@@ -51,7 +53,11 @@ public class DropSystem extends BaseGameSystem {
     }
     private void addDropEntity(DropData dd, Scene dropScene, ItemData itemData, Position pos, int num, Player target) {
         if (!dd.isGive() && (itemData.getItemType() != ItemType.ITEM_VIRTUAL || itemData.getGadgetId() != 0)) {
-            EntityItem entity = new EntityItem(dropScene, target, itemData, pos, num, dd.isShare());
+            val createConfig = new CreateGadgetEntityConfig(itemData, num)
+                .setBornPos(pos)
+                .setPlayerOwner(target)
+                .setShareItem(dd.isShare());
+            EntityItem entity = new EntityItem(dropScene, createConfig);
             if (!dd.isShare())
                 dropScene.addEntityToSingleClient(target, entity);
             else

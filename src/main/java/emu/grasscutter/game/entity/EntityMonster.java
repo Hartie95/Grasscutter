@@ -10,6 +10,8 @@ import emu.grasscutter.data.excels.MonsterCurveData;
 import emu.grasscutter.data.excels.MonsterData;
 import emu.grasscutter.game.ability.AbilityManager;
 import emu.grasscutter.game.dungeons.enums.DungeonPassConditionType;
+import emu.grasscutter.game.entity.create_config.CreateGadgetEntityConfig;
+import emu.grasscutter.game.entity.create_config.CreateMonsterEntityConfig;
 import emu.grasscutter.game.entity.interfaces.StringAbilityEntity;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.*;
@@ -39,7 +41,7 @@ import java.util.stream.Collectors;
 
 import static org.anime_game_servers.gi_lua.models.constants.EventType.EVENT_SPECIFIC_MONSTER_HP_CHANGE;
 
-public class EntityMonster extends GameEntity implements StringAbilityEntity {
+public class EntityMonster extends GameEntity<CreateMonsterEntityConfig> implements StringAbilityEntity {
     @Getter(onMethod = @__(@Override))
     private final Int2FloatOpenHashMap fightProperties;
 
@@ -50,7 +52,7 @@ public class EntityMonster extends GameEntity implements StringAbilityEntity {
     @Getter private final MonsterData monsterData;
     @Getter private final ConfigEntityMonster configEntityMonster;
     @Getter private final Position bornPos;
-    @Getter private final int level;
+    @Getter private final Position bornRot;
     @Getter private EntityWeapon weaponEntity;
     @Getter @Setter private int poseId;
     @Getter @Setter private int aiId = -1;
@@ -59,29 +61,34 @@ public class EntityMonster extends GameEntity implements StringAbilityEntity {
 
     @Getter @Setter private SceneMonster metaMonster;
 
-    public EntityMonster(Scene scene, MonsterData monsterData, Position pos, int level) {
-        super(scene);
+    public EntityMonster(Scene scene, CreateMonsterEntityConfig config) {
+        super(scene, config);
         this.id = getWorld().getNextEntityId(EntityIdType.MONSTER);
-        this.monsterData = monsterData;
+
+        this.monsterData = config.getMonsterData();
         this.fightProperties = new Int2FloatOpenHashMap();
-        this.position = new Position(pos);
-        this.rotation = new Position();
-        this.bornPos = getPosition().clone();
-        this.level = level;
+        this.position = config.getPos();
+        this.rotation = config.getRot();
+        this.bornPos = config.getBornPos();
+        this.bornRot = config.getBornRot();
         this.playerOnBattle = new ArrayList<>();
 
-        if(GameData.getMonsterMappingMap().containsKey(getMonsterId())) {
-            this.configEntityMonster = GameData.getMonsterConfigData().get(GameData.getMonsterMappingMap().get(getMonsterId()).getMonsterJson());
-        } else {
-            this.configEntityMonster = null;
+
+        this.configEntityMonster = config.getConfigEntity();
+
+        if(getSpawnConfig().getInitDataSource() instanceof SceneMonster sceneMonster){
+            this.metaMonster = sceneMonster;
         }
 
         // Monster weapon
         if (getMonsterWeaponId() > 0) {
-            this.weaponEntity = new EntityWeapon(scene, getMonsterWeaponId());
+            val weaponConfig = new CreateGadgetEntityConfig(getMonsterWeaponId());
+            this.weaponEntity = new EntityWeapon(scene, weaponConfig);
             scene.getWeaponEntities().put(this.weaponEntity.getId(), this.weaponEntity);
             //this.weaponEntityId = getWorld().getNextEntityId(EntityIdType.WEAPON);
         }
+        this.aiId = config.getAiId();
+        this.poseId = config.getPoseId();
 
         this.recalcStats();
 
@@ -354,7 +361,7 @@ public class EntityMonster extends GameEntity implements StringAbilityEntity {
 
             monsterInfo.setWeaponList(List.of(weaponInfo));
         }
-        if (this.aiId != -1) {
+        if (this.aiId > 0) {
             monsterInfo.setAiConfigId(aiId);
         }
 

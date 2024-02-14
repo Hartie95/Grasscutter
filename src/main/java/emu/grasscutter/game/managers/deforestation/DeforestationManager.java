@@ -3,12 +3,14 @@ package emu.grasscutter.game.managers.deforestation;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.game.entity.EntityItem;
+import emu.grasscutter.game.entity.create_config.CreateGadgetEntityConfig;
 import emu.grasscutter.game.player.BasePlayerManager;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.world.Scene;
 import org.anime_game_servers.multi_proto.gi.messages.scene.HitTreeNotify;
 import org.anime_game_servers.multi_proto.gi.messages.general.Vector;
 import emu.grasscutter.utils.Position;
+import lombok.val;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -72,12 +74,11 @@ public class DeforestationManager extends BasePlayerManager {
                     currentRecord.remove(0);
                 }
                 if (record.record()) {
-                    EntityItem entity = new EntityItem(scene,
-                            null,
-                            GameData.getItemDataMap().get(itemId),
-                            new Position(hitPosition.getX(), hitPosition.getY(), hitPosition.getZ()),
-                            1,
-                            false);
+                    val itemData = GameData.getItemDataMap().get(itemId);
+                    val createConfig = new CreateGadgetEntityConfig(itemData, 1)
+                        .setShareItem(false)
+                        .setBornPos(new Position(hitPosition.getX(), hitPosition.getY(), hitPosition.getZ()));
+                    EntityItem entity = new EntityItem(scene, createConfig);
                     scene.addEntity(entity);
                 }
                 //record.record()=false : too many wood they have deforested, no more wood dropped!

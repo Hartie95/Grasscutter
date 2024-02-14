@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import emu.grasscutter.game.entity.EntityBaseGadget;
+import emu.grasscutter.game.entity.EntityGadget;
 import org.anime_game_servers.gi_lua.models.SceneGroupUserData;
 import org.anime_game_servers.gi_lua.models.scene.group.SceneGadget;
 import org.anime_game_servers.gi_lua.models.scene.group.SceneGroup;
@@ -74,9 +76,9 @@ public class SceneGroupInstance implements SceneGroupUserData {
         save(); //Save each time a group is registered or unregistered
     }
 
-    public void cacheGadgetState(SceneGadget g, int state) {
+    public void cacheGadgetState(EntityGadget g) {
         if(g.isPersistent()) //Only cache when is persistent
-            cachedGadgetStates.put(g.getConfigId(), state);
+            cachedGadgetStates.put(g.getConfigId(), g.getState());
     }
 
     public int getCachedGadgetState(SceneGadget g) {

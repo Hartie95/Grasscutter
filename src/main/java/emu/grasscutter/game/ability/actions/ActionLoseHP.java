@@ -9,7 +9,7 @@ import emu.grasscutter.game.props.FightProperty;
 @AbilityAction(AbilityModifierAction.Type.LoseHP)
 public class ActionLoseHP extends AbilityActionHandler {
     @Override
-    public boolean execute(Ability ability, AbilityModifierAction action, byte[] abilityData, GameEntity target) {
+    public boolean execute(Ability ability, AbilityModifierAction action, byte[] abilityData, GameEntity<?> target) {
         GameEntity owner = ability.getOwner();
         //handle client gadgets, that the effective caster is the current local avatar
         if(owner instanceof EntityClientGadget ownerGadget) {

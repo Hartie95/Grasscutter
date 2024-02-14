@@ -2,6 +2,7 @@ package emu.grasscutter.game.avatar;
 
 import dev.morphia.annotations.Entity;
 import emu.grasscutter.game.entity.EntityWeapon;
+import emu.grasscutter.game.entity.create_config.CreateGadgetEntityConfig;
 import emu.grasscutter.game.inventory.EquipType;
 import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.inventory.TowerItem;
@@ -83,7 +84,8 @@ public class TowerAvatar extends Avatar {
             item.setOwner(getPlayer());
             if (item.getItemData().getEquipType() == EquipType.EQUIP_WEAPON && getPlayer().getWorld() != null) {
                 if(!(item.getWeaponEntity() != null && item.getWeaponEntity().getScene() == getPlayer().getScene())) {
-                    item.setWeaponEntity(new EntityWeapon(getPlayer().getScene(), item.getItemData().getGadgetId()));
+                    val weaponConfig = new CreateGadgetEntityConfig(item.getItemData().getGadgetId());
+                    item.setWeaponEntity(new EntityWeapon(getPlayer().getScene(), weaponConfig));
                     getPlayer().getScene().getWeaponEntities().put(item.getWeaponEntity().getId(), item.getWeaponEntity());
                 }
                 getPlayer().sendPacket(new PacketAvatarEquipChangeNotify(this, item));

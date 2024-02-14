@@ -1,6 +1,7 @@
-package emu.grasscutter.game.entity.gadget;
+package emu.grasscutter.game.entity.gadget.content;
 
 import emu.grasscutter.game.entity.EntityGadget;
+import emu.grasscutter.game.entity.gadget.content.GadgetContent;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.server.packet.send.PacketGadgetInteractRsp;
 import lombok.val;

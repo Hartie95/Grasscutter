@@ -7,12 +7,15 @@ import emu.grasscutter.data.excels.GadgetData;
 import emu.grasscutter.data.excels.ItemData;
 import emu.grasscutter.data.excels.MonsterData;
 import emu.grasscutter.game.entity.*;
+import emu.grasscutter.game.entity.create_config.CreateGadgetEntityConfig;
+import emu.grasscutter.game.entity.create_config.CreateMonsterEntityConfig;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.EntityType;
 import emu.grasscutter.game.props.FightProperty;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.utils.Position;
 import lombok.Setter;
+import lombok.val;
 
 import java.util.List;
 import java.util.Map;
@@ -127,27 +130,36 @@ public final class SpawnCommand implements CommandHandler {
     ;
 
     private EntityItem createItem(ItemData itemData, SpawnParameters param, Position pos) {
-        return new EntityItem(param.scene, null, itemData, pos, 1, true);
+        val createConfig = new CreateGadgetEntityConfig(itemData, 1)
+            .setBornPos(pos)
+            .setRot(pos);
+        return new EntityItem(param.scene, createConfig);
     }
 
     private EntityMonster createMonster(MonsterData monsterData, SpawnParameters param, Position pos) {
-        var entity = new EntityMonster(param.scene, monsterData, pos, param.lvl);
+        val config = new CreateMonsterEntityConfig(monsterData)
+            .setBornPos(pos)
+            .setLevel(param.lvl);
         if (param.ai != -1) {
-            entity.setAiId(param.ai);
+            config.setAiId(param.ai);
         }
+        var entity = new EntityMonster(param.scene, config);
         return entity;
     }
 
     private EntityBaseGadget createGadget(GadgetData gadgetData, SpawnParameters param, Position pos, Player targetPlayer) {
+        val config = new CreateGadgetEntityConfig(param.id)
+            .setBornPos(pos)
+            .setBornRot(targetPlayer.getRotation());
+        if (param.state != -1) {
+            config.setGadgetState(param.state);
+        }
+
         EntityBaseGadget entity;
         if (gadgetData.getType() == EntityType.Vehicle) {
-            entity = new EntityVehicle(param.scene, targetPlayer, param.id, 0, pos, targetPlayer.getRotation());
+            entity = new EntityVehicle(param.scene, targetPlayer, config);
         } else {
-            entity = new EntityGadget(param.scene, param.id, pos, targetPlayer.getRotation());
-            if (param.state != -1) {
-                ((EntityGadget) entity).setState(param.state);
-            }
-            ((EntityGadget)entity).buildContent();
+            entity = new EntityGadget(param.scene, config);
         }
 
         return entity;
