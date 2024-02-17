@@ -1,6 +1,5 @@
 package emu.grasscutter.game.dungeons.dungeon_results;
 
-import emu.grasscutter.data.excels.DungeonData;
 import emu.grasscutter.game.avatar.Avatar;
 import emu.grasscutter.game.dungeons.DungeonEndStats;
 import emu.grasscutter.game.entity.EntityAvatar;
@@ -14,11 +13,11 @@ import lombok.val;
 import org.anime_game_servers.multi_proto.gi.messages.dungeon.StrengthenPointData;
 import org.anime_game_servers.multi_proto.gi.messages.dungeon.progression.DungeonSettleNotify;
 import org.anime_game_servers.multi_proto.gi.messages.dungeon.progression.ParamList;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonData;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.InvolveType;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static emu.grasscutter.game.dungeons.enums.DungeonInvolveType.INVOLVE_SINGLE_MULTIPLE;
 
 /**
  * Shows dungeon results
@@ -46,7 +45,7 @@ public class BaseDungeonResult {
      * */
     private void getStrengthenPointData(DungeonSettleNotify builder) {
         if (this.dungeonStats.dungeonResult().isSuccess() ||
-            this.dungeonData.getInvolveType() != INVOLVE_SINGLE_MULTIPLE) return;
+            this.dungeonData.getInvolveType() != InvolveType.INVOLVE_SINGLE_MULTIPLE) return;
 
         val playerActiveTeam = this.player.getTeamManager().getActiveTeam();
         builder.setStrengthenPointDataMap(Arrays.stream(StrengthenPointType.values()).collect(

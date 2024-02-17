@@ -2,18 +2,14 @@ package emu.grasscutter.game.dungeons;
 
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
-import emu.grasscutter.data.excels.DungeonData;
 import emu.grasscutter.data.excels.DungeonElementChallengeData;
-import emu.grasscutter.data.excels.DungeonPassConfigData;
+import emu.grasscutter.game.LogicTypeUtils;
 import emu.grasscutter.game.activity.trialavatar.TrialAvatarActivityHandler;
 import emu.grasscutter.game.dungeons.dungeon_results.BaseDungeonResult;
-import emu.grasscutter.game.dungeons.enums.DungeonPassConditionType;
 import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.ActionReason;
-import emu.grasscutter.game.props.ActivityType;
 import emu.grasscutter.game.props.WatcherTriggerType;
-import emu.grasscutter.game.quest.enums.LogicType;
 import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.server.packet.send.PacketDungeonDataNotify;
@@ -30,13 +26,19 @@ import lombok.Setter;
 import lombok.val;
 import org.anime_game_servers.multi_proto.gi.messages.general.avatar.GrantReason;
 import org.anime_game_servers.multi_proto.gi.messages.scene.entity.WeeklyBossResinDiscountInfo;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonData;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonPassConditionType;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonPassData;
 import org.anime_game_servers.gi_lua.models.ScriptArgs;
 import org.anime_game_servers.gi_lua.models.constants.EventType;
+import org.anime_game_servers.game_data_models.gi.data.activity.ActivityType;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static org.anime_game_servers.game_data_models.gi.data.general.UnsetTypesKt.UnsetInt;
 
 /**
  * TODO handle time limits
@@ -48,7 +50,7 @@ public class DungeonManager {
 
     @Getter private final Scene scene;
     @Getter private final DungeonData dungeonData;
-    @Getter private final DungeonPassConfigData passConfigData;
+    @Getter private final DungeonPassData passConfigData;
 
     @Getter private final int[] finishedConditions;
     @Getter private final IntSet rewardedPlayers = new IntOpenHashSet();
@@ -76,7 +78,7 @@ public class DungeonManager {
     }
 
     public boolean isFinishedSuccessfully() {
-        return LogicType.calculate(this.passConfigData.getLogicType(), this.finishedConditions);
+        return LogicTypeUtils.calculate(this.passConfigData.getLogicTypeNonNull(), this.finishedConditions);
     }
 
     public int getLevelForMonster(int id) {
@@ -120,7 +122,7 @@ public class DungeonManager {
 
     private boolean hasRewards(){
         //TODO check dungeonData.passRewardId and dungeondata.passRewardPreviewId only as fallback
-        return this.dungeonData.getRewardPreviewData() != null && this.dungeonData.getRewardPreviewData().getPreviewItems().length > 0;
+        return this.dungeonData.getPassRewardPreviewId()!=UnsetInt || this.dungeonData.getPassRewardId()!=UnsetInt;
     }
 
     private boolean hasPlayerClaimedRewards(Player player){
@@ -159,7 +161,7 @@ public class DungeonManager {
 
             // Spend the condensed resin and only proceed if the transaction succeeds.
             return player.getResinManager().useCondensedResin(1);
-        } else if (this.dungeonData.getStatueCostID() == 106) {
+        } else if (this.dungeonData.getStatueCostId() == 106) {
             // Spend the resin and only proceed if the transaction succeeds.
             return player.getResinManager().useResin(resinCost);
         } //TODO should we maybe support other currencies here?
@@ -170,6 +172,7 @@ public class DungeonManager {
         val rewards = new ArrayList<GameItem>();
         final int dungeonId = this.dungeonData.getId();
         // If we have specific drop data for this dungeon, we use it.
+        // TODO use statueDrop for this, in combination with DropTable and leaf data
         if (GameData.getDungeonDropDataMap().containsKey(dungeonId)) {
             val dropEntries = GameData.getDungeonDropDataMap().get(dungeonId);
 
@@ -209,8 +212,12 @@ public class DungeonManager {
         // Otherwise, we fall back to the preview data.
         else {
             Grasscutter.getLogger().info("No drop data found or dungeon {}, falling back to preview data ...", dungeonId);
-            Arrays.stream(this.dungeonData.getRewardPreviewData().getPreviewItems())
-                .map(param -> new GameItem(param.getId(), Math.max(param.getCount(), 1)))
+            //val rewardData = GameData.getRewardDataMap().get(this.dungeonData.getPassRewardId());
+
+            val rewardPreviewData = GameData.getRewardDataMap().get(this.dungeonData.getPassRewardPreviewId());
+
+            rewardPreviewData.getRewardItemList().stream()
+                .map(param -> new GameItem(param.getItemId(), Math.max(param.getCount(), 1)))
                 .forEach(rewards::add);
         }
 
@@ -266,7 +273,7 @@ public class DungeonManager {
                 this.dungeonData.getId());
 
             // Battle pass trigger
-            if (this.dungeonData.getType().isCountsToBattlepass() && successfully) {
+            if (successfully) {
                 p.getBattlePassManager().triggerMission(WatcherTriggerType.TRIGGER_FINISH_DUNGEON);
             }
             if(dungeonData.getPassJumpDungeon() > 0){

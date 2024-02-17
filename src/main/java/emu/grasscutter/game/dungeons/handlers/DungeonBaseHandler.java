@@ -1,9 +1,9 @@
 package emu.grasscutter.game.dungeons.handlers;
 
-import emu.grasscutter.data.excels.DungeonPassConfigData;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonPassData;
 
 public abstract class DungeonBaseHandler {
 
-	public abstract boolean execute(DungeonPassConfigData.DungeonPassCondition condition, int... params);
+	public abstract boolean execute(DungeonPassData.DungeonPassCondition condition, int... params);
 
 }

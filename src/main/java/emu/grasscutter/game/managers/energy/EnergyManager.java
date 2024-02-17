@@ -183,11 +183,12 @@ public class EnergyManager extends BasePlayerManager {
         //    - Does this really count every individual hit separately?
 
         // Get the avatar's weapon type.
-        WeaponType weaponType = avatar.getAvatar().getAvatarData().getWeaponType();
+        val weaponType = avatar.getAvatar().getAvatarData().getWeaponType();
+        val weaponTypeGC = WeaponType.getTypeByName(weaponType.name());
 
         // Check if we already have probability data for this avatar. If not, insert it.
         if (!this.avatarNormalProbabilities.containsKey(avatar)) {
-            this.avatarNormalProbabilities.put(avatar, weaponType.getEnergyGainInitialProbability());
+            this.avatarNormalProbabilities.put(avatar, weaponTypeGC.getEnergyGainInitialProbability());
         }
 
         // Roll for energy.
@@ -197,11 +198,11 @@ public class EnergyManager extends BasePlayerManager {
         // If the player wins the roll, we increase the avatar's energy and reset the probability.
         if (roll < currentProbability) {
             avatar.addEnergy(1.0f, PropChangeReason.PROP_CHANGE_ABILITY, true);
-            this.avatarNormalProbabilities.put(avatar, weaponType.getEnergyGainInitialProbability());
+            this.avatarNormalProbabilities.put(avatar, weaponTypeGC.getEnergyGainInitialProbability());
         }
         // Otherwise, we increase the probability for the next hit.
         else {
-            this.avatarNormalProbabilities.put(avatar, currentProbability + weaponType.getEnergyGainIncreaseProbability());
+            this.avatarNormalProbabilities.put(avatar, currentProbability + weaponTypeGC.getEnergyGainIncreaseProbability());
         }
     }
 

@@ -4,7 +4,7 @@ import emu.grasscutter.command.Command;
 import emu.grasscutter.command.CommandHandler;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.GameDepot;
-import emu.grasscutter.data.excels.AvatarData;
+import emu.grasscutter.data.custom.AvatarDataCache;
 import emu.grasscutter.data.excels.AvatarSkillDepotData;
 import emu.grasscutter.data.excels.ItemData;
 import emu.grasscutter.data.excels.ReliquaryAffixData;
@@ -17,6 +17,8 @@ import emu.grasscutter.game.props.ActionReason;
 import emu.grasscutter.game.props.FightProperty;
 import emu.grasscutter.utils.SparseSet;
 import lombok.Setter;
+import lombok.val;
+import org.anime_game_servers.game_data_models.gi.data.entities.avatar.AvatarData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +64,7 @@ public final class GiveCommand implements CommandHandler {
         public int mainPropId = -1;
         public List<Integer> appendPropIdList;
         public ItemData data;
-        public AvatarData avatarData;
+        public AvatarDataCache avatarData;
         public GiveAllType giveAllType = GiveAllType.NONE;
     }
 
@@ -103,9 +105,9 @@ public final class GiveCommand implements CommandHandler {
                 }
                 param.data = GameData.getItemDataMap().get(param.id);
                 if ((param.id > 10_000_000) && (param.id < 12_000_000))
-                    param.avatarData = GameData.getAvatarDataMap().get(param.id);
+                    param.avatarData = GameData.getAvatarInfoCacheMap().get(param.id);
                 else if ((param.id > 1000) && (param.id < 1100))
-                    param.avatarData = GameData.getAvatarDataMap().get(param.id - 1000 + 10_000_000);
+                    param.avatarData = GameData.getAvatarInfoCacheMap().get(param.id - 1000 + 10_000_000);
                 isRelic = ((param.data != null) && (param.data.getItemType() == ItemType.ITEM_RELIQUARY));
 
                 if (!isRelic && !args.isEmpty() && (param.amount == 1)) {  // A concession for the people that truly hate [x<amount>].
@@ -218,7 +220,7 @@ public final class GiveCommand implements CommandHandler {
         return makeAvatar(param.avatarData, param.lvl, Avatar.getMinPromoteLevel(param.lvl), param.constellation, param.skillLevel);
     }
 
-    private static Avatar makeAvatar(AvatarData avatarData, int level, int promoteLevel, int constellation, int skillLevel) {
+    private static Avatar makeAvatar(AvatarDataCache avatarData, int level, int promoteLevel, int constellation, int skillLevel) {
         Avatar avatar = new Avatar(avatarData);
         avatar.setLevel(level);
         avatar.setPromoteLevel(promoteLevel);
@@ -232,7 +234,7 @@ public final class GiveCommand implements CommandHandler {
     private static void giveAllAvatars(Player player, GiveItemParameters param) {
         int promoteLevel = Avatar.getMinPromoteLevel(param.lvl);
         if (param.constellation < 0 || param.constellation > 6) param.constellation = 6; // constellation's default is -1 so if no parameters set for constellations it'll automatically be 6
-        for (AvatarData avatarData : GameData.getAvatarDataMap().values()) {
+        for (val avatarData : GameData.getAvatarInfoCacheMap().values()) {
             int id = avatarData.getId();
             if (id < 10000002 || id >= 11000000) continue; // Exclude test avatars
             // Don't try to add each avatar to the current team

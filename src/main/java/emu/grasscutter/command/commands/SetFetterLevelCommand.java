@@ -36,7 +36,7 @@ public final class SetFetterLevelCommand implements CommandHandler {
 
             avatar.setFetterLevel(fetterLevel);
             if (fetterLevel != 10) {
-                avatar.setFetterExp(GameData.getAvatarFetterLevelDataMap().get(fetterLevel).getExp());
+                avatar.setFetterExp(GameData.getAvatarFetterLevelDataMap().get(fetterLevel).getNeedExp());
             }
             avatar.save();
 

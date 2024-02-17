@@ -3,7 +3,6 @@ package emu.grasscutter.game.dungeons.dungeon_entry;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.ScenePointEntry;
 import emu.grasscutter.data.common.PointData;
-import emu.grasscutter.data.excels.DungeonData;
 import emu.grasscutter.data.excels.DungeonRosterData;
 import emu.grasscutter.data.excels.DungeonSerialData;
 import emu.grasscutter.game.player.BasePlayerManager;
@@ -17,6 +16,7 @@ import lombok.val;
 import org.anime_game_servers.multi_proto.gi.messages.dungeon.entry.DungeonEntryInfo;
 import org.anime_game_servers.multi_proto.gi.messages.scene.entity.WeeklyBossResinDiscountInfo;
 import org.anime_game_servers.core.gi.enums.QuestState;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonData;
 
 import java.util.*;
 import java.util.stream.Stream;

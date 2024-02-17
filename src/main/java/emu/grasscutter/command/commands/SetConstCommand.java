@@ -3,12 +3,9 @@ package emu.grasscutter.command.commands;
 import emu.grasscutter.command.Command;
 import emu.grasscutter.command.CommandHandler;
 import emu.grasscutter.game.avatar.Avatar;
-import emu.grasscutter.game.entity.EntityAvatar;
 import emu.grasscutter.game.player.Player;
-import emu.grasscutter.game.world.Scene;
-import emu.grasscutter.game.world.World;
 import emu.grasscutter.server.packet.send.*;
-import emu.grasscutter.utils.Position;
+import lombok.val;
 
 import java.util.List;
 
@@ -34,11 +31,11 @@ public final class SetConstCommand implements CommandHandler {
             }
             // If it's either empty or anything else other than "all" just do normal setConstellation
             if (args.size() == 1) {
-                EntityAvatar entity = targetPlayer.getTeamManager().getCurrentAvatarEntity();
+                val entity = targetPlayer.getTeamManager().getCurrentAvatarEntity();
                 if (entity == null) return;
-                Avatar avatar = entity.getAvatar();
+                val avatar = entity.getAvatar();
                 this.setConstellation(targetPlayer, avatar, constLevel);
-                CommandHandler.sendTranslatedMessage(sender, "commands.setConst.success", avatar.getAvatarData().getName(), constLevel);
+                CommandHandler.sendTranslatedMessage(sender, "commands.setConst.success", avatar.getAvatarData().getBaseName(), constLevel);
                 return;
             }
             // Check if there's an additional argument which is "all", if it does then go setAllConstellation
@@ -53,7 +50,7 @@ public final class SetConstCommand implements CommandHandler {
     }
 
     private void setConstellation(Player player, Avatar avatar, int constLevel) {
-        int currentConstLevel = avatar.getCoreProudSkillLevel();
+        val currentConstLevel = avatar.getCoreProudSkillLevel();
         avatar.forceConstellationLevel(constLevel);
 
         // force player to reload scene when necessary
@@ -79,9 +76,9 @@ public final class SetConstCommand implements CommandHandler {
     }
 
     private void reloadScene(Player player) {
-        World world = player.getWorld();
-        Scene scene = player.getScene();
-        Position pos = player.getPosition();
+        val world = player.getWorld();
+        val scene = player.getScene();
+        val pos = player.getPosition();
         world.transferPlayerToScene(player, 1, pos, null);
         world.transferPlayerToScene(player, scene.getId(), pos, null);
         scene.broadcastPacket(new PacketSceneEntityAppearNotify(player));

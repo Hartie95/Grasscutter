@@ -1,6 +1,6 @@
 package emu.grasscutter.game.dungeons;
 
-import emu.grasscutter.game.dungeons.enums.DungeonPassConditionType;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonPassConditionType;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

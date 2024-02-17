@@ -3,11 +3,11 @@ package emu.grasscutter.game.dungeons.dungeon_entry;
 import dev.morphia.annotations.Entity;
 import emu.grasscutter.GameConstants;
 import emu.grasscutter.data.GameData;
-import emu.grasscutter.data.excels.DungeonData;
 import emu.grasscutter.data.excels.DungeonRosterData;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.Getter;
 import lombok.val;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonData;
 
 import java.time.*;
 import java.time.temporal.TemporalAdjusters;

@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import emu.grasscutter.data.GameData;
-import emu.grasscutter.data.excels.AvatarData;
 import emu.grasscutter.data.excels.AvatarSkillDepotData;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.entity.EntityAvatar;
@@ -18,6 +17,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import lombok.Getter;
+import lombok.val;
 
 @Getter
 public class AvatarStorage extends BasePlayerManager implements Iterable<Avatar> {
@@ -147,7 +147,7 @@ public class AvatarStorage extends BasePlayerManager implements Iterable<Avatar>
                 continue;
             }
 
-            AvatarData avatarData = GameData.getAvatarDataMap().get(avatar.getAvatarId());
+            val avatarData = GameData.getAvatarInfoCacheMap().get(avatar.getAvatarId());
             AvatarSkillDepotData skillDepot = GameData.getAvatarSkillDepotDataMap().get(avatar.getSkillDepotId());
             if (avatarData == null || skillDepot == null) {
                 continue;

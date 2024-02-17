@@ -1,5 +1,8 @@
 package emu.grasscutter.data;
 
+import java.lang.reflect.Field;
+import java.util.*;
+
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.binout.*;
 import emu.grasscutter.data.binout.config.*;
@@ -12,6 +15,13 @@ import emu.grasscutter.data.custom.TrialAvatarActivityCustomData;
 import emu.grasscutter.data.custom.TrialAvatarCustomData;
 import emu.grasscutter.data.excels.*;
 import emu.grasscutter.data.server.*;
+import emu.grasscutter.data.binout.routes.Route;
+import emu.grasscutter.data.custom.*;
+import emu.grasscutter.data.server.DropSubfieldMapping;
+import emu.grasscutter.data.server.DropTableExcelConfigData;
+import emu.grasscutter.data.server.GadgetMapping;
+import emu.grasscutter.data.server.MonsterMapping;
+import emu.grasscutter.data.server.SubfieldMapping;
 import emu.grasscutter.game.dungeons.DungeonDropEntry;
 import emu.grasscutter.game.dungeons.dungeon_entry.DungeonEntries;
 import emu.grasscutter.game.quest.QuestEncryptionKey;
@@ -20,12 +30,32 @@ import emu.grasscutter.utils.Utils;
 import it.unimi.dsi.fastutil.ints.*;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.experimental.Tolerate;
 import lombok.val;
+import org.anime_game_servers.game_data_models.gi.custom.activity.ActivityExtraInfo;
+import org.anime_game_servers.game_data_models.gi.custom.weather.WeatherMapping;
+import org.anime_game_servers.game_data_models.gi.data.activity.*;
+import org.anime_game_servers.game_data_models.gi.data.city.CityData;
+import org.anime_game_servers.game_data_models.gi.data.city.CityLevelUpData;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonData;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonPassData;
+import org.anime_game_servers.game_data_models.gi.data.entities.avatar.*;
+import org.anime_game_servers.game_data_models.gi.data.entities.avatar.AvatarCurveData;
+import org.anime_game_servers.game_data_models.gi.data.entities.avatar.AvatarData;
 import org.anime_game_servers.gi_lua.models.quest.QuestData;
 import org.anime_game_servers.gi_lua.models.quest.RewindData;
 import org.anime_game_servers.gi_lua.models.scene.DummyPoint;
 import org.anime_game_servers.gi_lua.models.scene.SceneGroupReplacement;
+import org.anime_game_servers.game_data_models.gi.data.quest.TriggerData;
+import org.anime_game_servers.game_data_models.gi.data.rewards.TransPointRewardData;
+import org.anime_game_servers.game_data_models.gi.data.rewards.RewardData;
+import org.anime_game_servers.game_data_models.gi.data.rewards.TowerRewardData;
+import org.anime_game_servers.game_data_models.gi.data.scene.SceneData;
+import org.anime_game_servers.game_data_models.gi.data.scene.SceneTagConfigData;
+import org.anime_game_servers.game_data_models.gi.data.scene.WorldAreaConfigData;
+import org.anime_game_servers.game_data_models.gi.data.shop.ShopGoodsData;
+import org.anime_game_servers.game_data_models.gi.data.talks.TalkData;
+import org.anime_game_servers.game_data_models.gi.data.watcher.ActivityWatcherData;
+import org.anime_game_servers.game_data_models.gi.data.world.WorldLevelData;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
@@ -46,29 +76,32 @@ public class GameData {
     @Getter private static final Int2ObjectMap<DungeonEntries> dungeonEntriesMap = new Int2ObjectOpenHashMap<>();
     protected static final Map<String, AbilityData> abilityDataMap = new HashMap<>();
     protected static final Int2ObjectMap<ScenePointEntry> scenePointEntryMap = new Int2ObjectOpenHashMap<>();
-    private static final Int2ObjectMap<MainQuestData> mainQuestData = new Int2ObjectOpenHashMap<>();
+    @Getter private static final Int2ObjectMap<MainQuestData> mainQuestDataMap = new Int2ObjectOpenHashMap<>();
     private static final Int2ObjectMap<QuestEncryptionKey> questsKeys = new Int2ObjectOpenHashMap<>();
-    private static final Int2ObjectMap<SceneNpcBornData> npcBornData = new Int2ObjectOpenHashMap<>();
-    private static final Map<String, AbilityEmbryoEntry> abilityEmbryos = new HashMap<>();
+    @Getter private static final Int2ObjectMap<SceneNpcBornData> npcBornData = new Int2ObjectOpenHashMap<>();
+    @Getter private static final Map<String, AbilityEmbryoEntry> abilityEmbryos = new HashMap<>();
+    @QuickAccessCache @Getter private static final Map<Long, String> textHashMap = new HashMap<>();
 
     // ExcelConfigs
-    @Getter private static final Int2ObjectMap<ActivityCondExcelConfigData> activityCondExcelConfigDataMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<DungeonPassConfigData> dungeonPassConfigDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<ActivityCondData> activityCondExcelConfigDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<DungeonPassData> dungeonPassConfigDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<DungeonChallengeConfigData> dungeonChallengeConfigDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<Int2ObjectMap<Route>> sceneRouteData = new Int2ObjectOpenHashMap<>();
 
     @Getter private static final ArrayList<CodexReliquaryData> codexReliquaryArrayList = new ArrayList<>();
-    @Getter private static final Int2ObjectMap<ActivityData> activityDataMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<ActivityShopData> activityShopDataMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<ActivityWatcherData> activityWatcherDataMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<AvatarCostumeData> avatarCostumeDataItemIdMap = new Int2ObjectLinkedOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<AvatarCostumeData> avatarCostumeDataMap = new Int2ObjectLinkedOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<ActivityData> activityDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<ActivityShopOverallData> activityShopDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<ActivityShopSheetData> activityShopSheetDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<ActivityWatcherData> activityWatcherDataMap = new Int2ObjectOpenHashMap<>();
+    @QuickAccessCache @Getter private static final Int2ObjectMap<AvatarCostumeData> avatarCostumeDataItemIdMap = new Int2ObjectLinkedOpenHashMap<>();
+    @QuickAccessCache @Getter private static final Int2ObjectMap<AvatarDataCache> avatarInfoCacheMap = new Int2ObjectLinkedOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<AvatarCostumeData> avatarCostumeDataMap = new Int2ObjectLinkedOpenHashMap<>();
     @Getter private static final Int2ObjectMap<AvatarReplaceCostumeData> avatarReplaceCostumeDataMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<AvatarCurveData> avatarCurveDataMap = new Int2ObjectLinkedOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<AvatarData> avatarDataMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<AvatarFetterLevelData> avatarFetterLevelDataMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<AvatarFlycloakData> avatarFlycloakDataMap = new Int2ObjectLinkedOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<AvatarLevelData> avatarLevelDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<AvatarCurveData> avatarCurveDataMap = new Int2ObjectLinkedOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<AvatarData> avatarDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<AvatarFettersLevelData> avatarFetterLevelDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<AvatarFlycloakData> avatarFlycloakDataMap = new Int2ObjectLinkedOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<AvatarLevelData> avatarLevelDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<AvatarSkillData> avatarSkillDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<AvatarSkillDepotData> avatarSkillDepotDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<AvatarTalentData> avatarTalentDataMap = new Int2ObjectOpenHashMap<>();
@@ -81,7 +114,8 @@ public class GameData {
     @Getter private static final Int2ObjectMap<BlossomSectionOrderData> blossomSectionOrderDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<BuffData> buffDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<ChapterData> chapterDataMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<CityData> cityDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<CityData> cityDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<CityLevelUpData> cityLevelUpDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<CodexAnimalData> codexAnimalDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<CodexMaterialData> codexMaterialDataIdMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<CodexQuestData> codexQuestDataIdMap = new Int2ObjectOpenHashMap<>();
@@ -93,7 +127,7 @@ public class GameData {
     @Getter private static final Int2ObjectMap<CookRecipeData> cookRecipeDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<CompoundData> compoundDataMap=new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<DailyDungeonData> dailyDungeonDataMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<DungeonData> dungeonDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<DungeonData> dungeonDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<DungeonElementChallengeData> dungeonElementChallengeDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<DungeonEntryData> dungeonEntryDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<DungeonRosterData> dungeonRosterDataMap = new Int2ObjectOpenHashMap<>();
@@ -126,35 +160,35 @@ public class GameData {
     @Getter private static final Int2ObjectMap<ReliquaryAffixData> reliquaryAffixDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<ReliquaryMainPropData> reliquaryMainPropDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<ReliquarySetData> reliquarySetDataMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<RewardData> rewardDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<RewardData> rewardDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<RewardPreviewData> rewardPreviewDataMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<SceneData> sceneDataMap = new Int2ObjectLinkedOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<SceneTagData> sceneTagDataMap = new Int2ObjectLinkedOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<SceneData> sceneDataMap = new Int2ObjectLinkedOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<SceneTagConfigData> sceneTagConfigDataMap = new Int2ObjectLinkedOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<TalkData> talkDataMap = new Int2ObjectLinkedOpenHashMap<>();
     @Getter private static final Int2ObjectMap<TowerBuffData> towerBuffDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<TowerFloorData> towerFloorDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<TowerLevelData> towerLevelDataMap = new Int2ObjectOpenHashMap<>();
-    private static final Int2ObjectMap<TowerRewardData> towerRewardDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource private static final Int2ObjectMap<TowerRewardData> towerRewardDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<TowerScheduleData> towerScheduleDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<TrialAvatarData> trialAvatarDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<TrialAvatarActivityData> trialAvatarActivityDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<TrialAvatarActivityDataData> trialAvatarActivityDataDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<TrialAvatarTemplateData> trialAvatarTemplateDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<TrialReliquaryData> trialReliquaryDataMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<TriggerExcelConfigData> triggerExcelConfigDataMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Map<String, TriggerExcelConfigData> triggerDataByNameMap = new HashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<TriggerData> triggerExcelConfigDataMap = new Int2ObjectOpenHashMap<>();
+    @QuickAccessCache @Getter private static final Map<String, TriggerData> triggerDataByNameMap = new HashMap<>();
     @Getter private static final Int2ObjectMap<WeaponCurveData> weaponCurveDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<WeaponLevelData> weaponLevelDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<WeaponPromoteData> weaponPromoteDataMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<StatuePromoteData> statuePromoteDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<WeatherData> weatherDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<WeatherTemplateData> weatherTemplateDataMap = new Int2ObjectOpenHashMap<>(); //Unused
     @Getter private static final Map<String, WeatherTemplateData> weatherTemplateDataByNameMap = new HashMap<>();
-    @Getter private static final Int2ObjectMap<WorldAreaData> worldAreaDataMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<WorldLevelData> worldLevelDataMap = new Int2ObjectOpenHashMap<>();
-    private static final Int2ObjectMap<AvatarPromoteData> avatarPromoteDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<WorldAreaConfigData> worldAreaDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<WorldLevelData> worldLevelDataMap = new Int2ObjectOpenHashMap<>();
+    @Getter private static final Int2ObjectMap<AvatarPromoteData> avatarPromoteDataMap = new Int2ObjectOpenHashMap<>();
     private static final Int2ObjectMap<FetterData> fetterDataMap = new Int2ObjectOpenHashMap<>();
     private static final Int2ObjectMap<ReliquaryLevelData> reliquaryLevelDataMap = new Int2ObjectOpenHashMap<>();
-    private static final Int2ObjectMap<ShopGoodsData> shopGoodsDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource private static final Int2ObjectMap<ShopGoodsData> shopGoodsDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<RewindData> rewindDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<QuestData> teleportDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<Map<String, DummyPoint>> dummyPointMap = new Int2ObjectOpenHashMap<>();
@@ -167,8 +201,12 @@ public class GameData {
     private static final Int2ObjectMap<CodexViewpointData> codexViewpointDataMap = new Int2ObjectOpenHashMap<>();
 
     @Getter private static final Int2ObjectMap<List<DungeonDropEntry>> dungeonDropDataMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<TransPointRewardData> transPointRewardData = new Int2ObjectOpenHashMap<>();
 
     @Getter @Setter private static ConfigGlobalCombat configGlobalCombat = null;
+
+    // from scripts
+    @Getter private static final Int2ObjectMap<SceneGroupReplacement> groupReplacements = new Int2ObjectOpenHashMap<>();
 
     // Custom community server resources
     @Getter private static final Int2ObjectMap<GadgetMapping> gadgetMappingMap = new Int2ObjectOpenHashMap<>();
@@ -176,9 +214,9 @@ public class GameData {
     @Getter private static final Int2ObjectMap<DropSubfieldMapping> dropSubfieldMappingMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<DropTableExcelConfigData> dropTableExcelConfigDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<MonsterMapping> monsterMappingMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<ActivityCondGroup> activityCondGroupMap = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<SceneGroupReplacement> groupReplacements = new Int2ObjectOpenHashMap<>();
-    @Getter private static final Int2ObjectMap<WeatherMapping> weatherMappingMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<ActivityCondGroupData> activityCondGroupMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<ActivityExtraInfo> activityExtraInfoMap = new Int2ObjectOpenHashMap<>();
+    @AutoResource @Getter private static final Int2ObjectMap<WeatherMapping> weatherMappingMap = new Int2ObjectOpenHashMap<>();
 
     // Cache
     @Getter private static final IntList scenePointIdList = new IntArrayList();
@@ -188,7 +226,7 @@ public class GameData {
     @Getter private static final Map<String, ConfigLevelEntity> configLevelEntityDataMap = new HashMap<>();
     @Getter private static final Map<String, GuideTriggerData> guideTriggerDataStringMap = new HashMap<>();
     private static Map<Integer, List<Integer>> fetters = new HashMap<>();
-    private static Map<Integer, List<ShopGoodsData>> shopGoods = new HashMap<>();
+    @QuickAccessCache private static Map<Integer, List<ShopGoodsData>> shopGoods = new HashMap<>();
     protected static Int2ObjectMap<IntSet> proudSkillGroupLevels = new Int2ObjectOpenHashMap<>();
     protected static Int2IntMap proudSkillGroupMaxLevels = new Int2IntOpenHashMap();
     protected static Int2ObjectMap<IntSet> avatarSkillLevels = new Int2ObjectOpenHashMap<>();
@@ -201,28 +239,17 @@ public class GameData {
     @Getter private static final Map<Integer, List<WeatherAreaPointData>> weatherAreaPointData = new HashMap<>();
     @Getter private static final Map<Integer, List<ScenePointArrayData>> scenePointArrayData = new HashMap<>();
 
-    // Getters with wrong names, remove later
-    @Deprecated(forRemoval = true) public static Int2ObjectMap<CodexReliquaryData> getcodexReliquaryIdMap() {return codexReliquaryDataIdMap;}
-    @Deprecated(forRemoval = true) public static Int2ObjectMap<DungeonEntryData> getDungeonEntryDatatMap() {return dungeonEntryDataMap;}
-    @Deprecated(forRemoval = true) @Tolerate public static ArrayList<CodexReliquaryData> getcodexReliquaryArrayList() {return codexReliquaryArrayList;}
-
     // Getters with different names that stay for now
-    public static Int2ObjectMap<MainQuestData> getMainQuestDataMap() {return mainQuestData;}
     public static Int2ObjectMap<QuestEncryptionKey> getMainQuestEncryptionMap() {return questsKeys;}
-    public static Int2ObjectMap<SceneNpcBornData> getSceneNpcBornData() {return npcBornData;}
-    public static Map<String, AbilityEmbryoEntry> getAbilityEmbryoInfo() {return abilityEmbryos;}
 
     // Getters that get values rather than containers. If Lombok ever gets syntactic sugar for this, we should adopt that.
-    public static AbilityData getAbilityData(String abilityName) {return abilityDataMap.get(abilityName);}
-    public static IntSet getAvatarSkillLevels(int avatarSkillId) {return avatarSkillLevels.get(avatarSkillId);}
-    public static IntSet getProudSkillGroupLevels(int proudSkillGroupId) {return proudSkillGroupLevels.get(proudSkillGroupId);}
+    @Nullable public static AbilityData getAbilityData(String abilityName) {return abilityDataMap.get(abilityName);}
+    @Nullable public static IntSet getAvatarSkillLevels(int avatarSkillId) {return avatarSkillLevels.get(avatarSkillId);}
     public static int getProudSkillGroupMaxLevel(int proudSkillGroupId) {return proudSkillGroupMaxLevels.getOrDefault(proudSkillGroupId, 0);}
+    @Nullable public static AbilityEmbryoEntry getAbilityEmbryo(String name) {return abilityEmbryos.get(name);}
+    @Nullable public static SceneNpcBornData getSceneNpcBornData(int npcId) {return npcBornData.get(npcId);}
 
     // Multi-keyed getters
-    public static AvatarPromoteData getAvatarPromoteData(int promoteId, int promoteLevel) {
-        return avatarPromoteDataMap.get((promoteId << 8) + promoteLevel);
-    }
-
     public static TowerRewardData getTowerRewardData(int levelIndex, int floorIndex) {
         return towerRewardDataMap.get((levelIndex << 4) + floorIndex);
     }
@@ -231,8 +258,8 @@ public class GameData {
         return weaponPromoteDataMap.get((promoteId << 8) + promoteLevel);
     }
 
-    public static StatuePromoteData getStatuePromoteData(int cityId, int promoteLevel) {
-        return statuePromoteDataMap.get((cityId << 8) + promoteLevel);
+    public static CityLevelUpData getCityLevelUpData(int cityId, int promoteLevel) {
+        return cityLevelUpDataMap.get(CityLevelUpData.getKey(cityId, promoteLevel));
     }
 
     public static ReliquaryLevelData getRelicLevelData(int rankLevel, int level) {
@@ -249,7 +276,7 @@ public class GameData {
     }
 
     public static int getAvatarFetterLevelExpRequired(int level) {
-        return Optional.ofNullable(avatarFetterLevelDataMap.get(level)).map(AvatarFetterLevelData::getExp).orElse(0);
+        return Optional.ofNullable(avatarFetterLevelDataMap.get(level)).map(AvatarFettersLevelData::getNeedExp).orElse(0);
     }
 
     public static int getRelicExpRequired(int rankLevel, int level) {
@@ -273,7 +300,6 @@ public class GameData {
 
         return map;
     }
-
 
 
     public static int getWeaponExpRequired(int rankLevel, int level) {
@@ -304,9 +330,9 @@ public class GameData {
     public static Map<Integer, List<ShopGoodsData>> getShopGoodsDataEntries() {
         if (shopGoods.isEmpty()) {
             shopGoodsDataMap.forEach((k, v) -> {
-                if (!shopGoods.containsKey(v.getShopType()))
-                    shopGoods.put(v.getShopType(), new ArrayList<>());
-                shopGoods.get(v.getShopType()).add(v);
+                val shopTypeId = v.getShopType().getIntKey();
+                shopGoods.computeIfAbsent(shopTypeId, key -> new ArrayList<>())
+                    .add(v);
             });
         }
 
@@ -335,11 +361,18 @@ public class GameData {
         return beginCondQuestMap.get(SubQuestData.questConditionKey(questCond, param0, questStr));
     }
 
-    public static TriggerExcelConfigData getQuestTriggerDataByName(int groupId, String triggerName){
+    public static TriggerData getQuestTriggerDataByName(int groupId, String triggerName){
         return triggerDataByNameMap.get(groupId + triggerName);
     }
+    public static void putQuestTriggerDataCache(TriggerData trigger){
+        triggerDataByNameMap.put(trigger.getGroupId()+trigger.getTriggerName(), trigger);
+    }
 
-    public static CodexViewpointData getViewCodexByGroupdCfg(int groupId, int cfgId){
+    public static void putAvatarCostumeDataCache(AvatarCostumeData data){
+        avatarCostumeDataItemIdMap.put(data.getItemId(), data);
+    }
+
+    public static CodexViewpointData getViewCodexByGroupdCfg(int groupId, int cfgId) {
         return codexViewpointDataIdMap.get(CodexViewpointData.getViewpointId(groupId, cfgId));
     }
 }

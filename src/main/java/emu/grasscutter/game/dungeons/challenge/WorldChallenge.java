@@ -2,12 +2,10 @@ package emu.grasscutter.game.dungeons.challenge;
 
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.game.dungeons.challenge.trigger.*;
-import emu.grasscutter.game.dungeons.enums.DungeonPassConditionType;
 import emu.grasscutter.game.entity.EntityGadget;
 import emu.grasscutter.game.entity.EntityMonster;
 import emu.grasscutter.game.entity.GameEntity;
 import emu.grasscutter.game.props.ElementReactionType;
-import emu.grasscutter.game.props.WatcherTriggerType;
 import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.server.packet.send.PacketDungeonChallengeBeginNotify;
 import emu.grasscutter.server.packet.send.PacketDungeonChallengeFinishNotify;
@@ -15,10 +13,12 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.val;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonPassConditionType;
 import org.anime_game_servers.gi_lua.models.ScriptArgs;
 import org.anime_game_servers.gi_lua.models.constants.EventType;
 import org.anime_game_servers.gi_lua.models.scene.group.SceneGroup;
 import org.anime_game_servers.gi_lua.models.scene.group.SceneTrigger;
+import org.anime_game_servers.game_data_models.gi.data.watcher.WatcherTriggerType;
 
 import java.util.ArrayList;
 import java.util.List;

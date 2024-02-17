@@ -1,6 +1,5 @@
 package emu.grasscutter.game.dungeons.dungeon_results;
 
-import emu.grasscutter.data.excels.DungeonData;
 import emu.grasscutter.game.dungeons.DungeonEndStats;
 import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.player.Player;
@@ -9,6 +8,7 @@ import lombok.val;
 import org.anime_game_servers.multi_proto.gi.messages.dungeon.progression.DungeonSettleNotify;
 import org.anime_game_servers.multi_proto.gi.messages.spiral_abyss.run.ContinueStateType;
 import org.anime_game_servers.multi_proto.gi.messages.spiral_abyss.run.TowerLevelEndNotify;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonData;
 
 import java.util.List;
 import java.util.stream.IntStream;

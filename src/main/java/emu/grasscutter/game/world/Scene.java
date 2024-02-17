@@ -8,14 +8,10 @@ import emu.grasscutter.data.binout.routes.Route;
 import emu.grasscutter.data.binout.routes.RouteType;
 import emu.grasscutter.data.common.ScenePointArrayData;
 import emu.grasscutter.data.excels.CodexAnimalData;
-import emu.grasscutter.data.excels.DungeonData;
-import emu.grasscutter.data.excels.SceneData;
-import emu.grasscutter.data.excels.WorldLevelData;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.avatar.Avatar;
 import emu.grasscutter.game.dungeons.DungeonManager;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
-import emu.grasscutter.game.dungeons.enums.DungeonPassConditionType;
 import emu.grasscutter.game.dungeons.settle_listeners.DungeonSettleListener;
 import emu.grasscutter.game.entity.*;
 import emu.grasscutter.game.entity.gadget.GadgetWorktop;
@@ -37,6 +33,8 @@ import kotlin.Pair;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonData;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonPassConditionType;
 import org.anime_game_servers.gi_lua.models.SceneGroupUserData;
 import org.anime_game_servers.gi_lua.models.ScriptArgs;
 import org.anime_game_servers.gi_lua.models.constants.EventType;
@@ -49,7 +47,10 @@ import org.anime_game_servers.multi_proto.gi.messages.battle.event.AttackResult;
 import org.anime_game_servers.multi_proto.gi.messages.gadget.SelectWorktopOptionReq;
 import org.anime_game_servers.multi_proto.gi.messages.scene.EnterType;
 import org.anime_game_servers.multi_proto.gi.messages.scene.VisionType;
+import org.anime_game_servers.game_data_models.gi.data.world.WorldLevelData;
 import org.jetbrains.annotations.NotNull;
+import org.anime_game_servers.game_data_models.gi.data.scene.SceneData;
+import org.anime_game_servers.game_data_models.gi.data.scene.SceneType;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -123,7 +124,7 @@ public class Scene {
     }
 
     public SceneType getSceneType() {
-        return this.sceneData.getSceneType();
+        return this.sceneData.getType();
     }
 
     public int getPlayerCount() {
@@ -911,7 +912,7 @@ public class Scene {
 
     private List<SceneNpcBornEntry> loadNpcForPlayer(Player player) {
         val pos = player.getPosition();
-        val data = GameData.getSceneNpcBornData().get(getId());
+        val data = GameData.getSceneNpcBornData(getId());
         if (data == null) return List.of();
 
         val npcList = SceneIndexManager.queryNeighbors(data.getIndex(), pos.toDoubleArray(),
