@@ -13,11 +13,11 @@ import java.util.HashSet;
 public class ExecAddSceneTag extends QuestExecHandler {
     @Override
     public boolean execute(GameQuest quest, QuestExecParam condition, String... paramStr) {
-        val SceneNumber = Integer.parseInt(paramStr[0]);
-        val SceneTagNumber = Integer.parseInt(paramStr[1]);
-        val TagSet = quest.getOwner().getSceneTags().getOrDefault(SceneNumber, new HashSet<>());
-        TagSet.add(SceneTagNumber);
-        quest.getOwner().getSceneTags().put(SceneNumber, TagSet);
+        val sceneNumber = Integer.parseInt(paramStr[0]);
+        val sceneTagNumber = Integer.parseInt(paramStr[1]);
+        val tagSet = quest.getOwner().getSceneTags().getOrDefault(sceneNumber, new HashSet<>());
+        tagSet.add(sceneTagNumber);
+        quest.getOwner().getSceneTags().put(sceneNumber, tagSet);
         quest.getOwner().sendPacket(new PacketPlayerWorldSceneInfoListNotify(quest.getOwner()));
         return true;
     }
