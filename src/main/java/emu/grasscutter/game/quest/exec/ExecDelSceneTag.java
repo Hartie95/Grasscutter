@@ -5,6 +5,7 @@ import emu.grasscutter.game.quest.GameQuest;
 import emu.grasscutter.game.quest.QuestValueExec;
 import emu.grasscutter.game.quest.enums.QuestExec;
 import emu.grasscutter.game.quest.handlers.QuestExecHandler;
+import emu.grasscutter.server.packet.send.PacketPlayerWorldSceneInfoListNotify;
 import lombok.val;
 import java.util.HashSet;
 
@@ -17,6 +18,7 @@ public class ExecDelSceneTag extends QuestExecHandler {
         val TagSet = quest.getOwner().getSceneTags().getOrDefault(SceneNumber, new HashSet<>());
         TagSet.remove(SceneTagNumber);
         quest.getOwner().getSceneTags().put(SceneNumber, TagSet);
+        quest.getOwner().sendPacket(new PacketPlayerWorldSceneInfoListNotify(quest.getOwner()));
         return true;
     }
 }
