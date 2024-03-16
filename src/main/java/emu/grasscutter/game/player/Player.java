@@ -94,6 +94,7 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.IntStream;
 
 import static emu.grasscutter.config.Configuration.GAME_OPTIONS;
 
@@ -141,6 +142,7 @@ public class Player {
     @Getter private Map<Integer, ActiveCookCompoundData> activeCookCompounds;
     @Getter private Map<Integer, Integer> questGlobalVariables;
     @Getter private Map<Integer, Integer> openStates;
+    @Getter private Map<Integer, Set<Integer>> sceneTags;
     @Getter @Setter private Map<Integer, Set<Integer>> unlockedSceneAreas;
     @Getter @Setter private Map<Integer, Set<Integer>> unlockedScenePoints;
     @Getter @Setter private List<Integer> chatEmojiIdList;
@@ -261,6 +263,7 @@ public class Player {
         this.unlockedRecipies = new HashMap<>();
         this.questGlobalVariables = new HashMap<>();
         this.openStates = new HashMap<>();
+        this.sceneTags = new HashMap<>();
         this.unlockedSceneAreas = new HashMap<>();
         this.unlockedScenePoints = new HashMap<>();
         this.chatEmojiIdList = new ArrayList<>();
@@ -317,6 +320,13 @@ public class Player {
         this.setProperty(PlayerProperty.PROP_PLAYER_RESIN, 160, false);
         this.getFlyCloakList().add(140001);
         this.getNameCardList().add(210001);
+
+        //TODO: some hard coded scene tags until we get scene tag condition support
+        //Jade chamber, Lmboss_01, LYDS_01, Vanarana (Sumeru tree) Vana_real, Arena (XMSM_CWLTop), Pyramid (CWL_Trans_02)
+        this.sceneTags.put(3, new HashSet<>(Arrays.asList(102, 113, 117, 1093, 1164, 1166)));
+        this.sceneTags.put(4, new HashSet<>(Arrays.asList(106, 109)));
+        this.sceneTags.put(9, new HashSet<>(IntStream.range(0, 3000).boxed().toList()));
+
         this.messageHandler = null;
         this.mapMarksManager = new MapMarksManager(this);
         this.staminaManager = new StaminaManager(this);
