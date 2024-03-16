@@ -321,11 +321,12 @@ public class Player {
         this.getFlyCloakList().add(140001);
         this.getNameCardList().add(210001);
 
-        //TODO: some hard coded scene tags until we get scene tag condition support
-        //Jade chamber, Lmboss_01, LYDS_01, Vanarana (Sumeru tree) Vana_real, Arena (XMSM_CWLTop), Pyramid (CWL_Trans_02)
-        this.sceneTags.put(3, new HashSet<>(Arrays.asList(102, 113, 117, 1093, 1164, 1166)));
-        this.sceneTags.put(4, new HashSet<>(Arrays.asList(106, 109)));
-        this.sceneTags.put(9, new HashSet<>(IntStream.range(0, 3000).boxed().toList()));
+        //TODO: some hard coded scene tags until we get some scene tag condition support
+        this.sceneTags.put(3, new HashSet<>(Arrays.asList(102, 107, 113, 117, 125, 134, 139, 141, 1091, 1094, 1095, 1099, 1101, 1103, 1105, 1110, 1120, 1122, 1125, 1127, 1129, 1131, 1133, 1135, 1137, 1138, 1140, 1143, 1146, 1165, 1168)));
+        this.sceneTags.put(5, new HashSet<>(Arrays.asList(1031)));
+        this.sceneTags.put(6, new HashSet<>(Arrays.asList(143, 145, 1061, 1063)));
+        this.sceneTags.put(7, new HashSet<>(Arrays.asList(136, 137, 138, 148)));
+        this.sceneTags.put(9, new HashSet<>(Arrays.asList(1012, 1014, 1017, 1020)));
 
         this.messageHandler = null;
         this.mapMarksManager = new MapMarksManager(this);
