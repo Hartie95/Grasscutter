@@ -2,31 +2,31 @@ package emu.grasscutter.server.packet.send;
 
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.game.player.Player;
-import emu.grasscutter.net.packet.BasePacket;
-import emu.grasscutter.net.packet.PacketOpcodes;
-import emu.grasscutter.net.proto.PlayerWorldSceneInfoListNotifyOuterClass.PlayerWorldSceneInfoListNotify;
-import emu.grasscutter.net.proto.PlayerWorldSceneInfoOuterClass.PlayerWorldSceneInfo;
+import emu.grasscutter.net.packet.BaseTypedPacket;
+import messages.scene.PlayerWorldSceneInfoListNotify;
+import messages.scene.PlayerWorldSceneInfo;
+import java.util.ArrayList;
+import java.util.List;
 
-public class PacketPlayerWorldSceneInfoListNotify extends BasePacket {
+public class PacketPlayerWorldSceneInfoListNotify extends BaseTypedPacket<PlayerWorldSceneInfoListNotify> {
 
     public PacketPlayerWorldSceneInfoListNotify(Player player) {
-        super(PacketOpcodes.PlayerWorldSceneInfoListNotify); // Rename opcode later
+        super(new PlayerWorldSceneInfoListNotify());
 
         var sceneTags = player.getSceneTags();
-
-        PlayerWorldSceneInfoListNotify.Builder proto =
-                PlayerWorldSceneInfoListNotify.newBuilder();
+        List<PlayerWorldSceneInfo> infoList = new ArrayList<>();
 
         // Iterate over all scenes
         for (int scene : GameData.getSceneDataMap().keySet()) {
-            var worldInfoBuilder = PlayerWorldSceneInfo.newBuilder().setSceneId(scene).setIsLocked(false);
+            var worldInfoBuilder = new PlayerWorldSceneInfo();
+            worldInfoBuilder.setSceneId(scene);
 
             // Scenetags
             if (sceneTags.containsKey(scene)) {
-                worldInfoBuilder.addAllSceneTagIdList(sceneTags.get(scene));
+                worldInfoBuilder.setSceneTagIdList(sceneTags.get(scene).stream().toList());
             }
-            proto.addInfoList(worldInfoBuilder.build());
+            infoList.add(worldInfoBuilder);
         }
-        this.setData(proto);
+        proto.setInfoList(infoList);
     }
 }
