@@ -9,6 +9,7 @@ import emu.grasscutter.utils.Position;
 import emu.grasscutter.utils.Utils;
 import messages.scene.EnterType;
 import messages.scene.PlayerEnterSceneNotify;
+import java.util.HashSet;
 
 public class PacketPlayerEnterSceneNotify extends BaseTypedPacket<PlayerEnterSceneNotify> {
 
