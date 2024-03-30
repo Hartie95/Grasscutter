@@ -6,6 +6,7 @@ import emu.grasscutter.game.quest.QuestValueExec;
 import emu.grasscutter.game.quest.enums.QuestExec;
 import emu.grasscutter.game.quest.handlers.QuestExecHandler;
 import emu.grasscutter.server.packet.send.PacketPlayerWorldSceneInfoListNotify;
+import emu.grasscutter.server.packet.send.PacketSceneDataNotify;
 import lombok.val;
 import java.util.HashSet;
 
