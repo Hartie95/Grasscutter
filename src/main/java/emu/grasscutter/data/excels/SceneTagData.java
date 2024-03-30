@@ -14,5 +14,4 @@ public class SceneTagData extends GameResource {
 	private int sceneId;
 	private boolean isDefaultValid;
 	private boolean isSkipLoading;
-	//private List<SceneTagCond> sceneTagCond;
 }

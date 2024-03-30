@@ -692,7 +692,7 @@ public class Scene {
     public void onRegisterGroups() {
         // Create the graph
         val groupList = new HashSet<Integer>();
-        val groupIds = this.loadedGroups.stream().map(SceneGroup::getGroupInfo).map(SceneGroupInfo::getId).toList();
+        //val groupIds = this.loadedGroups.stream().map(SceneGroup::getGroupInfo).map(SceneGroupInfo::getId).toList();
         val replacements = GameData.getGroupReplacements().values().stream()
             .filter(replacement -> this.loadedGroups.stream()
                 .filter(g-> g.getGroupInfo().isDynamicLoad())
