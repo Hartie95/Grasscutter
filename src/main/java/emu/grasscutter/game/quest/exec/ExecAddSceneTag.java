@@ -18,6 +18,7 @@ public class ExecAddSceneTag extends QuestExecHandler {
         val tagSet = quest.getOwner().getSceneTags().getOrDefault(sceneNumber, new HashSet<>());
         tagSet.add(sceneTagNumber);
         quest.getOwner().getSceneTags().put(sceneNumber, tagSet);
+        quest.getOwner().sendPacket(new PacketSceneDataNotify(quest.getOwner()));
         quest.getOwner().sendPacket(new PacketPlayerWorldSceneInfoListNotify(quest.getOwner()));
         return true;
     }
