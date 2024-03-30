@@ -94,7 +94,7 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.stream.IntStream;
+import java.util.stream.Collectors;
 
 import static emu.grasscutter.config.Configuration.GAME_OPTIONS;
 
@@ -143,6 +143,7 @@ public class Player {
     @Getter private Map<Integer, Integer> questGlobalVariables;
     @Getter private Map<Integer, Integer> openStates;
     @Getter private Map<Integer, Set<Integer>> sceneTags;
+    @Getter private Set<Integer> visitedScenes;
     @Getter @Setter private Map<Integer, Set<Integer>> unlockedSceneAreas;
     @Getter @Setter private Map<Integer, Set<Integer>> unlockedScenePoints;
     @Getter @Setter private List<Integer> chatEmojiIdList;
@@ -264,6 +265,7 @@ public class Player {
         this.questGlobalVariables = new HashMap<>();
         this.openStates = new HashMap<>();
         this.sceneTags = new HashMap<>();
+        this.visitedScenes = new HashSet<>();
         this.unlockedSceneAreas = new HashMap<>();
         this.unlockedScenePoints = new HashMap<>();
         this.chatEmojiIdList = new ArrayList<>();
@@ -320,14 +322,6 @@ public class Player {
         this.setProperty(PlayerProperty.PROP_PLAYER_RESIN, 160, false);
         this.getFlyCloakList().add(140001);
         this.getNameCardList().add(210001);
-
-        //TODO: some hard coded scene tags until we get some scene tag condition support
-        this.sceneTags.put(3, new HashSet<>(Arrays.asList(102, 107, 113, 117, 125, 134, 139, 141, 1091, 1094, 1095, 1099, 1101, 1103, 1105, 1110, 1120, 1122, 1125, 1127, 1129, 1131, 1133, 1135, 1137, 1138, 1140, 1143, 1146, 1165, 1168)));
-        this.sceneTags.put(5, new HashSet<>(Arrays.asList(1031)));
-        this.sceneTags.put(6, new HashSet<>(Arrays.asList(143, 145, 1061, 1063)));
-        this.sceneTags.put(7, new HashSet<>(Arrays.asList(136, 137, 138, 148)));
-        this.sceneTags.put(9, new HashSet<>(Arrays.asList(1012, 1014, 1017, 1020)));
-
         this.messageHandler = null;
         this.mapMarksManager = new MapMarksManager(this);
         this.staminaManager = new StaminaManager(this);
@@ -399,6 +393,17 @@ public class Player {
 
     public synchronized void setScene(Scene scene) {
         this.scene = scene;
+    }
+
+    public void visitScene(int sceneId) {
+        if (visitedScenes.contains(sceneId)) return;
+        visitedScenes.add(sceneId);
+        val sceneTagData = GameData.getSceneTagDataMap().values();
+        val tagsToAdd = sceneTagData.stream()
+                .filter(tagData -> tagData.getSceneId() == sceneId && tagData.isDefaultValid())
+                .map(SceneTagData::getId)
+                .collect(Collectors.toSet());
+        this.sceneTags.get(sceneId).addAll(tagsToAdd);
     }
 
     synchronized public void setClimate(ClimateType climate) {

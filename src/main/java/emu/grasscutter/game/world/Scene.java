@@ -186,6 +186,7 @@ public class Scene {
         this.players.add(player);
         player.setSceneId(getId());
         player.setScene(this);
+        player.visitScene(getId());
 
         setupPlayerAvatars(player);
     }
