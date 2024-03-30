@@ -2,6 +2,7 @@ package emu.grasscutter.server.packet.send;
 
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.game.player.Player;
+import emu.grasscutter.game.props.SceneType;
 import emu.grasscutter.net.packet.BaseTypedPacket;
 import messages.scene.PlayerWorldSceneInfoListNotify;
 import messages.scene.PlayerWorldSceneInfo;
@@ -17,13 +18,16 @@ public class PacketPlayerWorldSceneInfoListNotify extends BaseTypedPacket<Player
         List<PlayerWorldSceneInfo> infoList = new ArrayList<>();
 
         // Iterate over all scenes
-        for (int scene : GameData.getSceneDataMap().keySet()) {
+        for (var scene : GameData.getSceneDataMap().values()) {
+            //only send big world info
+            if (scene.getSceneType() != SceneType.SCENE_WORLD) continue;
+
             var worldInfoBuilder = new PlayerWorldSceneInfo();
-            worldInfoBuilder.setSceneId(scene);
+            worldInfoBuilder.setSceneId(scene.getId());
 
             // Scenetags
-            if (sceneTags.containsKey(scene)) {
-                worldInfoBuilder.setSceneTagIdList(sceneTags.get(scene).stream().toList());
+            if (sceneTags.containsKey(scene.getId())) {
+                worldInfoBuilder.setSceneTagIdList(sceneTags.get(scene.getId()).stream().toList());
             }
             infoList.add(worldInfoBuilder);
         }
