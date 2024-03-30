@@ -403,7 +403,10 @@ public class Player {
                 .filter(tagData -> tagData.getSceneId() == sceneId && tagData.isDefaultValid())
                 .map(SceneTagData::getId)
                 .collect(Collectors.toSet());
-        this.sceneTags.get(sceneId).addAll(tagsToAdd);
+
+        val tagsToSet = this.sceneTags.getOrDefault(sceneId, new HashSet<>());
+        tagsToSet.addAll(tagsToAdd);
+        this.sceneTags.put(sceneId, tagsToSet);
     }
 
     synchronized public void setClimate(ClimateType climate) {
