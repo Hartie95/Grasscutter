@@ -1,19 +1,14 @@
 package emu.grasscutter.server.packet.recv;
 
-import emu.grasscutter.net.packet.Opcodes;
-import emu.grasscutter.net.packet.PacketOpcodes;
-import emu.grasscutter.net.proto.GetSceneAreaReqOuterClass.GetSceneAreaReq;
-import emu.grasscutter.net.packet.PacketHandler;
+import emu.grasscutter.net.packet.TypedPacketHandler;
 import emu.grasscutter.server.game.GameSession;
 import emu.grasscutter.server.packet.send.PacketGetSceneAreaRsp;
+import messages.scene.GetSceneAreaReq;
 
-@Opcodes(PacketOpcodes.GetSceneAreaReq)
-public class HandlerGetSceneAreaReq extends PacketHandler {
+public class HandlerGetSceneAreaReq extends TypedPacketHandler<GetSceneAreaReq> {
 
     @Override
-    public void handle(GameSession session, byte[] header, byte[] payload) throws Exception {
-        GetSceneAreaReq req = GetSceneAreaReq.parseFrom(payload);
-
+    public void handle(GameSession session, byte[] header, GetSceneAreaReq req) throws Exception {
         session.send(new PacketGetSceneAreaRsp(session.getPlayer(), req.getSceneId()));
     }
 

@@ -764,7 +764,8 @@ public class SceneScriptManager {
      * @return true if there is no condition, otherwise the result of the condition call as boolean
      */
     private boolean evaluateTriggerCondition(SceneTrigger trigger, SceneGroup group, ScriptArgs params){
-        logger.trace("Call Condition Trigger {}, [{},{},{}]", trigger.getCondition(), params.param1, params.source_eid, params.target_eid);
+        logger.trace("Call Condition Trigger {}, [{},{},{}]", trigger.getCondition(), params.param1,
+            params.getSourceEntityId(), params.getTargetEntityId());
         val condition = trigger.getCondition();
         if(condition == null || condition.isBlank()){
             return true;
@@ -993,19 +994,12 @@ public class SceneScriptManager {
         }
         logger.info("creating group timer event for group {} with source {} and time {}",
             groupID, source, time);
-        for(SceneTrigger trigger : group.getTriggers().values()){
-            if(trigger.getEvent() == EVENT_TIMER_EVENT &&trigger.getSource().equals(source)){
-                logger.warn("[LUA] Found timer trigger with source {} for group {} : {}",
-                    source, groupID, trigger.getName());
-                cancelGroupTimerEvent(groupID, source);
-                var taskIdentifier = Grasscutter.getGameServer().getScheduler().scheduleDelayedRepeatingTask(() ->
-                    callEvent(new ScriptArgs(groupID, EVENT_TIMER_EVENT)
-                        .setEventSource(source)), (int)time, (int)time);
-                var groupTasks = activeGroupTimers.computeIfAbsent(groupID, k -> new HashSet<>());
-                groupTasks.add(new Pair<>(source, taskIdentifier));
-
-            }
-        }
+        cancelGroupTimerEvent(groupID, source);
+        var taskIdentifier = Grasscutter.getGameServer().getScheduler().scheduleDelayedRepeatingTask(() ->
+            callEvent(new ScriptArgs(groupID, EVENT_TIMER_EVENT)
+                .setEventSource(source)), (int)time, (int)time);
+        var groupTasks = activeGroupTimers.computeIfAbsent(groupID, k -> new HashSet<>());
+        groupTasks.add(new Pair<>(source, taskIdentifier));
         return 0;
     }
     public int cancelGroupTimerEvent(int groupID, String source) {

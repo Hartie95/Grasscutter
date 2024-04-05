@@ -2,9 +2,11 @@ package emu.grasscutter.server.packet.recv;
 
 import emu.grasscutter.game.dungeons.DungeonManager;
 import emu.grasscutter.game.player.Player.SceneLoadState;
+import emu.grasscutter.game.world.WeatherArea;
 import emu.grasscutter.net.packet.*;
 import emu.grasscutter.server.game.GameSession;
 import emu.grasscutter.server.packet.send.*;
+import lombok.val;
 import messages.scene.SceneInitFinishReq;
 
 import java.util.Optional;
@@ -28,7 +30,14 @@ public class HandlerSceneInitFinishReq extends TypedPacketHandler<SceneInitFinis
 		session.send(new PacketSceneTimeNotify(session.getPlayer()));
 		session.send(new PacketPlayerGameTimeNotify(session.getPlayer()));
 		session.send(new PacketPlayerEnterSceneInfoNotify(session.getPlayer()));
-		session.send(new PacketSceneAreaWeatherNotify(session.getPlayer()));
+
+		session.getPlayer().getScene().reloadWeathers();
+		session.getPlayer().updateWeather(session.getPlayer().getScene());
+		val area = session.getPlayer().getScene().getWeatherAreas().get(session.getPlayer().getWeatherAreaId());
+		if(area != null)
+			session.send(new PacketSceneAreaWeatherNotify(area.getConfig().getAreaID(), area.getCurrentClimateType(), area.getTransDuration()));
+		else //TODO: Remove old climate implementation, you can use areaId 0 and climate type none, but needs testing
+			session.send(new PacketSceneAreaWeatherNotify(session.getPlayer()));
 		session.send(new PacketScenePlayerInfoNotify(session.getPlayer().getWorld()));
 		session.send(new PacketSceneTeamUpdateNotify(session.getPlayer()));
 

@@ -4,6 +4,7 @@ import emu.grasscutter.command.Command;
 import emu.grasscutter.command.CommandHandler;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.ClimateType;
+import emu.grasscutter.game.world.WeatherArea;
 
 import java.util.List;
 
@@ -15,8 +16,11 @@ public final class WeatherCommand implements CommandHandler {
         int weatherId = targetPlayer.getWeatherId();
         ClimateType climate = ClimateType.CLIMATE_NONE;  // Sending ClimateType.CLIMATE_NONE to Scene.setWeather will use the default climate for that weather
 
+        WeatherArea area = targetPlayer.getScene().getWeatherArea(targetPlayer.getPosition());
+
         if (args.isEmpty()) {
-            climate = targetPlayer.getClimate();
+            if(area != null)
+                climate = area.getCurrentClimateType();
             CommandHandler.sendTranslatedMessage(sender, "commands.weather.status", weatherId, climate.getShortName());
             return;
         }
@@ -36,8 +40,10 @@ public final class WeatherCommand implements CommandHandler {
             }
         }
 
-        targetPlayer.setWeather(weatherId, climate);
-        climate = targetPlayer.getClimate();  // Might be different to what we set
+        if(area != null) {
+            area.setClimateType(climate);
+            climate = area.getCurrentClimateType();
+        }
         CommandHandler.sendTranslatedMessage(sender, "commands.weather.success", weatherId, climate.getShortName());
     }
 }

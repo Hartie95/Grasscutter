@@ -15,6 +15,7 @@ import emu.grasscutter.data.binout.config.ConfigEntityMonster;
 import emu.grasscutter.data.binout.config.ConfigGlobalCombat;
 import emu.grasscutter.data.binout.config.ConfigLevelEntity;
 import emu.grasscutter.game.dungeons.dungeon_entry.DungeonEntries;
+import emu.grasscutter.data.common.WeatherAreaPointData;
 import emu.grasscutter.data.common.quest.MainQuestData;
 import emu.grasscutter.data.common.quest.SubQuestData;
 import emu.grasscutter.data.binout.routes.Route;
@@ -25,6 +26,7 @@ import emu.grasscutter.data.server.DropTableExcelConfigData;
 import emu.grasscutter.data.server.GadgetMapping;
 import emu.grasscutter.data.server.MonsterMapping;
 import emu.grasscutter.data.server.SubfieldMapping;
+import emu.grasscutter.data.server.WeatherMapping;
 import emu.grasscutter.game.dungeons.DungeonDropEntry;
 import emu.grasscutter.game.quest.QuestEncryptionKey;
 import emu.grasscutter.game.quest.enums.QuestCond;
@@ -161,7 +163,10 @@ public class GameData {
     @Getter private static final Int2ObjectMap<WeaponCurveData> weaponCurveDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<WeaponLevelData> weaponLevelDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<WeaponPromoteData> weaponPromoteDataMap = new Int2ObjectOpenHashMap<>();
+    @Getter private static final Int2ObjectMap<StatuePromoteData> statuePromoteDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<WeatherData> weatherDataMap = new Int2ObjectOpenHashMap<>();
+    @Getter private static final Int2ObjectMap<WeatherTemplateData> weatherTemplateDataMap = new Int2ObjectOpenHashMap<>(); //Unused
+    @Getter private static final Map<String, WeatherTemplateData> weatherTemplateDataByNameMap = new HashMap<>();
     @Getter private static final Int2ObjectMap<WorldAreaData> worldAreaDataMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<WorldLevelData> worldLevelDataMap = new Int2ObjectOpenHashMap<>();
     private static final Int2ObjectMap<AvatarPromoteData> avatarPromoteDataMap = new Int2ObjectOpenHashMap<>();
@@ -190,6 +195,7 @@ public class GameData {
     @Getter private static final Int2ObjectMap<MonsterMapping> monsterMappingMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<ActivityCondGroup> activityCondGroupMap = new Int2ObjectOpenHashMap<>();
     @Getter private static final Int2ObjectMap<SceneGroupReplacement> groupReplacements = new Int2ObjectOpenHashMap<>();
+    @Getter private static final Int2ObjectMap<WeatherMapping> weatherMappingMap = new Int2ObjectOpenHashMap<>();
 
     // Cache
     @Getter private static final IntList scenePointIdList = new IntArrayList();
@@ -209,6 +215,7 @@ public class GameData {
     @Getter private static final Map<Integer, TrialAvatarActivityCustomData> trialAvatarActivityCustomData = new HashMap<>();
     @Getter private static final Map<Integer, TrialAvatarActivityDataData> trialAvatarActivityDataCustomData = new HashMap<>();
     @Getter private static final Int2IntMap trialAvatarIndexIdTrialActivityDataDataMap = new Int2IntOpenHashMap();
+    @Getter private static final Map<Integer, List<WeatherAreaPointData>> weatherAreaPointData = new HashMap<>();
 
     // Getters with wrong names, remove later
     @Deprecated(forRemoval = true) public static Int2ObjectMap<CodexReliquaryData> getcodexReliquaryIdMap() {return codexReliquaryDataIdMap;}
@@ -238,6 +245,10 @@ public class GameData {
 
     public static WeaponPromoteData getWeaponPromoteData(int promoteId, int promoteLevel) {
         return weaponPromoteDataMap.get((promoteId << 8) + promoteLevel);
+    }
+
+    public static StatuePromoteData getStatuePromoteData(int cityId, int promoteLevel) {
+        return statuePromoteDataMap.get((cityId << 8) + promoteLevel);
     }
 
     public static ReliquaryLevelData getRelicLevelData(int rankLevel, int level) {

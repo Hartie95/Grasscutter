@@ -37,7 +37,7 @@ public enum QuestContent implements QuestTrigger {
     QUEST_CONTENT_DAILY_TASK_COMP_FINISH (26), // missing, currently unused
     QUEST_CONTENT_FINISH_ITEM_GIVING (27), // missing, finish
     QUEST_CONTENT_SKILL (107),
-    QUEST_CONTENT_CITY_LEVEL_UP (109), // missing, finish
+    QUEST_CONTENT_CITY_LEVEL_UP (109),
     QUEST_CONTENT_PATTERN_GROUP_CLEAR_MONSTER (110), // missing, finish, for random quests
     QUEST_CONTENT_ITEM_LESS_THAN (111),
     QUEST_CONTENT_PLAYER_LEVEL_UP (112),

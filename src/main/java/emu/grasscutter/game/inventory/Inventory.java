@@ -434,6 +434,20 @@ public class Inventory extends BasePlayerManager implements Iterable<GameItem> {
         return removeItem(item, count);
     }
 
+    /**
+     * Removes an item by its item ID.
+     *
+     * @param itemId The ID of the item to remove.
+     * @param count The amount of items to remove.
+     * @return True if the item was removed, false otherwise.
+     */
+    public synchronized boolean removeItemById(int itemId, int count) {
+        var item = this.getItems().values().stream().filter(i -> i.getItemId() == itemId).findFirst();
+
+        // Check if the item is in the player's inventory.
+        return item.filter(gameItem -> this.removeItem(gameItem, count)).isPresent();
+    }
+
     public synchronized boolean removeItem(GameItem item) {
         return removeItem(item, item.getCount());
     }

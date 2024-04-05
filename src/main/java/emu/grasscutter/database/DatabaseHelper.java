@@ -23,6 +23,7 @@ import emu.grasscutter.game.mail.Mail;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.quest.GameMainQuest;
 import emu.grasscutter.game.world.SceneGroupInstance;
+import emu.grasscutter.game.world.SceneInstanceData;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -373,6 +374,15 @@ public final class DatabaseHelper {
 
     public static SceneGroupInstance loadGroupInstance(int groupId, Player owner) {
         SceneGroupInstance instance = DatabaseManager.getGameDatastore().find(SceneGroupInstance.class).filter(Filters.and(Filters.eq("ownerUid", owner.getUid()), Filters.eq("groupId", groupId))).first();
+        return instance;
+    }
+
+    public static void saveSceneInstanceData(SceneInstanceData instance) {
+        DatabaseManager.getGameDatastore().save(instance);
+    }
+
+    public static SceneInstanceData loadSceneInstanceData(int sceneId, Player owner) {
+        SceneInstanceData instance = DatabaseManager.getGameDatastore().find(SceneInstanceData.class).filter(Filters.and(Filters.eq("ownerUid", owner.getUid()), Filters.eq("sceneId", sceneId))).first();
         return instance;
     }
 }

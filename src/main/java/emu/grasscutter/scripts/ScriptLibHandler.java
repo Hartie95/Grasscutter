@@ -18,6 +18,7 @@ import emu.grasscutter.game.props.ClimateType;
 import emu.grasscutter.game.quest.enums.QuestCond;
 import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.game.world.SceneGroupInstance;
+import emu.grasscutter.game.world.WeatherArea;
 import emu.grasscutter.scripts.lua_engine.GroupEventLuaContext;
 import emu.grasscutter.scripts.scriptlib_handlers.BaseHandler;
 import emu.grasscutter.server.packet.send.*;
@@ -141,7 +142,7 @@ public class ScriptLibHandler extends BaseHandler implements org.anime_game_serv
         if(callParams == null || group == null){
             return 1;
         }
-        val eid = callParams.source_eid;
+        val eid = callParams.getSourceEntityId();
         val entity = scene.getEntityById(eid);
 
 
@@ -190,7 +191,7 @@ public class ScriptLibHandler extends BaseHandler implements org.anime_game_serv
         if(callParams == null || group == null){
             return 1;
         }
-        var eid = callParams.source_eid;
+        var eid = callParams.getSourceEntityId();
         var entity = scene.getEntityById(eid);
         if (!(entity instanceof EntityGadget gadget)) {
             return 1;
@@ -1232,13 +1233,18 @@ public class ScriptLibHandler extends BaseHandler implements org.anime_game_serv
     }
 
     @Override
-    public int AddPlayerGroupVisionType(GroupEventLuaContext context, LuaTable uidsTable, LuaTable var2) {
-        return handleUnimplemented(printTable(uidsTable), printTable(var2));
+    public int AddPlayerGroupVisionType(GroupEventLuaContext context, int[] uids, int[] visionTypeList) {
+        return handleUnimplemented(uids, visionTypeList);
     }
 
     @Override
-    public int DelPlayerGroupVisionType(GroupEventLuaContext context, LuaTable uidsTable, LuaTable var2) {
-        return handleUnimplemented(printTable(uidsTable), printTable(var2));
+    public int DelPlayerGroupVisionType(GroupEventLuaContext context, int[] uids, int[] visionTypeList) {
+        return handleUnimplemented(uids, visionTypeList);
+    }
+
+    @Override
+    public int SetPlayerGroupVisionType(GroupEventLuaContext context, int[] uids, int[] visionTypeList) {
+        return handleUnimplemented(uids, visionTypeList);
     }
 
     @Override
@@ -1397,13 +1403,20 @@ public class ScriptLibHandler extends BaseHandler implements org.anime_game_serv
     @Override
     public int SetWeatherAreaState(GroupEventLuaContext context, int var1, int var2) {
         logger.warn("[LUA] Call unimplemented SetWeatherAreaState with {} {}", var1, var2);
-        context.getSceneScriptManager().getScene().getPlayers().forEach(p -> p.setWeather(var1, ClimateType.getTypeByValue(var2)));
-        return 0;
+        if(var2 != 0) {
+            return context.getSceneScriptManager().getScene().addWeatherArea(var1) ? 0 : 1;
+        } else {
+            return context.getSceneScriptManager().getScene().removeWeatherArea(var1) ? 0 : 1;
+        }
     }
 
     @Override
     public int EnterWeatherArea(GroupEventLuaContext context, int weatherAreaId) {
-        return handleUnimplemented(weatherAreaId);
+        context.getSceneScriptManager().getScene().getPlayers().forEach(p -> {
+            if(p.getWeatherAreaId() != weatherAreaId) p.updateWeather(p.getScene());
+        });
+
+        return 0;
     }
 
     @Override

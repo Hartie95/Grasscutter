@@ -126,10 +126,10 @@ public final class AbilityManager extends BasePlayerManager {
         logger.debug("Ability invoke: " + invoke + " " + invoke.getArgumentType() + " (" + invoke.getArgumentTypeValue() + "): " + this.player.getScene().getEntityById(invoke.getEntityId()));
         var entity = this.player.getScene().getEntityById(invoke.getEntityId());
         if(entity != null) {
-            logger.info("Entity group id {} config id {}", entity.getGroupId(), entity.getConfigId());
+            logger.debug("Entity group id {} config id {}", entity.getGroupId(), entity.getConfigId());
         }
         if(invoke.getHead() != null && invoke.getHead().getTargetId() != 0) {
-            logger.info("Target: " + this.player.getScene().getEntityById(invoke.getHead().getTargetId()));
+            logger.debug("Target: " + this.player.getScene().getEntityById(invoke.getHead().getTargetId()));
         }
 
         if(invoke.getHead() != null && invoke.getHead().getLocalId() != 0) {
@@ -266,7 +266,7 @@ public final class AbilityManager extends BasePlayerManager {
         }
 
         ability.getAbilitySpecials().put(valueChange.getKey().getStr(), valueChange.getFloatValue());
-        logger.info("Ability {} changed {} to {}", ability.getData().abilityName, valueChange.getKey().getStr(), valueChange.getFloatValue());
+        logger.debug("Ability {} changed {} to {}", ability.getData().abilityName, valueChange.getKey().getStr(), valueChange.getFloatValue());
     }
 
     private void handleOverrideParam(AbilityInvokeEntry invoke) throws Exception {
@@ -377,9 +377,9 @@ public final class AbilityManager extends BasePlayerManager {
             }
             var modifierData = (AbilityModifier)modifierArray[modChange.getModifierLocalId()];
             if(entity.getInstancedModifiers().containsKey(head.getInstancedModifierId())) {
-                logger.info("Replacing entity {} modifier id {} with ability {} modifier {}", invoke.getEntityId(), head.getInstancedModifierId(), instancedAbilityData.abilityName, modifierData);
+                logger.debug("Replacing entity {} modifier id {} with ability {} modifier {}", invoke.getEntityId(), head.getInstancedModifierId(), instancedAbilityData.abilityName, modifierData);
             } else {
-                logger.info("Adding entity {} modifier id {} with ability {} modifier {}", invoke.getEntityId(), head.getInstancedModifierId(), instancedAbilityData.abilityName, modifierData);
+                logger.debug("Adding entity {} modifier id {} with ability {} modifier {}", invoke.getEntityId(), head.getInstancedModifierId(), instancedAbilityData.abilityName, modifierData);
             }
 
             AbilityModifierController modifier = new AbilityModifierController(instancedAbility, instancedAbilityData, modifierData);
@@ -388,7 +388,7 @@ public final class AbilityManager extends BasePlayerManager {
 
             //TODO: Add all the ability modifier property change
         } else if(modChange.getAction() == ModifierAction.REMOVED) {
-            logger.info("Removed on entity {} modifier id {}: {}", invoke.getEntityId(), head.getInstancedModifierId(), entity.getInstancedModifiers().get(head.getInstancedModifierId()));
+            logger.debug("Removed on entity {} modifier id {}: {}", invoke.getEntityId(), head.getInstancedModifierId(), entity.getInstancedModifiers().get(head.getInstancedModifierId()));
 
             //TODO: Add debug log
 
@@ -463,7 +463,7 @@ public final class AbilityManager extends BasePlayerManager {
 
         entity.getInstancedAbilities().add(new Ability(ability, entity, player));
 
-        logger.info("Ability added to entity {} at index {}", entity.getId(), entity.getInstancedAbilities().size());
+        logger.debug("Ability added to entity {} at index {}", entity.getId(), entity.getInstancedAbilities().size());
     }
 
     /**

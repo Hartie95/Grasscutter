@@ -47,6 +47,7 @@ public class World implements Iterable<Player> {
     @Getter private int tickCount = 0;
     @Getter private boolean isPaused = false;
     @Getter private boolean isGameTimeLocked = false;
+    @Getter private boolean isWeatherLocked = false;
     private long lastUpdateTime;
     @Getter private long currentWorldTime = 0;
     @Getter private long currentGameTime = 540;
@@ -70,6 +71,7 @@ public class World implements Iterable<Player> {
         this.lastUpdateTime = System.currentTimeMillis();
         this.currentGameTime = owner.getPlayerGameTime();
         this.isGameTimeLocked = owner.getBoolProperty(PlayerProperty.PROP_IS_GAME_TIME_LOCKED);
+        this.isWeatherLocked = owner.getBoolProperty(PlayerProperty.PROP_IS_WEATHER_LOCKED);
 
         this.worldRandomGenerator = new Random();
 
@@ -83,6 +85,12 @@ public class World implements Iterable<Player> {
         }
         isGameTimeLocked = gameTimeLocked;
         getPlayers().forEach(p -> p.setProperty(PlayerProperty.PROP_IS_GAME_TIME_LOCKED, gameTimeLocked));
+        return true;
+    }
+
+    public boolean setWeatherIsLocked(boolean weatherLocked) {
+        isWeatherLocked = weatherLocked;
+        getPlayers().forEach(p -> p.setProperty(PlayerProperty.PROP_IS_WEATHER_LOCKED, isWeatherLocked));
         return true;
     }
 
@@ -326,6 +334,7 @@ public class World implements Iterable<Player> {
 
         // Teleport packet
         player.sendPacket(new PacketPlayerEnterSceneNotify(player, teleportProperties));
+        player.updateWeather(newScene);
 
         if(teleportProperties.getTeleportType() != TeleportType.INTERNAL && teleportProperties.getTeleportType() != SCRIPT) {
             player.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_ANY_MANUAL_TRANSPORT);
@@ -383,6 +392,7 @@ public class World implements Iterable<Player> {
         if(tickCount%10 == 0){
             players.forEach(p -> p.sendPacket(new PacketPlayerGameTimeNotify(p)));
             isGameTimeLocked = getHost().getBoolProperty(PlayerProperty.PROP_IS_GAME_TIME_LOCKED);
+            isWeatherLocked = getHost().getBoolProperty(PlayerProperty.PROP_IS_WEATHER_LOCKED);
         }
         // store updated world time every 60 seconds (ingame hour)
         if(tickCount%60 == 0){

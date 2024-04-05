@@ -13,6 +13,7 @@ import emu.grasscutter.data.common.quest.MainQuestData;
 import emu.grasscutter.data.common.quest.SubQuestData;
 import emu.grasscutter.data.binout.routes.SceneRoutes;
 import emu.grasscutter.data.common.PointData;
+import emu.grasscutter.data.common.WeatherAreaPointData;
 import emu.grasscutter.data.custom.*;
 import emu.grasscutter.data.excels.TrialAvatarActivityDataData;
 import emu.grasscutter.data.server.ActivityCondGroup;
@@ -21,6 +22,7 @@ import emu.grasscutter.data.server.DropTableExcelConfigData;
 import emu.grasscutter.data.server.GadgetMapping;
 import emu.grasscutter.data.server.MonsterMapping;
 import emu.grasscutter.data.server.SubfieldMapping;
+import emu.grasscutter.data.server.WeatherMapping;
 import emu.grasscutter.game.ability.Ability;
 import emu.grasscutter.game.dungeons.DungeonDrop;
 import emu.grasscutter.game.dungeons.enums.DungeonType;
@@ -130,6 +132,7 @@ public class ResourceLoader {
         loadDungeonDrops();
         // Load scene points - must be done AFTER resources are loaded
         loadScenePoints();
+        loadSceneWeatherAreas();
         loadDungeonEntryAndExitPoints();
         // Load default home layout
         loadHomeworldDefaultSaveData();
@@ -141,6 +144,7 @@ public class ResourceLoader {
         loadScriptData();
         loadGadgetMappings();
         loadSubfieldMappings();
+        loadWeatherMappings();
         loadMonsterMappings();
         loadActivityCondGroups();
         loadTrialAvatarCustomData();
@@ -264,6 +268,39 @@ public class ResourceLoader {
             });
         } catch (IOException e) {
             logger.error("Scene point files cannot be found, you cannot use teleport waypoints!");
+        }
+    }
+
+    private static void loadSceneWeatherAreas() {
+        val pattern = Pattern.compile("scene([0-9]+)_weather_areas\\.json");
+        try (val dirStream = Files.newDirectoryStream(getResourcePath("Scripts/Scene"))) {
+            dirStream.forEach(dirPath -> {
+                try (val stream = Files.newDirectoryStream(dirPath, "scene*_weather_areas.json")){
+                    stream.forEach(path -> {
+                        val matcher = pattern.matcher(path.getFileName().toString());
+                        if (!matcher.find()) return;
+                        int sceneId = Integer.parseInt(matcher.group(1));
+
+                        List<WeatherAreaPointData> config;
+                        try {
+                            config = JsonUtils.loadToList(path, WeatherAreaPointData.class);
+                        } catch (Exception e) {
+                            logger.error("Error loading weather area file: {}", path, e);
+                            return;
+                        }
+
+                        if (config == null) return;
+
+                        config.forEach((area) -> {
+                            GameData.getWeatherAreaPointData().put(sceneId, config);
+                        });
+                    });
+                } catch (IOException e) {
+                    logger.error("Weather area files cannot be found");
+                }
+            });
+        } catch (IOException e) {
+            logger.error("Weather area files cannot be found");
         }
     }
 
@@ -827,6 +864,18 @@ public class ResourceLoader {
             logger.debug("Loaded {} drop table configs.", dropTableExcelConfigDataMap.size());
         } catch (Exception e) {
             logger.error("Unable to load drop table config data.", e);
+        }
+    }
+
+    private static void loadWeatherMappings() {
+        try {
+            val weatherMap = GameData.getWeatherMappingMap();
+            try {
+                JsonUtils.loadToList(getResourcePath("Server/WeatherMapping.json"), WeatherMapping.class).forEach(entry -> weatherMap.put(entry.getAreaId(), entry));;
+            } catch (IOException | NullPointerException ignored) {}
+            logger.debug("Loaded {} weather mappings.", weatherMap.size());
+        } catch (Exception e) {
+            logger.error("Unable to load weather mappings.", e);
         }
     }
 

@@ -264,6 +264,19 @@ public class PlayerProgressManager extends BasePlayerDataManager {
         return true;
     }
 
+    public boolean lockTransPoint(int sceneId, int pointId) {
+        val scenePointEntry = GameData.getScenePointEntryById(sceneId, pointId);
+
+        if (scenePointEntry == null || !this.player.getUnlockedScenePoints(sceneId).contains(pointId)) {
+            return false;
+        }
+
+        this.player.getUnlockedScenePoints(sceneId).remove(pointId);
+
+        this.player.sendPacket(new PacketScenePointUnlockNotify(sceneId, pointId, true));
+        return true;
+    }
+
     public void unlockSceneArea(int sceneId, int areaId) {
         // Add the area to the list of unlocked areas in its scene.
         this.player.getUnlockedSceneAreas(sceneId).add(areaId);
