@@ -144,7 +144,6 @@ public class Player {
     @Getter private Map<Integer, Integer> questGlobalVariables;
     @Getter private Map<Integer, Integer> openStates;
     @Getter private Map<Integer, Map<Integer, Boolean>> sceneTags;
-    @Getter private Set<Integer> visitedScenes;
     @Getter @Setter private Map<Integer, Set<Integer>> unlockedSceneAreas;
     @Getter @Setter private Map<Integer, Set<Integer>> unlockedScenePoints;
     @Getter @Setter private List<Integer> chatEmojiIdList;
@@ -271,7 +270,6 @@ public class Player {
         this.questGlobalVariables = new HashMap<>();
         this.openStates = new HashMap<>();
         this.sceneTags = new HashMap<>();
-        this.visitedScenes = new HashSet<>();
         this.unlockedSceneAreas = new HashMap<>();
         this.unlockedScenePoints = new HashMap<>();
         this.chatEmojiIdList = new ArrayList<>();
@@ -403,15 +401,12 @@ public class Player {
     }
 
     public void visitScene(int sceneId) {
-        if (visitedScenes.contains(sceneId)) return;
-        visitedScenes.add(sceneId);
         val sceneTagData = GameData.getSceneTagDataMap().values();
-        Map<Integer, Boolean> tagsToAdd = new HashMap<>();
+        val tags = this.sceneTags.computeIfAbsent(sceneId, k -> new HashMap<>());
         sceneTagData.stream()
                 .filter(tagData -> tagData.getSceneId() == sceneId && tagData.isDefaultValid())
                 .map(SceneTagData::getId)
-                .forEach(k -> tagsToAdd.put(k, true));
-        this.sceneTags.computeIfAbsent(sceneId, k -> new HashMap<>()).putAll(tagsToAdd);
+                .forEach(k -> tags.putIfAbsent(k, true));
     }
 
     synchronized public void setClimate(ClimateType climate) {
@@ -1580,7 +1575,10 @@ public class Player {
     }
 
     public List<Integer> getSceneTagList(int sceneId) {
-        val sceneTagMap = this.sceneTags.getOrDefault(sceneId, new HashMap<>());
-        return sceneTagMap.keySet().stream().filter(sceneTagMap::get).toList();
+        return this.sceneTags.getOrDefault(sceneId, new HashMap<>())
+                .entrySet().stream()
+                .filter(Map.Entry::getValue)
+                .map(Map.Entry::getKey)
+                .toList();
     }
 }
