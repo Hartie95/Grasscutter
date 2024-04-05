@@ -1538,4 +1538,15 @@ public class Player {
         return true;
     }
 
+    public void addSceneTag(int sceneId, int sceneTagNumber) {
+        this.getSceneTags().computeIfAbsent(sceneId, k -> new HashSet<>()).add(sceneTagNumber);
+        this.sendPacket(new PacketSceneDataNotify(this));
+        this.sendPacket(new PacketPlayerWorldSceneInfoListNotify(this));
+    }
+
+    public void delSceneTag(int sceneId, int sceneTagNumber) {
+        this.getSceneTags().computeIfAbsent(sceneId, k -> new HashSet<>()).remove(sceneTagNumber);
+        this.sendPacket(new PacketSceneDataNotify(this));
+        this.sendPacket(new PacketPlayerWorldSceneInfoListNotify(this));
+    }
 }
