@@ -9,7 +9,6 @@ import emu.grasscutter.utils.Position;
 import emu.grasscutter.utils.Utils;
 import messages.scene.EnterType;
 import messages.scene.PlayerEnterSceneNotify;
-import java.util.HashSet;
 
 public class PacketPlayerEnterSceneNotify extends BaseTypedPacket<PlayerEnterSceneNotify> {
 
@@ -28,7 +27,7 @@ public class PacketPlayerEnterSceneNotify extends BaseTypedPacket<PlayerEnterSce
         proto.setFirstLoginEnterScene(player.isFirstLoginEnterScene());
         proto.setWorldType(1);
         proto.setSceneTransaction(player.getSceneId() + "-" + player.getUid() + "-" + (int) (System.currentTimeMillis() / 1000) + "-" + 18402);
-        proto.setSceneTagIdList(player.getSceneTags().getOrDefault(player.getSceneId(), new HashSet<>()).stream().toList());
+        proto.setSceneTagIdList(player.getSceneTagList(player.getSceneId()));
     }
 
     public PacketPlayerEnterSceneNotify(Player player, EnterType type, EnterReason reason, int newScene, Position newPos) {
@@ -68,6 +67,6 @@ public class PacketPlayerEnterSceneNotify extends BaseTypedPacket<PlayerEnterSce
         proto.setWorldType(teleportProperties.getWorldType()) ;// TODO
         proto.setDungeonId(teleportProperties.getDungeonId());
         proto.setSceneTransaction(teleportProperties.getSceneId() + "-" + target.getUid() + "-" + (int) (System.currentTimeMillis() / 1000) + "-" + 18402);
-        proto.setSceneTagIdList(player.getSceneTags().getOrDefault(player.getSceneId(), new HashSet<>()).stream().toList());
+        proto.setSceneTagIdList(player.getSceneTagList(player.getSceneId()));
     }
 }

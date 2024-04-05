@@ -13,7 +13,7 @@ public class ExecAddSceneTag extends QuestExecHandler {
     public boolean execute(GameQuest quest, QuestExecParam condition, String... paramStr) {
         val sceneNumber = Integer.parseInt(paramStr[0]);
         val sceneTagNumber = Integer.parseInt(paramStr[1]);
-        quest.getOwner().addSceneTag(sceneNumber, sceneTagNumber);
+        quest.getOwner().setSceneTag(sceneNumber, sceneTagNumber, true);
         return true;
     }
 }

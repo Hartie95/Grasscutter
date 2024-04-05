@@ -143,7 +143,7 @@ public class Player {
     @Getter private Map<Integer, ActiveCookCompoundData> activeCookCompounds;
     @Getter private Map<Integer, Integer> questGlobalVariables;
     @Getter private Map<Integer, Integer> openStates;
-    @Getter private Map<Integer, Set<Integer>> sceneTags;
+    @Getter private Map<Integer, Map<Integer, Boolean>> sceneTags;
     @Getter private Set<Integer> visitedScenes;
     @Getter @Setter private Map<Integer, Set<Integer>> unlockedSceneAreas;
     @Getter @Setter private Map<Integer, Set<Integer>> unlockedScenePoints;
@@ -406,11 +406,12 @@ public class Player {
         if (visitedScenes.contains(sceneId)) return;
         visitedScenes.add(sceneId);
         val sceneTagData = GameData.getSceneTagDataMap().values();
-        val tagsToAdd = sceneTagData.stream()
+        Map<Integer, Boolean> tagsToAdd = new HashMap<>();
+        sceneTagData.stream()
                 .filter(tagData -> tagData.getSceneId() == sceneId && tagData.isDefaultValid())
                 .map(SceneTagData::getId)
-                .collect(Collectors.toSet());
-        this.sceneTags.computeIfAbsent(sceneId, k -> new HashSet<>()).addAll(tagsToAdd);
+                .forEach(k -> tagsToAdd.put(k, true));
+        this.sceneTags.computeIfAbsent(sceneId, k -> new HashMap<>()).putAll(tagsToAdd);
     }
 
     synchronized public void setClimate(ClimateType climate) {
@@ -1572,15 +1573,14 @@ public class Player {
         }
     }
 
-    public void addSceneTag(int sceneId, int sceneTagNumber) {
-        this.getSceneTags().computeIfAbsent(sceneId, k -> new HashSet<>()).add(sceneTagNumber);
+    public void setSceneTag(int sceneId, int sceneTagNumber, Boolean value) {
+        this.getSceneTags().computeIfAbsent(sceneId, k -> new HashMap<>()).put(sceneTagNumber, value);
         this.sendPacket(new PacketSceneDataNotify(this));
         this.sendPacket(new PacketPlayerWorldSceneInfoListNotify(this));
     }
 
-    public void delSceneTag(int sceneId, int sceneTagNumber) {
-        this.getSceneTags().computeIfAbsent(sceneId, k -> new HashSet<>()).remove(sceneTagNumber);
-        this.sendPacket(new PacketSceneDataNotify(this));
-        this.sendPacket(new PacketPlayerWorldSceneInfoListNotify(this));
+    public List<Integer> getSceneTagList(int sceneId) {
+        val sceneTagMap = this.sceneTags.getOrDefault(sceneId, new HashMap<>());
+        return sceneTagMap.keySet().stream().filter(sceneTagMap::get).toList();
     }
 }

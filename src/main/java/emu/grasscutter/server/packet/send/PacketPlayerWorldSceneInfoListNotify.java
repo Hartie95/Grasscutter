@@ -13,8 +13,6 @@ public class PacketPlayerWorldSceneInfoListNotify extends BaseTypedPacket<Player
 
     public PacketPlayerWorldSceneInfoListNotify(Player player) {
         super(new PlayerWorldSceneInfoListNotify());
-
-        var sceneTags = player.getSceneTags();
         List<PlayerWorldSceneInfo> infoList = new ArrayList<>();
 
         // Iterate over all scenes
@@ -25,10 +23,7 @@ public class PacketPlayerWorldSceneInfoListNotify extends BaseTypedPacket<Player
             var worldInfoBuilder = new PlayerWorldSceneInfo();
             worldInfoBuilder.setSceneId(scene.getId());
 
-            // Scenetags
-            if (sceneTags.containsKey(scene.getId())) {
-                worldInfoBuilder.setSceneTagIdList(sceneTags.get(scene.getId()).stream().toList());
-            }
+            worldInfoBuilder.setSceneTagIdList(player.getSceneTagList(scene.getId()));
             infoList.add(worldInfoBuilder);
         }
         proto.setInfoList(infoList);

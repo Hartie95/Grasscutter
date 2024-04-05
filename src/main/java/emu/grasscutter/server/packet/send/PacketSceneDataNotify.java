@@ -9,6 +9,6 @@ public class PacketSceneDataNotify extends BaseTypedPacket<SceneDataNotify> {
     public PacketSceneDataNotify(Player player) {
         super(new SceneDataNotify());
 
-        proto.setSceneTagIdList(player.getSceneTags().get(player.getSceneId()).stream().toList());
+        proto.setSceneTagIdList(player.getSceneTagList(player.getSceneId()));
     }
 }
