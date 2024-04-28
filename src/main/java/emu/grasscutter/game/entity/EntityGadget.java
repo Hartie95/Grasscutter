@@ -162,6 +162,7 @@ public class EntityGadget extends EntityBaseGadget implements ConfigAbilityDataA
             case Chest -> new GadgetChest(this);
             case Gadget -> new GadgetObject(this);
             case Screen -> new GadgetScreen(this);
+            case ViewPoint -> new GadgetViewPoint(this);
             default -> null;
         };
     }
