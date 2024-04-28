@@ -10,10 +10,10 @@ import lombok.Getter;
 @ResourceType(name = {"ViewCodexExcelConfigData.json"})
 public class CodexViewpointData extends GameResource {
     @SerializedName(value = "id", alternate = "Id")
-    public int id;
-    public int gadgetId;
-    public int sceneId;
-    public int groupId;
+    private int id;
+    private int gadgetId;
+    private int sceneId;
+    private int groupId;
     public int configId;
     private long nameTextMapHash;
     private long descTextMapHash;

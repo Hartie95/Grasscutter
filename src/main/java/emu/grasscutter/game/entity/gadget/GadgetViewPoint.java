@@ -32,6 +32,7 @@ public class GadgetViewPoint extends  GadgetContent{
 
     @Override
     public void onBuildProto(SceneGadgetInfo gadgetInfo) {
-
+        // Shouldn't require explicit mapping to set content
     }
+
 }
