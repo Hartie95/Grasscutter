@@ -14,7 +14,7 @@ public class CodexViewpointData extends GameResource {
     private int gadgetId;
     private int sceneId;
     private int groupId;
-    public int configId;
+    private int configId;
     private long nameTextMapHash;
     private long descTextMapHash;
     private String image;
@@ -25,6 +25,6 @@ public class CodexViewpointData extends GameResource {
 
     @Override
     public void onLoad() {
-        GameData.getCodexViewpointDataIdMap().put(this.getGroupId()<<32 + getConfigId(), this);
+        GameData.getCodexViewpointDataIdMap().put(this.getGroupId()<<32 + this.getConfigId(), this);
     }
 }
