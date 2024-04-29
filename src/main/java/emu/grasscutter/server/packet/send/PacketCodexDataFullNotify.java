@@ -79,6 +79,8 @@ public class PacketCodexDataFullNotify extends BasePacket {
             reliquaryData.addCodexIdList(reliquarySuit).addAllHaveViewedList(Collections.singleton(true));
         });
 
+        player.getCodex().getUnlockedView().forEach(view -> viewTypeData.addCodexIdList(view).addAllHaveViewedList(Collections.singleton(true)));
+
         CodexDataFullNotify.Builder proto = CodexDataFullNotify.newBuilder()
                 .addTypeDataList(questTypeData.build())
                 .addTypeDataList(weaponTypeData)
