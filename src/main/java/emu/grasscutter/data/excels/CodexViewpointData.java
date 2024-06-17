@@ -22,9 +22,12 @@ public class CodexViewpointData extends GameResource {
     private int worldAreaId;
     private int sortOrder;
 
-
     @Override
     public void onLoad() {
-        GameData.getCodexViewpointDataIdMap().put(this.getGroupId()<<32 + this.getConfigId(), this);
+        GameData.getCodexViewpointDataIdMap().put(getViewpointId(this.getGroupId(), this.getConfigId()), this);
+    }
+
+    public static int getViewpointId(int groupId, int configId) {
+        return groupId << 32 + configId;
     }
 }

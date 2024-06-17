@@ -354,6 +354,6 @@ public class GameData {
     }
 
     public static CodexViewpointData getViewCodexByGroupdCfg(int groupId, int cfgId){
-        return codexViewpointDataIdMap.get(groupId<<32 + cfgId);
+        return codexViewpointDataIdMap.get(CodexViewpointData.getViewpointId(groupId, cfgId));
     }
 }
