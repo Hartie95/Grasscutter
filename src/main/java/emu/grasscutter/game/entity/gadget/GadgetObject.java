@@ -2,6 +2,7 @@ package emu.grasscutter.game.entity.gadget;
 
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
+import emu.grasscutter.data.excels.GadgetInteractData.InteractActionType;
 import emu.grasscutter.game.entity.EntityGadget;
 import emu.grasscutter.game.player.Player;
 import lombok.val;
@@ -21,6 +22,8 @@ public class GadgetObject extends GadgetContent{
         if (interactID == 0) return false;
         val interactDataEntry = GameData.getGadgetInteractDataMap().values().stream().filter(x -> x.getInteractId() == interactID).toList().get(0);
 
+        //TODO: check conditions
+
         //do the thing
         for (val action : interactDataEntry.getActionList()) {
             if (action.getActionType() != null) {
@@ -37,10 +40,12 @@ public class GadgetObject extends GadgetContent{
         return false;
     }
 
-    private void executeInteractAction(String action, int[] params) {
+    private void executeInteractAction(InteractActionType action, int[] params) {
         switch (action) {
-            case "INTERACT_ACTION_STATE" -> this.getGadget().updateState(params[0]);
-            default -> Grasscutter.getLogger().warn("Encountered new gadget interact action! {}", action);
+            case INTERACT_ACTION_NONE -> {
+            }
+            case INTERACT_ACTION_STATE -> this.getGadget().updateState(params[0]);
+            default -> Grasscutter.getLogger().warn("Encountered unimplemented gadget interact action! {}", action);
         }
     }
 
