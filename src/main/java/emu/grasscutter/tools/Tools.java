@@ -24,6 +24,7 @@ import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.ResourceLoader;
 import emu.grasscutter.data.excels.AvatarData;
 import emu.grasscutter.data.excels.ItemData;
+import emu.grasscutter.server.http.handlers.GachaHandler;
 import emu.grasscutter.utils.Language;
 import emu.grasscutter.utils.Language.TextStrings;
 import it.unimi.dsi.fastutil.ints.Int2IntRBTreeMap;
@@ -232,8 +233,19 @@ public final class Tools {
         return sbs.stream().map(StringBuilder::toString).toList();
     }
 
+    public static void generateGachaMappings() {
+        var path = GachaHandler.getGachaMappingsPath();
+        if (!Files.exists(path)) {
+            try {
+                Grasscutter.getLogger().info("Creating default '{}' data", path.toString());
+                Tools.createGachaMappings(path);
+            } catch (Exception exception) {
+                Grasscutter.getLogger().warn("Failed to create gacha mappings. \n", exception);
+            }
+        }
+    }
+
     public static void createGachaMappings(Path location) throws IOException {
-        ResourceLoader.loadResources();
         List<String> jsons = createGachaMappingJsons();
         var usedLocales = new HashSet<String>();
         StringBuilder sb = new StringBuilder("mappings = {\n");
@@ -249,14 +261,18 @@ public final class Tools {
 
         Files.createDirectories(location.getParent());
         Files.writeString(location, sb);
-        Grasscutter.getLogger().info("Mappings generated to " + location);
+        Grasscutter.getLogger().info("Mappings generated to {}", location);
     }
 
     public static List<String> getAvailableLanguage() {
         List<String> availableLangList = new ArrayList<>();
-        try {
-            Files.newDirectoryStream(getResourcePath("TextMap"), "TextMap*.json").forEach(path -> {
-                availableLangList.add(path.getFileName().toString().replace("TextMap", "").replace(".json", "").toLowerCase());
+        try(val stream = Files.newDirectoryStream(getResourcePath("TextMap"), "TextMap*.json")) {
+            stream.forEach(path -> {
+                val lang = path.getFileName().toString()
+                    .replace("TextMap", "")
+                    .replace(".json", "")
+                    .toLowerCase();
+                availableLangList.add(lang);
             });
         } catch (IOException e) {
             Grasscutter.getLogger().error("Failed to get available languages:", e);

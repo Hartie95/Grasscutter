@@ -121,6 +121,9 @@ public final class Grasscutter {
         // Generate handbooks.
         Tools.createGmHandbooks();
 
+        // Generate gacha mappings.
+        Tools.generateGachaMappings();
+
         // Initialize database.
         DatabaseManager.initialize();
 

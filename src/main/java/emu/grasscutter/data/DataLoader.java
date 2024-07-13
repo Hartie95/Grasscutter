@@ -118,8 +118,6 @@ public class DataLoader {
         } catch (Exception e) {
             logger.error("An error occurred while trying to check the data folder.", e);
         }
-
-        generateGachaMappings();
     }
 
     private static void checkAndCopyData(String name) {
@@ -136,15 +134,4 @@ public class DataLoader {
         }
     }
 
-    private static void generateGachaMappings() {
-        var path = GachaHandler.getGachaMappingsPath();
-        if (!Files.exists(path)) {
-            try {
-                logger.info("Creating default '" + path.toString() + "' data");
-                Tools.createGachaMappings(path);
-            } catch (Exception exception) {
-                logger.warn("Failed to create gacha mappings. \n" + exception);
-            }
-        }
-    }
 }
