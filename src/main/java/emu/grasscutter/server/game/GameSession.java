@@ -245,8 +245,7 @@ public class GameSession implements GameSessionManager.KcpChannel {
             player.onLogout();
         }
         try {
-            val disconnectPacketId = getPackageIdProvider().getPacketId("ServerDisconnectClientNotify");
-            send(new BasePacket(disconnectPacketId));
+            send(new BasePacket(getPackageIdProvider().getPacketId("ServerDisconnectClientNotify")));
         } catch (Throwable ignore) {
             Grasscutter.getLogger().warn("closing {} error", getAddress().getAddress().getHostAddress());
         }

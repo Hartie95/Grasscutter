@@ -31,7 +31,7 @@ public class HandlerPlayerLoginReq extends TypedPacketHandler<PlayerLoginReq> {
         if (player.getAvatars().getAvatarCount() == 0) {
             // Pick character
             session.setState(SessionState.PICKING_CHARACTER);
-            session.send(new BasePacket(PacketOpcodes.DoSetPlayerBornDataNotify));
+            session.send(new BasePacket(session.getPackageIdProvider().getPacketId("DoSetPlayerBornDataNotify")));
         } else {
             // Login done
             session.getPlayer().onLogin();

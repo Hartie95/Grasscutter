@@ -14,6 +14,6 @@ public class HandlerPlayerQuitDungeonReq extends PacketHandler {
     public void handle(GameSession session, byte[] header, byte[] payload) throws Exception {
         val req = PlayerQuitDungeonReq.parseFrom(payload);
         session.getPlayer().getServer().getDungeonSystem().exitDungeon(session.getPlayer(), req.getIsQuitImmediately());
-        session.getPlayer().sendPacket(new BasePacket(PacketOpcodes.PlayerQuitDungeonRsp));
+        session.getPlayer().sendPacket(new BasePacket(session.getPackageIdProvider().getPacketId("PlayerQuitDungeonRsp")));
     }
 }

@@ -43,7 +43,7 @@ public class HandlerQuickUseWidgetReq extends PacketHandler {
                 }
                 proto.setMaterialId(materialId);
                 inventory.removeItem(item,1);// decrease count
-                BasePacket rsp = new BasePacket(PacketOpcodes.QuickUseWidgetRsp);
+                BasePacket rsp = new BasePacket(session.getPackageIdProvider().getPacketId("QuickUseWidgetRsp"));
                 rsp.setData(proto);
                 session.send(rsp);
                 Grasscutter.getLogger().warn("class has no effects in the game, feel free to implement it");
