@@ -13,8 +13,6 @@ import emu.grasscutter.game.props.ActionReason;
 import emu.grasscutter.game.quest.enums.QuestCond;
 import emu.grasscutter.game.quest.enums.QuestContent;
 import emu.grasscutter.net.proto.ChapterStateOuterClass;
-import emu.grasscutter.net.proto.QuestOuterClass.Quest;
-
 import emu.grasscutter.server.packet.send.PacketChapterStateNotify;
 import emu.grasscutter.server.packet.send.PacketDelQuestNotify;
 import emu.grasscutter.server.packet.send.PacketQuestListUpdateNotify;
@@ -22,10 +20,12 @@ import emu.grasscutter.utils.Utils;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
+import org.anime_game_servers.multi_proto.gi.messages.quest.child.Quest;
 import org.anime_game_servers.core.gi.enums.QuestState;
 
 import javax.annotation.Nullable;
 import javax.script.Bindings;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -262,26 +262,19 @@ public class GameQuest {
     }
 
     public Quest toProto() {
-        Quest.Builder proto = Quest.newBuilder()
-                .setQuestId(getSubQuestId())
-                .setState(getState().getValue())
-                .setParentQuestId(getMainQuestId())
-                .setStartTime(getStartTime())
-                .setStartGameTime(438)
-                .setAcceptTime(getAcceptTime());
+        Quest proto = new Quest(getSubQuestId(), getState().getValue(), getStartTime());
+        proto.setParentQuestId(getMainQuestId());
+        proto.setStartGameTime(438);
+        proto.setAcceptTime(getAcceptTime());
 
         if (getFinishProgressList() != null) {
-            for (int i : getFinishProgressList()) {
-                proto.addFinishProgressList(i);
-            }
+            proto.setFinishProgressList(Arrays.stream(getFinishProgressList()).boxed().toList());
         }
 
         if (getFailProgressList() != null) {
-            for (int i : getFailProgressList()) {
-                proto.addFailProgressList(i);
-            }
+            proto.setFailProgressList(Arrays.stream(getFailProgressList()).boxed().toList());
         }
 
-        return proto.build();
+        return proto;
     }
 }

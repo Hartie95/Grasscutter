@@ -11,7 +11,7 @@ import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.entity.EntityWeapon;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.FightProperty;
-import emu.grasscutter.net.proto.ItemHintOuterClass.ItemHint;
+import org.anime_game_servers.multi_proto.gi.messages.item.ItemHint;
 import emu.grasscutter.net.proto.ItemParamOuterClass;
 import emu.grasscutter.utils.WeightedList;
 import lombok.Getter;
@@ -279,11 +279,12 @@ public class GameItem {
     }
 
     public ItemHint toItemHintProto() {
-        return ItemHint.newBuilder()
-            .setItemId(this.itemId)
-            .setCount(this.count)
-            .setIsNew(this.newItem)
-            .build();
+        ItemHint proto = new ItemHint();
+        proto.setCount(this.count);
+        proto.setNew(this.newItem);
+        proto.setItemId(this.itemId);
+        return proto;
+
     }
 
     public ItemParamOuterClass.ItemParam toItemParamOld() {
