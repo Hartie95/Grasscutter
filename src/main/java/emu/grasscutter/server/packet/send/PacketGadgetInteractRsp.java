@@ -13,10 +13,10 @@ public class PacketGadgetInteractRsp extends BaseTypedPacket<GadgetInteractRsp> 
 	}
 
 	public PacketGadgetInteractRsp(EntityBaseGadget gadget, InteractType interact, InterOpType opType) {
-		super(new GadgetInteractRsp(gadget.getId(), interact));
-
+        super(new GadgetInteractRsp());
+        proto.setGadgetEntityId(gadget.getId());
+        proto.setInteractType(interact);
 		proto.setGadgetId(gadget.getGadgetId());
-
 		if (opType != null) {
 			proto.setOpType(opType);
 		}

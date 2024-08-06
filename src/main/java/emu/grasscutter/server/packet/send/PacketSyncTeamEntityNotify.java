@@ -12,7 +12,8 @@ import java.util.ArrayList;
 public class PacketSyncTeamEntityNotify extends BaseTypedPacket<SyncTeamEntityNotify> {
 
 	public PacketSyncTeamEntityNotify(Player player) {
-		super(new SyncTeamEntityNotify(player.getSceneId()));
+        super(new SyncTeamEntityNotify());
+        proto.setSceneId(player.getSceneId());
 
 		if (player.getWorld().isMultiplayer()) {
             val infoList = new ArrayList<TeamEntityInfo>();

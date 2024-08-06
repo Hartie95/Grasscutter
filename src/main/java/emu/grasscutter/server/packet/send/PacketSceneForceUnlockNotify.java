@@ -7,10 +7,12 @@ import java.util.List;
 
 public class PacketSceneForceUnlockNotify extends BaseTypedPacket<SceneForceUnlockNotify> {
 	public PacketSceneForceUnlockNotify(List<Integer> unlocked, boolean isAdd) {
-		super(new SceneForceUnlockNotify(unlocked, isAdd));
+        super(new SceneForceUnlockNotify());
+        proto.setForceIdList(unlocked);
+        proto.setAdd(isAdd);
 	}
 
 	public PacketSceneForceUnlockNotify(int unlocked, boolean isAdd) {
-		super(new SceneForceUnlockNotify(List.of(unlocked), isAdd));
+        this(List.of(unlocked), isAdd);
 	}
 }

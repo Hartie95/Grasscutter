@@ -8,8 +8,8 @@ import org.anime_game_servers.multi_proto.gi.messages.scene.ScenePlayerLocationN
 public class PacketScenePlayerLocationNotify extends BaseTypedPacket<ScenePlayerLocationNotify> {
 
 	public PacketScenePlayerLocationNotify(Scene scene) {
-		super(new ScenePlayerLocationNotify(scene.getId()));
-
+        super(new ScenePlayerLocationNotify());
+        proto.setSceneId(scene.getId());
         proto.setPlayerLocList(scene.getPlayers().stream().map(Player::getPlayerLocationInfo).toList());
 	}
 }

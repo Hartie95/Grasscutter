@@ -7,6 +7,7 @@ import org.anime_game_servers.multi_proto.gi.messages.scene.SceneInitFinishRsp;
 public class PacketSceneInitFinishRsp extends BaseTypedPacket<SceneInitFinishRsp> {
 
 	public PacketSceneInitFinishRsp(Player player) {
-		super(new SceneInitFinishRsp(player.getEnterSceneToken()), 11);
+        super(new SceneInitFinishRsp(), 11);
+        proto.setEnterSceneTtoken(player.getEnterSceneToken());
 	}
 }

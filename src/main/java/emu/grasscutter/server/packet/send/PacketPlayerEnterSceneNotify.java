@@ -14,7 +14,11 @@ public class PacketPlayerEnterSceneNotify extends BaseTypedPacket<PlayerEnterSce
 
     // Login
     public PacketPlayerEnterSceneNotify(Player player) {
-        super(new PlayerEnterSceneNotify(player.getSceneId(), player.getPosition().toProto(), System.currentTimeMillis(), org.anime_game_servers.multi_proto.gi.messages.scene.EnterType.ENTER_SELF));
+        super(new PlayerEnterSceneNotify());
+        proto.setSceneId(player.getSceneId());
+        proto.setPos(player.getPosition().toProto());
+        proto.setSceneBeginTime(System.currentTimeMillis());
+        proto.setType(org.anime_game_servers.multi_proto.gi.messages.scene.EnterType.ENTER_SELF);
 
         player.setSceneLoadState(SceneLoadState.LOADING);
         player.setEnterSceneToken(Utils.randomRange(1000, 99999));
@@ -48,7 +52,11 @@ public class PacketPlayerEnterSceneNotify extends BaseTypedPacket<PlayerEnterSce
 
     // Teleport or go somewhere
     public PacketPlayerEnterSceneNotify(Player player, Player target, TeleportProperties teleportProperties) {
-        super(new PlayerEnterSceneNotify(teleportProperties.getSceneId(), teleportProperties.getTeleportTo().toProto(), System.currentTimeMillis(), teleportProperties.getEnterType()));
+        super(new PlayerEnterSceneNotify());
+        proto.setSceneId(teleportProperties.getSceneId());
+        proto.setPos(teleportProperties.getTeleportTo().toProto());
+        proto.setSceneBeginTime(System.currentTimeMillis());
+        proto.setType(teleportProperties.getEnterType());
 
         player.setSceneLoadState(SceneLoadState.LOADING);
         player.setEnterSceneToken(Utils.randomRange(1000, 99999));

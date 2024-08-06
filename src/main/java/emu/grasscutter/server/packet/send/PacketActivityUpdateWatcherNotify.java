@@ -7,8 +7,8 @@ import org.anime_game_servers.multi_proto.gi.messages.activity.ActivityUpdateWat
 public class PacketActivityUpdateWatcherNotify extends BaseTypedPacket<ActivityUpdateWatcherNotify> {
 
 	public PacketActivityUpdateWatcherNotify(int activityId, PlayerActivityData.WatcherInfo watcherInfo) {
-		super(new ActivityUpdateWatcherNotify(
-            activityId, watcherInfo.toProto()
-        ));
+        super(new ActivityUpdateWatcherNotify());
+        proto.setActivityId(activityId);
+        proto.setWatcherInfo(watcherInfo.toProto());
 	}
 }

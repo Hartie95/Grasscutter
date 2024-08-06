@@ -8,12 +8,13 @@ import org.anime_game_servers.multi_proto.gi.messages.activity.user_generated_co
 public class PacketMusicGameCreateBeatmapRsp extends BaseTypedPacket<SaveUgcRsp> {
 
 	public PacketMusicGameCreateBeatmapRsp(long musicShareId, UgcType ugcType) {
-		super(new SaveUgcRsp(musicShareId, ugcType));
+        super(new SaveUgcRsp());
+        proto.setUgcGuid(musicShareId);
+        proto.setUgcType(ugcType);
 	}
 
 	public PacketMusicGameCreateBeatmapRsp(RetcodeOuterClass.Retcode retCode, UgcType ugcType) {
 		super(new SaveUgcRsp());
-
         proto.setRetcode(retCode.getNumber());
         proto.setUgcType(ugcType);
 	}

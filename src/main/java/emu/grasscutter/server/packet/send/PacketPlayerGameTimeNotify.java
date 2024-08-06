@@ -7,6 +7,8 @@ import org.anime_game_servers.multi_proto.gi.messages.player.PlayerGameTimeNotif
 public class PacketPlayerGameTimeNotify extends BaseTypedPacket<PlayerGameTimeNotify> {
 
 	public PacketPlayerGameTimeNotify(Player player) {
-		super(new PlayerGameTimeNotify(player.getUid(), player.getWorld().getGameTime()));
+        super(new PlayerGameTimeNotify());
+        proto.setUid(player.getUid());
+        proto.setGameTime(player.getWorld().getGameTime());
 	}
 }

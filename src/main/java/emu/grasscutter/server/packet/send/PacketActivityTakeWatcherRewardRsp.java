@@ -6,7 +6,9 @@ import org.anime_game_servers.multi_proto.gi.messages.activity.ActivityTakeWatch
 public class PacketActivityTakeWatcherRewardRsp extends BaseTypedPacket<ActivityTakeWatcherRewardRsp> {
 
 	public PacketActivityTakeWatcherRewardRsp(int activityId, int watcherId) {
-		super(new ActivityTakeWatcherRewardRsp(activityId, watcherId));
+        super(new ActivityTakeWatcherRewardRsp());
+        proto.setActivityId(activityId);
+        proto.setWatcherId(watcherId);
 	}
 
 }

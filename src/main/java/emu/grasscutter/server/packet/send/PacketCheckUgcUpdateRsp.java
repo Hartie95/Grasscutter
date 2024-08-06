@@ -7,6 +7,7 @@ import org.anime_game_servers.multi_proto.gi.messages.activity.user_generated_co
 public class PacketCheckUgcUpdateRsp extends BaseTypedPacket<CheckUgcUpdateRsp> {
 
 	public PacketCheckUgcUpdateRsp(UgcType ugcType) {
-		super(new CheckUgcUpdateRsp(ugcType));
+		super(new CheckUgcUpdateRsp());
+		proto.setUgcType(ugcType);
 	}
 }

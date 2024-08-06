@@ -6,6 +6,7 @@ import org.anime_game_servers.multi_proto.gi.messages.general.ServerTimeNotify;
 public class PacketServerTimeNotify extends BaseTypedPacket<ServerTimeNotify> {
 
 	public PacketServerTimeNotify() {
-		super(new ServerTimeNotify(System.currentTimeMillis()));
+        super(new ServerTimeNotify());
+        proto.setServerTime(System.currentTimeMillis());
 	}
 }

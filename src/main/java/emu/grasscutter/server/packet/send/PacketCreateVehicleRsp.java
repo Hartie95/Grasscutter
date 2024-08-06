@@ -16,7 +16,7 @@ import java.util.List;
 public class PacketCreateVehicleRsp extends BaseTypedPacket<CreateVehicleRsp> {
 
     public PacketCreateVehicleRsp(Player player, int vehicleId, int pointId, Position pos, Position rot) {
-        super(new CreateVehicleRsp(vehicleId, pointId));
+        super(new CreateVehicleRsp());
 
         // Eject vehicle members and Kill previous vehicles if there are any
         List<GameEntity> previousVehicles = player.getScene().getEntities().values().stream()

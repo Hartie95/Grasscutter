@@ -7,12 +7,13 @@ import org.anime_game_servers.multi_proto.gi.messages.team.avatar.cosmetic.Avata
 public class PacketAvatarChangeCostumeRsp extends BaseTypedPacket<AvatarChangeCostumeRsp> {
 
 	public PacketAvatarChangeCostumeRsp(long avatarGuid, int costumeId) {
-		super(new AvatarChangeCostumeRsp(costumeId, avatarGuid));
+        super(new AvatarChangeCostumeRsp());
+        proto.setCostumeId(costumeId);
+        proto.setAvatarGuid(avatarGuid);
 	}
 
 	public PacketAvatarChangeCostumeRsp() {
 		super(new AvatarChangeCostumeRsp());
         proto.setRetcode(RetcodeOuterClass.Retcode.RET_SVR_ERROR_VALUE);
-
 	}
 }

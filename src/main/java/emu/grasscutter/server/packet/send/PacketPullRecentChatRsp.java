@@ -8,6 +8,7 @@ import java.util.List;
 
 public class PacketPullRecentChatRsp extends BaseTypedPacket<PullRecentChatRsp> {
     public PacketPullRecentChatRsp(List<ChatInfo> messages) {
-        super(new PullRecentChatRsp(messages));
+        super(new PullRecentChatRsp());
+        proto.setChatInfo(messages);
     }
 }

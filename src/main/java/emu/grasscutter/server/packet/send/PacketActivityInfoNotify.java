@@ -7,6 +7,7 @@ import org.anime_game_servers.multi_proto.gi.messages.activity.ActivityInfoNotif
 public class PacketActivityInfoNotify extends BaseTypedPacket<ActivityInfoNotify> {
 
 	public PacketActivityInfoNotify(ActivityInfo activityInfo) {
-		super(new ActivityInfoNotify(activityInfo));
+        super(new ActivityInfoNotify());
+        proto.setActivityInfo(activityInfo);
 	}
 }

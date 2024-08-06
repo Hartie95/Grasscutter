@@ -10,7 +10,7 @@ public class HandlerCheckUgcStateReq extends TypedPacketHandler<CheckUgcStateReq
 
     @Override
     public void handle(GameSession session, byte[] header, CheckUgcStateReq payload) throws Exception {
-        session.send(new PacketCheckUgcStateRsp(Retcode.RET_SUCC));
+        session.send(new PacketCheckUgcStateRsp(Retcode.RET_SUCC.getNumber()));
     }
 
 }

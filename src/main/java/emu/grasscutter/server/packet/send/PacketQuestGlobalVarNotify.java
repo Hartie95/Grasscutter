@@ -7,7 +7,8 @@ import org.anime_game_servers.multi_proto.gi.messages.quest.variable.QuestGlobal
 
 public class PacketQuestGlobalVarNotify extends BaseTypedPacket<QuestGlobalVarNotify> {
     public PacketQuestGlobalVarNotify(Player player) {
-        super(new QuestGlobalVarNotify(player.getQuestGlobalVariables().entrySet().stream()
-            .map(entry -> new QuestGlobalVar(entry.getKey(),entry.getValue())).toList()));
+        super(new QuestGlobalVarNotify());
+        proto.setVarList(player.getQuestGlobalVariables().entrySet().stream()
+            .map(entry -> new QuestGlobalVar(entry.getKey(), entry.getValue())).toList());
     }
 }

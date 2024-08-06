@@ -7,6 +7,7 @@ import org.anime_game_servers.multi_proto.gi.messages.scene.AvatarChangeCostumeN
 public class PacketAvatarChangeCostumeNotify extends BaseTypedPacket<AvatarChangeCostumeNotify> {
 
 	public PacketAvatarChangeCostumeNotify(EntityAvatar entity) {
-		super(new AvatarChangeCostumeNotify(entity.toProto()));
+        super(new AvatarChangeCostumeNotify());
+        proto.setEntityInfo(entity.toProto());
 	}
 }
