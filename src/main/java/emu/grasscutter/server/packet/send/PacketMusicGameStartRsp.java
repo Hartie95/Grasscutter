@@ -6,6 +6,8 @@ import org.anime_game_servers.multi_proto.gi.messages.activity.music_game.MusicG
 public class PacketMusicGameStartRsp extends BaseTypedPacket<MusicGameStartRsp> {
 
 	public PacketMusicGameStartRsp(int musicBasicId, long musicShareId) {
-		super(new MusicGameStartRsp(musicBasicId, musicShareId));
+        super(new MusicGameStartRsp());
+        proto.setMusicBasicId(musicBasicId);
+        proto.setUgcGuid(musicShareId);
 	}
 }

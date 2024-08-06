@@ -7,6 +7,9 @@ import org.anime_game_servers.multi_proto.gi.messages.gadget.ProjectorOptionRsp;
 public class PacketProjectorOptionRsp extends BaseTypedPacket<ProjectorOptionRsp> {
 
     public PacketProjectorOptionRsp(int entityId, ProjectorOpType opType, int retcode) {
-        super(new ProjectorOptionRsp(entityId, opType, retcode));
+        super(new ProjectorOptionRsp());
+        proto.setOpType(opType);
+        proto.setEntityId(entityId);
+        proto.setRetCode(retcode);
     }
 }

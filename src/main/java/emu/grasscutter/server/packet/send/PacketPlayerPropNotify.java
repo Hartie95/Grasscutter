@@ -11,8 +11,8 @@ import java.util.Map;
 public class PacketPlayerPropNotify extends BaseTypedPacket<PlayerPropNotify> {
 
 	public PacketPlayerPropNotify(Player player, PlayerProperty prop) {
-		super(new PlayerPropNotify(Map.of(prop.getId(), ProtoHelper.newPropValue(prop, player.getProperty(prop)))));
-
+        super(new PlayerPropNotify());
 		this.buildHeader(0);
+        proto.setPropMap(Map.of(prop.getId(), ProtoHelper.newPropValue(prop, player.getProperty(prop))));
 	}
 }

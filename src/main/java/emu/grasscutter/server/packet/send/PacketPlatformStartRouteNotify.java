@@ -6,7 +6,9 @@ import org.anime_game_servers.multi_proto.gi.messages.scene.PlatformStartRouteNo
 
 public class PacketPlatformStartRouteNotify extends BaseTypedPacket<PlatformStartRouteNotify> {
     public PacketPlatformStartRouteNotify(EntityGadget gadgetEntity) {
-        super(new PlatformStartRouteNotify(gadgetEntity.getId(), gadgetEntity.getPlatformInfo(),
-            gadgetEntity.getScene().getSceneTime()));
+        super(new PlatformStartRouteNotify());
+        proto.setEntityId(gadgetEntity.getId());
+        proto.setPlatform(gadgetEntity.getPlatformInfo());
+        proto.setSceneTime(gadgetEntity.getScene().getSceneTime());
     }
 }

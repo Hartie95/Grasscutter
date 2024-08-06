@@ -9,8 +9,11 @@ import org.anime_game_servers.multi_proto.gi.messages.item.avatar.AvatarEquipCha
 public class PacketAvatarEquipChangeNotify extends BaseTypedPacket<AvatarEquipChangeNotify> {
 
 	public PacketAvatarEquipChangeNotify(Avatar avatar, GameItem item) {
-		super(new AvatarEquipChangeNotify(avatar.getGuid(), item.getGuid(), item.getEquipSlot(), item.getItemId()));
-
+        super(new AvatarEquipChangeNotify());
+        proto.setAvatarGuid(avatar.getGuid());
+        proto.setEquipGuid(item.getGuid());
+        proto.setEquipType(item.getEquipSlot());
+        proto.setItemId(item.getItemId());
 		if (item.getItemData().getEquipType() == EquipType.EQUIP_WEAPON) {
 			proto.setWeapon(item.createSceneWeaponInfo());
 		} else {
@@ -19,6 +22,8 @@ public class PacketAvatarEquipChangeNotify extends BaseTypedPacket<AvatarEquipCh
 	}
 
 	public PacketAvatarEquipChangeNotify(Avatar avatar, EquipType slot) {
-		super(new AvatarEquipChangeNotify(avatar.getGuid(), slot.getValue()));
+        super(new AvatarEquipChangeNotify());
+        proto.setAvatarGuid(avatar.getGuid());
+        proto.setEquipType(slot.getValue());
 	}
 }

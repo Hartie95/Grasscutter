@@ -8,15 +8,15 @@ import org.anime_game_servers.multi_proto.gi.messages.activity.music_game.MusicG
 public class PacketMusicGameSettleRsp extends BaseTypedPacket<MusicGameSettleRsp> {
 
     public PacketMusicGameSettleRsp(int musicBasicId, long musicShareId, boolean isNewRecord) {
-        super(new MusicGameSettleRsp(musicBasicId));
-
+        super(new MusicGameSettleRsp());
+        proto.setMusicBasicId(musicBasicId);
         proto.setUgcGuid(musicShareId);
         proto.setNewRecord(isNewRecord);
     }
 
     public PacketMusicGameSettleRsp(Retcode errorCode, MusicGameSettleReq req) {
-        super(new MusicGameSettleRsp(req.getMusicBasicId()));
-
+        super(new MusicGameSettleRsp());
+        proto.setMusicBasicId(req.getMusicBasicId());
         proto.setRetcode(errorCode.getNumber());
         proto.setUgcGuid(req.getUgcGuid());
     }

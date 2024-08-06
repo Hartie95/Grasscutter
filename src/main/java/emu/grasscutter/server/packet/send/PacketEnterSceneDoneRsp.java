@@ -7,6 +7,7 @@ import org.anime_game_servers.multi_proto.gi.messages.scene.EnterSceneDoneRsp;
 public class PacketEnterSceneDoneRsp extends BaseTypedPacket<EnterSceneDoneRsp> {
 
 	public PacketEnterSceneDoneRsp(Player player) {
-		super(new EnterSceneDoneRsp(player.getEnterSceneToken()));
+        super(new EnterSceneDoneRsp());
+        proto.setEnterSceneToken(player.getEnterSceneToken());
 	}
 }

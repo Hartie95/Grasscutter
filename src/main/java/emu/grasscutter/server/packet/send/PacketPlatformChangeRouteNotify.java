@@ -7,8 +7,10 @@ import org.anime_game_servers.multi_proto.gi.messages.scene.PlatformChangeRouteN
 public class PacketPlatformChangeRouteNotify extends BaseTypedPacket<PlatformChangeRouteNotify> {
 
     public PacketPlatformChangeRouteNotify(EntityGadget gadgetEntity) {
-        super(new PlatformChangeRouteNotify(gadgetEntity.getId(), gadgetEntity.getPlatformInfo(),
-            gadgetEntity.getScene().getSceneTime()));
+        super(new PlatformChangeRouteNotify());
+        proto.setEntityId(gadgetEntity.getId());
+        proto.setPlatform(gadgetEntity.getPlatformInfo());
+        proto.setSceneTime(gadgetEntity.getScene().getSceneTime());
     }
 
 }

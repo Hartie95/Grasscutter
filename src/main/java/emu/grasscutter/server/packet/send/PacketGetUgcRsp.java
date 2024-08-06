@@ -10,17 +10,18 @@ import org.anime_game_servers.multi_proto.gi.messages.activity.user_generated_co
 public class PacketGetUgcRsp extends BaseTypedPacket<GetUgcRsp> {
 
     public PacketGetUgcRsp(UgcMusicBriefInfo briefInfo, UgcMusicRecord musicRecord, GetUgcReq req) {
-        super(new GetUgcRsp(briefInfo.getUgcGuid(),
-            req.getUgcType(),
-            req.getUgcRecordUsage(),
-            new GetUgcRsp.Record.MusicRecord(musicRecord),
-            new GetUgcRsp.Brief.MusicBriefInfo(briefInfo)));
+        super(new GetUgcRsp());
+        proto.setUgcGuid(briefInfo.getUgcGuid());
+        proto.setUgcType(req.getUgcType());
+        proto.setUgcRecordUsage(req.getUgcRecordUsage());
+        proto.setRecord(new GetUgcRsp.Record.MusicRecord(musicRecord));
+        proto.setBrief(new GetUgcRsp.Brief.MusicBriefInfo(briefInfo));
     }
     public PacketGetUgcRsp(Retcode errorCode, GetUgcReq req) {
-        super( new GetUgcRsp(req.getUgcGuid(),
-            req.getUgcType(),
-            req.getUgcRecordUsage()));
-
+        super(new GetUgcRsp());
+        proto.setUgcGuid(req.getUgcGuid());
+        proto.setUgcType(req.getUgcType());
+        proto.setUgcRecordUsage(req.getUgcRecordUsage());
         proto.setRetcode(errorCode.getNumber());
     }
 }

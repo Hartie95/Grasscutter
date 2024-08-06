@@ -7,7 +7,9 @@ import org.anime_game_servers.multi_proto.gi.messages.battle.event.EvtAvatarLock
 
 public class PacketEvtAvatarLockChairRsp extends BaseTypedPacket<EvtAvatarLockChairRsp> {
     public PacketEvtAvatarLockChairRsp(int clientSequence, EntityAvatar entityAvatar, EvtAvatarLockChairReq lockChairReq) {
-        super(new EvtAvatarLockChairRsp(lockChairReq.getChairId(),
-            entityAvatar.getId(),lockChairReq.getPosition()));
+        super(new EvtAvatarLockChairRsp());
+        proto.setChairId(lockChairReq.getChairId());
+        proto.setEntityId(entityAvatar.getId());
+        proto.setPosition(lockChairReq.getPosition());
     }
 }

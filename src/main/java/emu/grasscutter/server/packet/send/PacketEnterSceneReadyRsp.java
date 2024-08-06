@@ -7,6 +7,7 @@ import org.anime_game_servers.multi_proto.gi.messages.scene.EnterSceneReadyRsp;
 public class PacketEnterSceneReadyRsp extends BaseTypedPacket<EnterSceneReadyRsp> {
 
 	public PacketEnterSceneReadyRsp(Player player) {
-		super(new EnterSceneReadyRsp(player.getEnterSceneToken()), 11);
+        super(new EnterSceneReadyRsp(), 11);
+        proto.setEnterSceneToken(player.getEnterSceneToken());
 	}
 }

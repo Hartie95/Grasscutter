@@ -7,6 +7,7 @@ import org.anime_game_servers.multi_proto.gi.messages.multiplayer.PlayerApplyEnt
 public class PacketPlayerApplyEnterMpNotify extends BaseTypedPacket<PlayerApplyEnterMpNotify> {
 
 	public PacketPlayerApplyEnterMpNotify(Player srcPlayer) {
-		super(new PlayerApplyEnterMpNotify(srcPlayer.getOnlinePlayerInfo()));
+        super(new PlayerApplyEnterMpNotify());
+        proto.setSrcPlayerInfo(srcPlayer.getOnlinePlayerInfo());
 	}
 }

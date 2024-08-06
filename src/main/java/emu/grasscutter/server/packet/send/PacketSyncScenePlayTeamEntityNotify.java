@@ -7,6 +7,7 @@ import org.anime_game_servers.multi_proto.gi.messages.scene.SyncScenePlayTeamEnt
 public class PacketSyncScenePlayTeamEntityNotify extends BaseTypedPacket<SyncScenePlayTeamEntityNotify> {
 
 	public PacketSyncScenePlayTeamEntityNotify(Player player) {
-		super(new SyncScenePlayTeamEntityNotify(player.getSceneId()));
+        super(new SyncScenePlayTeamEntityNotify());
+        proto.setSceneId(player.getSceneId());
 	}
 }

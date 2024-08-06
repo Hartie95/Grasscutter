@@ -8,6 +8,7 @@ import java.util.List;
 public class PacketDelMailRsp  extends BaseTypedPacket<DelMailRsp> {
 
     public PacketDelMailRsp(List<Integer> toDeleteIds) {
-        super(new DelMailRsp(toDeleteIds));
+        super(new DelMailRsp());
+        proto.setMailIdList(toDeleteIds);
     }
 }

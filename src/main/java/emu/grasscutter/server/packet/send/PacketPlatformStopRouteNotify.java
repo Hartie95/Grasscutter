@@ -6,7 +6,9 @@ import org.anime_game_servers.multi_proto.gi.messages.scene.PlatformStopRouteNot
 
 public class PacketPlatformStopRouteNotify extends BaseTypedPacket<PlatformStopRouteNotify> {
     public PacketPlatformStopRouteNotify(EntityGadget gadgetEntity) {
-        super(new PlatformStopRouteNotify(gadgetEntity.getId(), gadgetEntity.getScene().getSceneTime(),
-            gadgetEntity.getPlatformInfo()));
+        super(new PlatformStopRouteNotify());
+        proto.setEntityId(gadgetEntity.getId());
+        proto.setSceneTime(gadgetEntity.getScene().getSceneTime());
+        proto.setPlatform(gadgetEntity.getPlatformInfo());
     }
 }
