@@ -431,13 +431,10 @@ public class GameMainQuest {
 
 
         if(withChildQuests) {
-            ArrayList<ChildQuest> childQuestList = new ArrayList<>();
-            for (GameQuest quest : this.getChildQuests().values()) {
-                if (quest.getState() != QuestState.QUEST_STATE_UNSTARTED) {
-                    childQuestList.add(new ChildQuest(quest.getSubQuestId(), quest.getState().getValue()));
-                }
-            }
-            proto.setChildQuestList(childQuestList);
+            proto.setChildQuestList(this.getChildQuests().values().stream()
+                .filter(quest->quest.getState() != QuestState.QUEST_STATE_UNSTARTED)
+                .map(quest->new ChildQuest(quest.getSubQuestId(), quest.getState().getValue()))
+                .toList());
         }
 
         proto.setQuestVar(Arrays.stream(getQuestVars()).boxed().toList());
