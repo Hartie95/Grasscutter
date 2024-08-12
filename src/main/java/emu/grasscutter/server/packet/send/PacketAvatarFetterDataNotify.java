@@ -19,7 +19,9 @@ public class PacketAvatarFetterDataNotify extends BaseTypedPacket<AvatarFetterDa
 
         val avatarFetter = new AvatarFetterInfo();
         avatarFetter.setExpLevel(fetterLevel);
-		if (fetterLevel != 10) avatarFetter.setExpNumber(avatar.getFetterExp());
+		if (fetterLevel != 10) {
+            avatarFetter.setExpNumber(avatar.getFetterExp());
+        }
 
         avatarFetter.setFetterList(avatar.getFetters().stream().map(id -> {
             val fetterData = new FetterData();
@@ -28,8 +30,9 @@ public class PacketAvatarFetterDataNotify extends BaseTypedPacket<AvatarFetterDa
             return fetterData;
         }).toList());
 
-		if (avatar.getPlayer().getNameCardList().contains(avatar.getNameCardId()))
+		if (avatar.getPlayer().getNameCardList().contains(avatar.getNameCardId())) {
             avatarFetter.setRewardedFetterLevelList(List.of(10));
+        }
 
         proto.setFetterInfoMap(Map.of(avatar.getGuid(), avatarFetter));
 	}
