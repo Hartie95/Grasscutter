@@ -12,7 +12,6 @@ import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.ActionReason;
 import emu.grasscutter.game.quest.enums.QuestCond;
 import emu.grasscutter.game.quest.enums.QuestContent;
-import emu.grasscutter.net.proto.ChapterStateOuterClass;
 import emu.grasscutter.server.packet.send.PacketChapterStateNotify;
 import emu.grasscutter.server.packet.send.PacketDelQuestNotify;
 import emu.grasscutter.server.packet.send.PacketQuestListUpdateNotify;
@@ -20,8 +19,9 @@ import emu.grasscutter.utils.Utils;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
-import org.anime_game_servers.multi_proto.gi.messages.quest.child.Quest;
 import org.anime_game_servers.core.gi.enums.QuestState;
+import org.anime_game_servers.multi_proto.gi.messages.quest.chapter.ChapterState;
+import org.anime_game_servers.multi_proto.gi.messages.quest.child.Quest;
 
 import javax.annotation.Nullable;
 import javax.script.Bindings;
@@ -93,7 +93,7 @@ public class GameQuest {
         if (ChapterData.beginQuestChapterMap.containsKey(subQuestId)) {
             getOwner().sendPacket(new PacketChapterStateNotify(
                 ChapterData.beginQuestChapterMap.get(subQuestId).getId(),
-                ChapterStateOuterClass.ChapterState.CHAPTER_STATE_BEGIN
+                ChapterState.CHAPTER_STATE_BEGIN
             ));
         }
 
@@ -193,7 +193,7 @@ public class GameQuest {
         if (ChapterData.endQuestChapterMap.containsKey(subQuestId)) {
             mainQuest.getOwner().sendPacket(new PacketChapterStateNotify(
                 ChapterData.endQuestChapterMap.get(subQuestId).getId(),
-                ChapterStateOuterClass.ChapterState.CHAPTER_STATE_END
+                ChapterState.CHAPTER_STATE_END
             ));
         }
 

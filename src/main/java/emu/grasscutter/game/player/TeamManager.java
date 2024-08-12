@@ -1,10 +1,5 @@
 package emu.grasscutter.game.player;
 
-import static emu.grasscutter.config.Configuration.*;
-
-import java.util.*;
-import java.util.stream.IntStream;
-
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Transient;
 import emu.grasscutter.GameConstants;
@@ -20,7 +15,6 @@ import emu.grasscutter.game.props.ElementType;
 import emu.grasscutter.game.props.EnterReason;
 import emu.grasscutter.game.props.FightProperty;
 import emu.grasscutter.game.world.World;
-import emu.grasscutter.net.proto.PlayerDieTypeOuterClass.PlayerDieType;
 import emu.grasscutter.net.proto.RetcodeOuterClass.Retcode;
 import emu.grasscutter.server.event.player.PlayerTeamDeathEvent;
 import emu.grasscutter.server.packet.send.*;
@@ -34,9 +28,15 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
+import org.anime_game_servers.multi_proto.gi.messages.general.PlayerDieType;
 import org.anime_game_servers.multi_proto.gi.messages.scene.EnterType;
 import org.anime_game_servers.multi_proto.gi.messages.scene.entity.MotionState;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.*;
+import java.util.stream.IntStream;
+
+import static emu.grasscutter.config.Configuration.GAME_OPTIONS;
 
 @Entity @Getter
 public class TeamManager extends BasePlayerDataManager {
@@ -463,7 +463,7 @@ public class TeamManager extends BasePlayerDataManager {
         PlayerDieType dieType = deadAvatar.getKilledType();
         int killedBy = deadAvatar.getKilledBy();
 
-        if (dieType == PlayerDieType.PLAYER_DIE_TYPE_DRAWN) {
+        if (dieType == PlayerDieType.PLAYER_DIE_DRAWN) {
             // Died in water. Do not replace
             // The official server has skipped this notify and will just respawn the team immediately after the animation.
             // TODO: Perhaps find a way to get vanilla experience?

@@ -5,7 +5,6 @@ import emu.grasscutter.game.entity.GameEntity;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.FightProperty;
 import emu.grasscutter.net.packet.TypedPacketHandler;
-import emu.grasscutter.net.proto.PlayerDieTypeOuterClass;
 import emu.grasscutter.server.event.entity.EntityMoveEvent;
 import emu.grasscutter.server.game.GameSession;
 import emu.grasscutter.server.packet.send.PacketEntityFightPropUpdateNotify;
@@ -15,6 +14,7 @@ import org.anime_game_servers.multi_proto.gi.messages.battle.CombatInvocationsNo
 import org.anime_game_servers.multi_proto.gi.messages.battle.CombatInvokeEntry;
 import org.anime_game_servers.multi_proto.gi.messages.battle.event.EvtAnimatorParameterInfo;
 import org.anime_game_servers.multi_proto.gi.messages.battle.event.EvtBeingHitInfo;
+import org.anime_game_servers.multi_proto.gi.messages.general.PlayerDieType;
 import org.anime_game_servers.multi_proto.gi.messages.general.entity.EntityMoveInfo;
 import org.anime_game_servers.multi_proto.gi.messages.scene.entity.MotionState;
 
@@ -155,7 +155,7 @@ public class HandlerCombatInvocationsNotify extends TypedPacketHandler<CombatInv
         entity.setFightProperty(FightProperty.FIGHT_PROP_CUR_HP, newHP);
         entity.getWorld().broadcastPacket(new PacketEntityFightPropUpdateNotify(entity, FightProperty.FIGHT_PROP_CUR_HP));
         if (newHP == 0) {
-            session.getPlayer().getStaminaManager().killAvatar(session, entity, PlayerDieTypeOuterClass.PlayerDieType.PLAYER_DIE_TYPE_FALL);
+            session.getPlayer().getStaminaManager().killAvatar(session, entity, PlayerDieType.PLAYER_DIE_FALL);
         }
         cachedLandingSpeed = 0;
     }

@@ -7,9 +7,7 @@ import emu.grasscutter.server.packet.send.PacketAddQuestContentProgressRsp;
 import lombok.val;
 import org.anime_game_servers.multi_proto.gi.messages.quest.child.AddQuestContentProgressReq;
 
-
 public class HandlerAddQuestContentProgressReq extends TypedPacketHandler<AddQuestContentProgressReq> {
-
     @Override
     public void handle(GameSession session, byte[] header, AddQuestContentProgressReq req) throws Exception {
         //Find all conditions in quest that are the same as the given one
@@ -19,5 +17,4 @@ public class HandlerAddQuestContentProgressReq extends TypedPacketHandler<AddQue
         }
         session.send(new PacketAddQuestContentProgressRsp(req.getContentType()));
     }
-
 }

@@ -3,7 +3,7 @@ package emu.grasscutter.game.props.ItemUseAction;
 import emu.grasscutter.data.excels.AvatarSkillDepotData;
 import emu.grasscutter.game.avatar.Avatar;
 import emu.grasscutter.game.props.ElementType;
-import emu.grasscutter.net.proto.PropChangeReasonOuterClass.PropChangeReason;
+import org.anime_game_servers.multi_proto.gi.messages.general.PropChangeReason;
 
 public abstract class ItemUseAddEnergy extends ItemUseAction {
     public abstract float getAddEnergy(ElementType avatarElement);
@@ -55,7 +55,7 @@ public abstract class ItemUseAddEnergy extends ItemUseAction {
         float energy = this.getAddEnergy(avatar.getSkillDepot()) * multiplier;
         if (energy < 0.01f)
             return false;
-        avatar.getAsEntity().addEnergy(energy, PropChangeReason.PROP_CHANGE_REASON_ENERGY_BALL);
+        avatar.getAsEntity().addEnergy(energy, PropChangeReason.PROP_CHANGE_ENERGY_BALL);
         return true;
     }
 }

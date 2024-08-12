@@ -1,19 +1,12 @@
 package emu.grasscutter.server.packet.send;
 
-import emu.grasscutter.net.packet.BasePacket;
-import emu.grasscutter.net.packet.PacketOpcodes;
-import emu.grasscutter.net.proto.DungeonPlayerDieRspOuterClass.DungeonPlayerDieRsp;
+import emu.grasscutter.net.packet.BaseTypedPacket;
 import emu.grasscutter.net.proto.RetcodeOuterClass.Retcode;
+import org.anime_game_servers.multi_proto.gi.messages.dungeon.DungeonPlayerDieRsp;
 
-public class PacketDungeonPlayerDieRsp extends BasePacket {
-
+public class PacketDungeonPlayerDieRsp extends BaseTypedPacket<DungeonPlayerDieRsp> {
     public PacketDungeonPlayerDieRsp(Retcode retcode) {
-        super(PacketOpcodes.DungeonPlayerDieRsp);
-
-        DungeonPlayerDieRsp proto = DungeonPlayerDieRsp.newBuilder()
-            .setRetcode(retcode.getNumber())
-            .build();
-
-        this.setData(proto);
+        super(new DungeonPlayerDieRsp());
+        proto.setRetcode(retcode.getNumber());
     }
 }

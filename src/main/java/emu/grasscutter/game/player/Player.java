@@ -6,7 +6,10 @@ import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.config.ConfigLevelEntity;
 import emu.grasscutter.data.binout.config.fields.ConfigAbilityData;
-import emu.grasscutter.data.excels.*;
+import emu.grasscutter.data.excels.AvatarData;
+import emu.grasscutter.data.excels.PlayerLevelData;
+import emu.grasscutter.data.excels.SceneTagData;
+import emu.grasscutter.data.excels.WeatherData;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.Account;
 import emu.grasscutter.game.CoopRequest;
@@ -31,13 +34,13 @@ import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.inventory.Inventory;
 import emu.grasscutter.game.mail.Mail;
 import emu.grasscutter.game.mail.MailHandler;
+import emu.grasscutter.game.managers.FurnitureManager;
+import emu.grasscutter.game.managers.ResinManager;
+import emu.grasscutter.game.managers.SotSManager;
 import emu.grasscutter.game.managers.blossom.BlossomManager;
 import emu.grasscutter.game.managers.cooking.ActiveCookCompoundData;
 import emu.grasscutter.game.managers.cooking.CookingCompoundManager;
 import emu.grasscutter.game.managers.cooking.CookingManager;
-import emu.grasscutter.game.managers.FurnitureManager;
-import emu.grasscutter.game.managers.ResinManager;
-import emu.grasscutter.game.managers.SotSManager;
 import emu.grasscutter.game.managers.deforestation.DeforestationManager;
 import emu.grasscutter.game.managers.energy.EnergyManager;
 import emu.grasscutter.game.managers.forging.ActiveForgeData;
@@ -45,7 +48,10 @@ import emu.grasscutter.game.managers.forging.ForgingManager;
 import emu.grasscutter.game.managers.mapmark.MapMark;
 import emu.grasscutter.game.managers.mapmark.MapMarksManager;
 import emu.grasscutter.game.managers.stamina.StaminaManager;
-import emu.grasscutter.game.props.*;
+import emu.grasscutter.game.props.ActionReason;
+import emu.grasscutter.game.props.ClimateType;
+import emu.grasscutter.game.props.PlayerProperty;
+import emu.grasscutter.game.props.WatcherTriggerType;
 import emu.grasscutter.game.quest.QuestManager;
 import emu.grasscutter.game.quest.enums.QuestCond;
 import emu.grasscutter.game.quest.enums.QuestContent;
@@ -80,6 +86,7 @@ import org.anime_game_servers.multi_proto.gi.messages.community.friends.FriendEn
 import org.anime_game_servers.multi_proto.gi.messages.community.player_presentation.SocialDetail;
 import org.anime_game_servers.multi_proto.gi.messages.gadget.GadgetInteractReq;
 import org.anime_game_servers.multi_proto.gi.messages.general.ProfilePicture;
+import org.anime_game_servers.multi_proto.gi.messages.general.avatar.AvatarExpeditionState;
 import org.anime_game_servers.multi_proto.gi.messages.general.avatar.GrantReason;
 import org.anime_game_servers.multi_proto.gi.messages.general.avatar.ShowAvatarInfo;
 import org.anime_game_servers.multi_proto.gi.messages.scene.PlayerLocationInfo;
@@ -95,7 +102,6 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.stream.Collectors;
 
 import static emu.grasscutter.config.Configuration.GAME_OPTIONS;
 
@@ -757,7 +763,7 @@ public class Player {
         ExpeditionInfo exp = new ExpeditionInfo();
         exp.setExpId(expId);
         exp.setHourTime(hourTime);
-        exp.setState(1);
+        exp.setState(AvatarExpeditionState.AVATAR_EXPEDITION_DOING);
         exp.setStartTime(startTime);
         expeditionInfo.put(avatarGuid, exp);
     }
@@ -1232,9 +1238,9 @@ public class Player {
         var timeNow = Utils.getCurrentSeconds();
         var needNotify = false;
         for (ExpeditionInfo e : expeditionInfo.values()) {
-            if (e.getState() == 1) {
+            if (e.getState() == AvatarExpeditionState.AVATAR_EXPEDITION_DOING) {
                 if (timeNow - e.getStartTime() >= e.getHourTime() * 60 * 60) {
-                    e.setState(2);
+                    e.setState(AvatarExpeditionState.AVATAR_EXPEDITION_FINISH_WAIT_REWARD);
                     needNotify = true;
                 }
             }

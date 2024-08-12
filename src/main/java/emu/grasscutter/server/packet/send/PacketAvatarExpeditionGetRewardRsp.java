@@ -2,21 +2,23 @@ package emu.grasscutter.server.packet.send;
 
 import emu.grasscutter.game.expedition.ExpeditionInfo;
 import emu.grasscutter.game.inventory.GameItem;
-import emu.grasscutter.net.packet.BasePacket;
-import emu.grasscutter.net.packet.PacketOpcodes;
-import emu.grasscutter.net.proto.AvatarExpeditionGetRewardRspOuterClass.AvatarExpeditionGetRewardRsp;
+import emu.grasscutter.net.packet.BaseTypedPacket;
+import org.anime_game_servers.multi_proto.gi.messages.general.item.ItemParam;
+import org.anime_game_servers.multi_proto.gi.messages.team.avatar.expedition.AvatarExpeditionGetRewardRsp;
+import org.anime_game_servers.multi_proto.gi.messages.team.avatar.expedition.AvatarExpeditionInfo;
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 
-public class PacketAvatarExpeditionGetRewardRsp extends BasePacket {
+public class PacketAvatarExpeditionGetRewardRsp extends BaseTypedPacket<AvatarExpeditionGetRewardRsp> {
     public PacketAvatarExpeditionGetRewardRsp(Map<Long, ExpeditionInfo> expeditionInfo, Collection<GameItem> items) {
-        super(PacketOpcodes.AvatarExpeditionGetRewardRsp);
+        super(new AvatarExpeditionGetRewardRsp());
 
-        AvatarExpeditionGetRewardRsp.Builder proto = AvatarExpeditionGetRewardRsp.newBuilder();
-        expeditionInfo.forEach((key, e) -> proto.putExpeditionInfoMap(key, e.toProto()));
-        items.forEach(item -> proto.addItemList(item.toItemParamOld()));
+        Map<Long, AvatarExpeditionInfo> avatarExpeditionInfoMap = new HashMap<>();
+        expeditionInfo.forEach((key, e) -> avatarExpeditionInfoMap.put(key, e.toProto()));
+        proto.setExpeditionInfoMap(avatarExpeditionInfoMap);
 
-        this.setData(proto.build());
+        List<ItemParam> itemParamList = new ArrayList<>();
+        items.forEach(item -> itemParamList.add(item.toItemParam()));
+        proto.setItemList(itemParamList);
     }
 }
