@@ -5,9 +5,9 @@ import emu.grasscutter.net.packet.PacketOpcodes;
 import emu.grasscutter.net.proto.ItemParamOuterClass.ItemParam;
 import emu.grasscutter.net.proto.TakeCompoundOutputRspOuterClass.TakeCompoundOutputRsp;
 
-public class PackageTakeCompoundOutputRsp extends BasePacket {
+public class PacketTakeCompoundOutputRsp extends BasePacket {
 
-    public PackageTakeCompoundOutputRsp(Iterable<ItemParam> itemList, int retcode) {
+    public PacketTakeCompoundOutputRsp(Iterable<ItemParam> itemList, int retcode) {
         super(PacketOpcodes.TakeCompoundOutputRsp);
         var builder = TakeCompoundOutputRsp.newBuilder()
             .addAllItemList(itemList)

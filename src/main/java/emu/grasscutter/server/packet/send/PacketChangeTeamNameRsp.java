@@ -1,20 +1,13 @@
 package emu.grasscutter.server.packet.send;
 
-import emu.grasscutter.net.packet.BasePacket;
-import emu.grasscutter.net.packet.PacketOpcodes;
-import emu.grasscutter.net.proto.ChangeTeamNameRspOuterClass.ChangeTeamNameRsp;
+import emu.grasscutter.net.packet.BaseTypedPacket;
+import org.anime_game_servers.multi_proto.gi.messages.team.ChangeTeamNameRsp;
 
-public class PacketChangeTeamNameRsp extends BasePacket {
-
+public class PacketChangeTeamNameRsp extends BaseTypedPacket<ChangeTeamNameRsp> {
 	public PacketChangeTeamNameRsp(int ret, int teamId, String teamName) {
-		super(PacketOpcodes.ChangeTeamNameRsp);
-
-		ChangeTeamNameRsp proto = ChangeTeamNameRsp.newBuilder()
-				.setTeamId(teamId)
-				.setTeamName(teamName)
-                .setRetcode(ret)
-				.build();
-
-		this.setData(proto);
+        super(new ChangeTeamNameRsp());
+        proto.setTeamId(teamId);
+        proto.setTeamName(teamName);
+        proto.setRetcode(ret);
 	}
 }

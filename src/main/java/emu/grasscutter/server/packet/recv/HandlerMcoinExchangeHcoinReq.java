@@ -1,27 +1,21 @@
 package emu.grasscutter.server.packet.recv;
 
-import emu.grasscutter.net.packet.Opcodes;
-import emu.grasscutter.net.packet.PacketHandler;
-import emu.grasscutter.net.packet.PacketOpcodes;
-import emu.grasscutter.net.proto.McoinExchangeHcoinReqOuterClass;
+import emu.grasscutter.net.packet.TypedPacketHandler;
 import emu.grasscutter.net.proto.RetcodeOuterClass;
 import emu.grasscutter.server.game.GameSession;
 import emu.grasscutter.server.packet.send.PacketMcoinExchangeHcoinRsp;
+import org.anime_game_servers.multi_proto.gi.messages.item.exchange.McoinExchangeHcoinReq;
 
-@Opcodes(PacketOpcodes.McoinExchangeHcoinReq)
-public class HandlerMcoinExchangeHcoinReq extends PacketHandler {
-
+public class HandlerMcoinExchangeHcoinReq extends TypedPacketHandler<McoinExchangeHcoinReq> {
     @Override
-    public void handle(GameSession session, byte[] header, byte[] payload) throws Exception {
-        McoinExchangeHcoinReqOuterClass.McoinExchangeHcoinReq exchangeReq = McoinExchangeHcoinReqOuterClass.McoinExchangeHcoinReq.parseFrom(payload);
-        
-        if (session.getPlayer().getCrystals() < exchangeReq.getMcoinCost() && exchangeReq.getMcoinCost() == exchangeReq.getHcoin()) {
+    public void handle(GameSession session, byte[] header, McoinExchangeHcoinReq req) throws Exception {
+        if (session.getPlayer().getCrystals() < req.getMcoinCost() && req.getMcoinCost() == req.getHcoin()) {
             session.send(new PacketMcoinExchangeHcoinRsp(RetcodeOuterClass.Retcode.RET_UNKNOWN_ERROR_VALUE));
             return;
         }
-        
-        session.getPlayer().setCrystals(session.getPlayer().getCrystals() - exchangeReq.getMcoinCost());
-        session.getPlayer().setPrimogems(session.getPlayer().getPrimogems() + exchangeReq.getHcoin());
+
+        session.getPlayer().setCrystals(session.getPlayer().getCrystals() - req.getMcoinCost());
+        session.getPlayer().setPrimogems(session.getPlayer().getPrimogems() + req.getHcoin());
         session.getPlayer().save();
         session.send(new PacketMcoinExchangeHcoinRsp(RetcodeOuterClass.Retcode.RET_SUCC_VALUE));
     }

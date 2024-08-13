@@ -13,7 +13,7 @@ import emu.grasscutter.net.proto.ItemParamOuterClass.ItemParam;
 import emu.grasscutter.net.proto.PlayerCompoundMaterialReqOuterClass.PlayerCompoundMaterialReq;
 import emu.grasscutter.net.proto.RetcodeOuterClass.Retcode;
 import emu.grasscutter.net.proto.TakeCompoundOutputReqOuterClass.TakeCompoundOutputReq;
-import emu.grasscutter.server.packet.send.PackageTakeCompoundOutputRsp;
+import emu.grasscutter.server.packet.send.PacketTakeCompoundOutputRsp;
 import emu.grasscutter.server.packet.send.PacketCompoundDataNotify;
 import emu.grasscutter.server.packet.send.PacketGetCompoundDataRsp;
 import emu.grasscutter.server.packet.send.PacketPlayerCompoundMaterialRsp;
@@ -123,9 +123,9 @@ public class CookingCompoundManager extends BasePlayerManager {
         //give player the rewards
         if (success) {
             player.getInventory().addItems(allRewards.values(), ActionReason.Compound);
-            player.sendPacket(new PackageTakeCompoundOutputRsp(allRewards.values().stream().map(i -> ItemParam.newBuilder().setItemId(i.getItemId()).setCount(i.getCount()).build()).toList(), Retcode.RET_SUCC_VALUE));
+            player.sendPacket(new PacketTakeCompoundOutputRsp(allRewards.values().stream().map(i -> ItemParam.newBuilder().setItemId(i.getItemId()).setCount(i.getCount()).build()).toList(), Retcode.RET_SUCC_VALUE));
         } else {
-            player.sendPacket(new PackageTakeCompoundOutputRsp(null, Retcode.RET_COMPOUND_NOT_FINISH_VALUE));
+            player.sendPacket(new PacketTakeCompoundOutputRsp(null, Retcode.RET_COMPOUND_NOT_FINISH_VALUE));
         }
     }
 

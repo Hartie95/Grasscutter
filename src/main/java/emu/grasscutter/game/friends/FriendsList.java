@@ -3,7 +3,7 @@ package emu.grasscutter.game.friends;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.player.BasePlayerManager;
 import emu.grasscutter.game.player.Player;
-import emu.grasscutter.net.proto.DealAddFriendResultTypeOuterClass.DealAddFriendResultType;
+import org.anime_game_servers.multi_proto.gi.messages.community.friends.management.DealAddFriendResultType;
 import emu.grasscutter.server.packet.send.*;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -95,7 +95,7 @@ public class FriendsList extends BasePlayerManager {
         }
 
         // Handle
-        if (result == DealAddFriendResultType.DEAL_ADD_FRIEND_RESULT_TYPE_ACCEPT) { // Request accepted
+        if (result == DealAddFriendResultType.DEAL_ADD_FRIEND_ACCEPT) { // Request accepted
             myFriendship.setFriend(true);
             theirFriendship.setFriend(true);
 
