@@ -1,22 +1,15 @@
 package emu.grasscutter.server.packet.send;
 
-import emu.grasscutter.net.packet.BasePacket;
-import emu.grasscutter.net.packet.PacketOpcodes;
-import emu.grasscutter.net.proto.UpdatePlayerShowAvatarListRspOuterClass.UpdatePlayerShowAvatarListRsp;
+import emu.grasscutter.net.packet.BaseTypedPacket;
+import org.anime_game_servers.multi_proto.gi.messages.community.player_presentation.UpdatePlayerShowAvatarListRsp;
 
 import java.util.List;
 
-public class PacketUpdatePlayerShowAvatarListRsp extends BasePacket {
-
+public class PacketUpdatePlayerShowAvatarListRsp extends BaseTypedPacket<UpdatePlayerShowAvatarListRsp> {
     public PacketUpdatePlayerShowAvatarListRsp(boolean isShowAvatar, List<Integer> avatarIds) {
-        super(PacketOpcodes.UpdatePlayerShowAvatarListRsp);
-
-        UpdatePlayerShowAvatarListRsp proto = UpdatePlayerShowAvatarListRsp.newBuilder()
-                .setIsShowAvatar(isShowAvatar)
-                .addAllShowAvatarIdList(avatarIds)
-                .setRetcode(0)
-                .build();
-
-        this.setData(proto);
+        super(new UpdatePlayerShowAvatarListRsp());
+        proto.setShowAvatar(isShowAvatar);
+        proto.setShowAvatarIdList(avatarIds);
+        proto.setRetcode(0);
     }
 }

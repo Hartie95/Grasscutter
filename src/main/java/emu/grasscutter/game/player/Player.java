@@ -62,7 +62,7 @@ import emu.grasscutter.game.world.Scene;
 import emu.grasscutter.game.world.World;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.proto.PlayerApplyEnterMpResultNotifyOuterClass;
-import emu.grasscutter.net.proto.PropChangeReasonOuterClass.PropChangeReason;
+import org.anime_game_servers.multi_proto.gi.messages.general.PropChangeReason;
 import emu.grasscutter.server.event.player.PlayerJoinEvent;
 import emu.grasscutter.server.event.player.PlayerQuitEvent;
 import emu.grasscutter.server.game.GameServer;
@@ -1527,9 +1527,9 @@ public class Player {
 
             // Make the Adventure EXP pop-up show on screen.
             if (prop == PlayerProperty.PROP_PLAYER_EXP) {
-                this.sendPacket(new PacketPlayerPropChangeReasonNotify(this, prop, currentValue, value, PropChangeReason.PROP_CHANGE_REASON_PLAYER_ADD_EXP));
+                this.sendPacket(new PacketPlayerPropChangeReasonNotify(this, prop, currentValue, value, PropChangeReason.PROP_CHANGE_PLAYER_ADD_EXP));
             } else if(prop == PlayerProperty.PROP_MAX_STAMINA) {
-                this.sendPacket(new PacketPlayerPropChangeReasonNotify(this, prop, currentValue, value, PropChangeReason.PROP_CHANGE_REASON_CITY_LEVELUP));
+                this.sendPacket(new PacketPlayerPropChangeReasonNotify(this, prop, currentValue, value, PropChangeReason.PROP_CHANGE_CITY_LEVELUP));
             }
         }
         return true;
