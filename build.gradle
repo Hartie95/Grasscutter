@@ -23,12 +23,6 @@ plugins {
 
     id 'com.github.johnrengelman.shadow' version '8.1.1'
 
-    // Eclipse Support
-    id 'eclipse'
-
-    // IntelliJ Support
-    id 'idea'
-
     // Maven
     id 'maven-publish'
     id 'signing'
