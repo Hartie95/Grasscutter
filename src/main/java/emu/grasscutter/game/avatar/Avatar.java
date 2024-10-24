@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import emu.grasscutter.game.entity.create_config.CreateGadgetEntityConfig;
 import lombok.*;
 import org.anime_game_servers.multi_proto.gi.messages.general.PropValue;
 import org.anime_game_servers.multi_proto.gi.messages.general.avatar.*;
@@ -84,7 +85,6 @@ public class Avatar {
 
     @Deprecated // Do not use. Morphia only!
     public Avatar() {
-
     }
 
     // On creation
@@ -347,7 +347,8 @@ public class Avatar {
 
         if (itemEquipType == EquipType.EQUIP_WEAPON && getPlayer().getWorld() != null) {
             if(!(item.getWeaponEntity() != null && item.getWeaponEntity().getScene() == getPlayer().getScene())) {
-                item.setWeaponEntity(new EntityWeapon(this.getPlayer().getScene(), item.getItemData().getGadgetId()));
+                val weaponConfig = new CreateGadgetEntityConfig(item.getItemData().getGadgetId());
+                item.setWeaponEntity(new EntityWeapon(this.getPlayer().getScene(), weaponConfig));
                 getPlayer().getScene().getWeaponEntities().put(item.getWeaponEntity().getId(), item.getWeaponEntity());
             }
             //item.setWeaponEntityId(this.getPlayer().getWorld().getNextEntityId(EntityIdType.WEAPON));

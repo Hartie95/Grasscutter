@@ -87,7 +87,7 @@ public class GadgetControllerHandler extends BaseHandler implements org.anime_ga
         EntityGadget gadget = context.getEntity();
         if(gadget == null) return -1;
 
-        return gadget.getTicksSinceChange();
+        return gadget.getTicksSinceStateChange();
     }
 
     @Override

@@ -297,7 +297,7 @@ public class QuestManager extends BasePlayerManager {
         // Main quest
         GameMainQuest mainQuest = this.getMainQuestById(questConfig.getMainId());
 
-        // Create main quest if it doesnt exist
+        // Create main quest if it doesn't exist
         if (mainQuest == null) {
             mainQuest = addMainQuest(questConfig);
         }
@@ -306,7 +306,7 @@ public class QuestManager extends BasePlayerManager {
         GameQuest quest = mainQuest.getChildQuestById(questConfig.getSubId());
 
         // Forcefully start
-        quest.start();
+        quest.acceptQuest(true);
         checkQuestAlreadyFulfilled(quest, true);
 
         return quest;

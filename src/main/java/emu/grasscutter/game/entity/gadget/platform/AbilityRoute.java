@@ -1,5 +1,6 @@
 package emu.grasscutter.game.entity.gadget.platform;
 
+import emu.grasscutter.game.entity.create_config.CreateGadgetEntityConfig;
 import emu.grasscutter.utils.Position;
 import lombok.val;
 import org.anime_game_servers.multi_proto.gi.messages.general.MathQuaternion;
@@ -13,9 +14,9 @@ public class AbilityRoute extends BaseRoute {
 
     private final Position basePosition;
 
-    public AbilityRoute(Position startRot, boolean startRoute, boolean isActive, Position basePosition) {
-        super(startRot, startRoute, isActive);
-        this.basePosition = basePosition;
+    public AbilityRoute(CreateGadgetEntityConfig createConfig, boolean startRoute, boolean isActive) {
+        super(createConfig.getBornRot(), startRoute, isActive);
+        this.basePosition = createConfig.getBornPos();
     }
 
     @Override

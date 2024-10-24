@@ -1,17 +1,14 @@
 package emu.grasscutter.game.entity.gadget.chest;
 
 import emu.grasscutter.Grasscutter;
-import emu.grasscutter.data.common.ItemParamData;
-import emu.grasscutter.game.entity.gadget.GadgetChest;
+import emu.grasscutter.game.entity.gadget.content.GadgetChest;
 import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.ActionReason;
 import emu.grasscutter.server.packet.send.PacketGadgetAutoPickDropInfoNotify;
 import lombok.val;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class BossChestInteractHandler implements ChestInteractHandler{
     @Override
@@ -29,14 +26,15 @@ public class BossChestInteractHandler implements ChestInteractHandler{
         if (blossomRewards) return true;
 
         val worldDataManager = chest.getGadget().getScene().getWorld().getServer().getWorldDataSystem();
-        val chestMetaGadget = chest.getGadget().getMetaGadget();
-        val group = chestMetaGadget.getSceneMeta().getGroup(chestMetaGadget.getGroupId());
+        val chestMetaGadget = chest.getGadget();
+        val group = chestMetaGadget.getScene().getScriptManager().getGroupById(chestMetaGadget.getGroupId());
+        val metaGadget = group.getGadgets().get(chestMetaGadget.getConfigId());
         if(group == null){
             Grasscutter.getLogger().warn("group is null {} unable to get cfg id {}",
-                chestMetaGadget.getGroupId(), chestMetaGadget.getBossChest().getMonsterConfigId());
+                chestMetaGadget.getGroupId(), metaGadget.getBossChest());
             return false;
         }
-        val monsterCfgId = chestMetaGadget.getBossChest().getMonsterConfigId();
+        val monsterCfgId = metaGadget.getBossChest().getMonsterConfigId();
         val groupMonsters = group.getMonsters();
         if(groupMonsters == null){
             Grasscutter.getLogger().warn("group monsters are null {} unable to get cfg id {}",

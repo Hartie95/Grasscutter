@@ -5,6 +5,7 @@ import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.AvatarData;
 import emu.grasscutter.data.excels.AvatarSkillDepotData;
 import emu.grasscutter.game.avatar.Avatar;
+import emu.grasscutter.game.entity.create_config.CreateGadgetEntityConfig;
 import emu.grasscutter.game.inventory.EquipType;
 import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.player.Player;
@@ -56,7 +57,8 @@ public class EntityAvatar extends GameEntity {
             GameItem weapon = this.getAvatar().getWeapon();
             if (weapon != null) {
                 if (!(weapon.getWeaponEntity() != null && weapon.getWeaponEntity().getScene() == scene)) {
-                    weapon.setWeaponEntity(new EntityWeapon(getPlayer().getScene(), weapon.getItemData().getGadgetId()));
+                    val weaponCreateConfig = new CreateGadgetEntityConfig(weapon.getItemData().getGadgetId());
+                    weapon.setWeaponEntity(new EntityWeapon(getPlayer().getScene(), weaponCreateConfig));
                     scene.getWeaponEntities().put(weapon.getWeaponEntity().getId(), weapon.getWeaponEntity());
                 }
                 //weapon.setWeaponEntityId(getScene().getWorld().getNextEntityId(EntityIdType.WEAPON));

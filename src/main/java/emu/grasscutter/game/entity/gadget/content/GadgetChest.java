@@ -1,4 +1,4 @@
-package emu.grasscutter.game.entity.gadget;
+package emu.grasscutter.game.entity.gadget.content;
 
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.game.entity.EntityGadget;
@@ -16,7 +16,6 @@ import org.anime_game_servers.gi_lua.models.constants.ScriptGadgetState;
 import org.anime_game_servers.gi_lua.models.scene.group.SceneGadget;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Optional;
 
 public class GadgetChest extends GadgetContent {
@@ -58,28 +57,26 @@ public class GadgetChest extends GadgetContent {
      * */
     public void onBuildProto(SceneGadgetInfo gadgetInfo) {
         val playersUid = getGadget().getScene().getPlayers().stream().map(Player::getUid).toList();
+        val configSource = getGadget().getSpawnConfig().getInitDataSource();
+        if(configSource instanceof SceneGadget sceneGadget && sceneGadget.getBossChest()!=null){
+            val bossChest = sceneGadget.getBossChest();
+            val chestProto = new BossChestInfo(bossChest.getMonsterConfigId(), bossChest.getResin());
 
-        Optional.ofNullable(getGadget().getMetaGadget())
-            .map(SceneGadget::getBossChest)
-            .ifPresent(bossChest -> {
-                val chestProto = new BossChestInfo(bossChest.getMonsterConfigId(), bossChest.getResin());
+            // removing instead of creating new list directly below is because
+            // it also has to consider normal cases
+            val qualifiedUids = new ArrayList<>(playersUid);
+            // don't allow player to take again if he has taken weekly boss already
+            val dungeonManager = getGadget().getScene().getDungeonManager();
+            if(dungeonManager != null){
+                val weeklyInfo = dungeonManager.getWeeklyBossUidInfo();
+                chestProto.getUidDiscountMap().putAll(weeklyInfo);
+                qualifiedUids.retainAll(weeklyInfo.keySet());
+            }
 
-                // removing instead of creating new list directly below is because
-                // it also has to consider normal cases
-                val qualifiedUids = new ArrayList<>(playersUid);
-                // don't allow player to take again if he has taken weekly boss already
-                val dungeonManager = getGadget().getScene().getDungeonManager();
-                if(dungeonManager != null){
-                   val weeklyInfo = dungeonManager.getWeeklyBossUidInfo();
-                   chestProto.getUidDiscountMap().putAll(weeklyInfo);
-                   qualifiedUids.retainAll(weeklyInfo.keySet());
-                }
-
-                chestProto.setQualifyUidList(playersUid);
-                chestProto.setRemainUidList(qualifiedUids);
-                gadgetInfo.setContent(new SceneGadgetInfo.Content.BossChest(chestProto));
-            });
-
+            chestProto.setQualifyUidList(playersUid);
+            chestProto.setRemainUidList(qualifiedUids);
+            gadgetInfo.setContent(new SceneGadgetInfo.Content.BossChest(chestProto));
+        }
 
         Optional.ofNullable(getGadget().getScene().getWorld().getHost().getBlossomManager()
                 .getChestInfo(getGadget().getConfigId(), playersUid))

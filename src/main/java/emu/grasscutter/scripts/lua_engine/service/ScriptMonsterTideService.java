@@ -42,7 +42,7 @@ public class ScriptMonsterTideService {
         this.sceneScriptManager.getScriptMonsterSpawnService().addMonsterDeadListener(onMonsterDead);
         // spawn the first turn
         for (int i = 0; i < this.monsterSceneLimit; i++) {
-            sceneScriptManager.addEntity(this.sceneScriptManager.createMonster(group.getGroupInfo().getId(), group.getGroupInfo().getBlockId(), getNextMonster()));
+            sceneScriptManager.addEntity(this.sceneScriptManager.createMonster(getNextMonster()));
         }
     }
 
@@ -82,7 +82,7 @@ public class ScriptMonsterTideService {
             monsterKillCount.incrementAndGet();
             if (monsterTideCount.get() > 0) {
                 // add more
-                sceneScriptManager.addEntity(sceneScriptManager.createMonster(currentGroup.getGroupInfo().getId(), currentGroup.getGroupInfo().getBlockId(), getNextMonster()));
+                sceneScriptManager.addEntity(sceneScriptManager.createMonster(getNextMonster()));
             }
             // spawn the last turn of monsters
             // fix the 5-2

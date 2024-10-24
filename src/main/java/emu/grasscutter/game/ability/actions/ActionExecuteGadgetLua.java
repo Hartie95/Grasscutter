@@ -7,7 +7,7 @@ import emu.grasscutter.game.entity.GameEntity;
 @AbilityAction(AbilityModifierAction.Type.ExecuteGadgetLua)
 public class ActionExecuteGadgetLua extends AbilityActionHandler {
     @Override
-    public boolean execute(Ability ability, AbilityModifierAction action,byte[]  abilityData, GameEntity target) {
+    public boolean execute(Ability ability, AbilityModifierAction action,byte[]  abilityData, GameEntity<?> target) {
         GameEntity owner = ability.getOwner();
 
         //Investigate if we need to use target

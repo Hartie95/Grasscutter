@@ -38,7 +38,7 @@ public final class KillAllCommand implements CommandHandler {
 
         // Separate into list to avoid concurrency issue
         final Scene sceneF = scene;
-        List<GameEntity> toKill = sceneF.getEntities().values().stream()
+        List<GameEntity<?>> toKill = sceneF.getEntities().values().stream()
                 .filter(entity -> entity instanceof EntityMonster)
                 .toList();
         toKill.forEach(entity -> sceneF.killEntity(entity, 0));

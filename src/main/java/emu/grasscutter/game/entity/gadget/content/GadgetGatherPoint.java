@@ -1,8 +1,10 @@
-package emu.grasscutter.game.entity.gadget;
+package emu.grasscutter.game.entity.gadget.content;
 
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.GatherData;
 import emu.grasscutter.game.entity.EntityGadget;
+import emu.grasscutter.game.entity.create_config.CreateGadgetEntityConfig;
+import emu.grasscutter.game.entity.gadget.content.GadgetContent;
 import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.props.ActionReason;
@@ -20,19 +22,19 @@ public class GadgetGatherPoint extends GadgetContent {
 
     public GadgetGatherPoint(EntityGadget gadget) {
         super(gadget);
-        this.gatherData = GameData.getGatherDataMap().get(gadget.getPointType());
+        val originalConfig = getGadget().getSpawnConfig();
+        this.gatherData = GameData.getGatherDataMap().get(originalConfig.getPointType());
+
 
         val scene = gadget.getScene();
-        gatherObjectChild = new EntityGadget(scene, gatherData.getGadgetId(), gadget.getBornPos());
+        val createConfig = new CreateGadgetEntityConfig(gadget, gatherData.getGadgetId())
+            .setBornPos(originalConfig.getBornPos().clone())
+            .setBornRot(originalConfig.getBornRot().clone())
+            .setGadgetState(originalConfig.getGadgetState())
+            .setPointType(originalConfig.getPointType());
+        createConfig.setInitDataSource(gadget.getMetaGadget());
 
-        gatherObjectChild.setBlockId(gadget.getBlockId());
-        gatherObjectChild.setConfigId(gadget.getConfigId());
-        gatherObjectChild.setGroupId(gadget.getGroupId());
-        gatherObjectChild.getRotation().set(gadget.getRotation());
-        gatherObjectChild.setState(gadget.getState());
-        gatherObjectChild.setPointType(gadget.getPointType());
-        gatherObjectChild.setMetaGadget(gadget.getMetaGadget());
-        gatherObjectChild.buildContent();
+        gatherObjectChild = new EntityGadget(scene, createConfig);
 
         gadget.getChildren().add(gatherObjectChild);
         scene.addEntity(gatherObjectChild);

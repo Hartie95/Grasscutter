@@ -9,14 +9,14 @@ import emu.grasscutter.game.entity.GameEntity;
 @AbilityAction(AbilityModifierAction.Type.SetGlobalValueToOverrideMap)
 public class ActionSetGlobalValueToOverrideMap extends AbilityActionHandler {
     @Override
-    public boolean execute(Ability ability, AbilityModifierAction action, byte[] abilityData, GameEntity target) {
+    public boolean execute(Ability ability, AbilityModifierAction action, byte[] abilityData, GameEntity<?> target) {
         //TODO:
         var entity = target;
         if(action.isFromOwner) {
             if(target instanceof EntityClientGadget gadget)
                 entity = entity.getScene().getEntityById(gadget.getOwnerEntityId());
             else if(target instanceof EntityGadget gadget)
-                entity = gadget.getOwner();
+                entity = gadget.getOwnerEntity();
         }
 
         var globalValueKey = action.globalValueKey;

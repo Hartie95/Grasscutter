@@ -8,7 +8,7 @@ import emu.grasscutter.data.excels.BlossomOpenData;
 import emu.grasscutter.data.excels.BlossomRefreshData;
 import emu.grasscutter.data.excels.BlossomRefreshData.RefreshCond;
 import emu.grasscutter.data.excels.BlossomSectionOrderData;
-import emu.grasscutter.game.entity.EntityGadget;
+import emu.grasscutter.game.entity.EntityBaseGadget;
 import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.managers.blossom.enums.BlossomRefreshType;
 import emu.grasscutter.game.player.BasePlayerDataManager;
@@ -152,7 +152,7 @@ public class BlossomManager extends BasePlayerDataManager {
     /**
      * Give player reward after challenge finish
      * */
-    public boolean onReward(Player player, @NonNull EntityGadget gadget, boolean useCondensedResin) {
+    public boolean onReward(Player player, @NonNull EntityBaseGadget gadget, boolean useCondensedResin) {
         val scheduleOption = Optional.ofNullable(this.spawnedChest.get(gadget.getConfigId()))
             .map(this.blossomSchedule::get);
         // if player is not qualified for the reward

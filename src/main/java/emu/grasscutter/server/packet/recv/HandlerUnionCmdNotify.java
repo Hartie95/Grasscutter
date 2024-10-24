@@ -24,6 +24,7 @@ public class HandlerUnionCmdNotify extends TypedPacketHandler<UnionCmdNotify> {
             } else if (GAME_INFO.logPackets ==  ServerDebugMode.BLACKLIST && !SERVER.debugBlacklist.contains(cmdName)) {
                 session.logPacket("RECV in Union", cmdOpcode, cmdPayload);
             }
+            session.logPacket("RECV", cmd.getMessageId(), cmd.getBody());
             //debugLevel ALL ignores UnionCmdNotify, so we will also ignore the contained opcodes
             session.getServer().getPacketHandler().handle(session, cmd.getMessageId(), EMPTY_BYTE_ARRAY, cmd.getBody());
         }

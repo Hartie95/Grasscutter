@@ -3,12 +3,14 @@ package emu.grasscutter.server.packet.recv;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.game.entity.EntityVehicle;
 import emu.grasscutter.net.packet.TypedPacketHandler;
+import emu.grasscutter.game.entity.create_config.CreateGadgetEntityConfig;
 import emu.grasscutter.server.game.GameSession;
 import emu.grasscutter.server.packet.send.PacketWidgetCoolDownNotify;
 import emu.grasscutter.server.packet.send.PacketWidgetDoBagRsp;
 import emu.grasscutter.server.packet.send.PacketWidgetGadgetDataNotify;
 import emu.grasscutter.utils.Position;
 import org.anime_game_servers.multi_proto.gi.messages.item.widget.use.WidgetDoBagReq;
+import lombok.val;
 
 public class HandlerWidgetDoBagReq extends TypedPacketHandler<WidgetDoBagReq> {
 
@@ -18,6 +20,7 @@ public class HandlerWidgetDoBagReq extends TypedPacketHandler<WidgetDoBagReq> {
             var locationInfo = widgetCreatorInfo.getValue().getLocationInfo();
             Position pos = new Position(locationInfo.getPos());
             Position rot = new Position(locationInfo.getRot());
+            // TODO those are probably not vehicles
             switch (req.getMaterialId()) {
                 case 220026 -> {
                     this.spawnVehicle(session, 70500025, pos, rot);
@@ -39,7 +42,10 @@ public class HandlerWidgetDoBagReq extends TypedPacketHandler<WidgetDoBagReq> {
     private void spawnVehicle(GameSession session, int gadgetId, Position pos, Position rot) {
         var player = session.getPlayer();
         var scene = player.getScene();
-        var entity = new EntityVehicle(scene, player, gadgetId, 0, pos, rot);
+        val config = new CreateGadgetEntityConfig(gadgetId)
+            .setBornPos(pos)
+            .setBornRot(rot);
+        var entity = new EntityVehicle(scene, player, config);
         scene.addEntity(entity);
         session.send(new PacketWidgetGadgetDataNotify(gadgetId, entity.getId()));
     }

@@ -176,6 +176,10 @@ public class Position implements Serializable, org.anime_game_servers.gi_lua.mod
         return new Vector(this.getX(), this.getY(), this.getZ());
     }
 
+    public boolean isDefault(){
+        return x == 0 && y == 0 && z == 0;
+    }
+
     public Point toPoint() {
         return Point.create(x,y,z);
     }

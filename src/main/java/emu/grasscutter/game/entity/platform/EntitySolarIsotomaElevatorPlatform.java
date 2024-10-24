@@ -3,17 +3,23 @@ package emu.grasscutter.game.entity.platform;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.binout.config.ConfigEntityGadget;
 import emu.grasscutter.game.entity.*;
-import emu.grasscutter.game.entity.gadget.GadgetAbility;
+import emu.grasscutter.game.entity.create_config.CreateGadgetEntityConfig;
+import emu.grasscutter.game.entity.gadget.content.GadgetAbility;
+import emu.grasscutter.game.entity.gadget.content.GadgetContent;
 import emu.grasscutter.game.entity.gadget.platform.AbilityRoute;
 import emu.grasscutter.game.world.Scene;
-import emu.grasscutter.utils.Position;
 
 public class EntitySolarIsotomaElevatorPlatform extends EntityGadget {
-    public EntitySolarIsotomaElevatorPlatform(EntitySolarIsotomaClientGadget isotoma, Scene scene, int gadgetId, Position pos, Position rot) {
-        super(scene, gadgetId, pos, rot);
-        setOwner(isotoma);
-        this.setRouteConfig(new AbilityRoute(rot, false, false, pos));
-        this.setContent(new GadgetAbility(this, isotoma));
+    private final EntitySolarIsotomaClientGadget isotoma;
+    public EntitySolarIsotomaElevatorPlatform(EntitySolarIsotomaClientGadget isotoma, Scene scene, CreateGadgetEntityConfig createConfig) {
+        super(scene, createConfig);
+        this.setRouteConfig(new AbilityRoute(createConfig, false, false));
+        this.isotoma = isotoma;
+    }
+
+    @Override
+    public GadgetContent buildContent(CreateGadgetEntityConfig config) {
+        return new GadgetAbility(this, isotoma);
     }
 
     @Override
@@ -26,7 +32,7 @@ public class EntitySolarIsotomaElevatorPlatform extends EntityGadget {
 
         if (combatProperties.isUseCreatorProperty()) {
             //If useCreatorProperty == true, use owner's property;
-            GameEntity ownerEntity = getOwner();
+            GameEntity ownerEntity = getOwnerEntity();
             if (ownerEntity != null && ownerEntity.getFightProperties() != null && getFightProperties() != null) {
                 getFightProperties().putAll(ownerEntity.getFightProperties());
                 return;

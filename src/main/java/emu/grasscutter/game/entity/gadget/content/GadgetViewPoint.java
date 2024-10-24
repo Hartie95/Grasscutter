@@ -1,4 +1,4 @@
-package emu.grasscutter.game.entity.gadget;
+package emu.grasscutter.game.entity.gadget.content;
 
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.CodexViewpointData;
@@ -8,7 +8,7 @@ import org.anime_game_servers.multi_proto.gi.messages.gadget.GadgetInteractReq;
 import org.anime_game_servers.multi_proto.gi.messages.scene.entity.SceneGadgetInfo;
 
 
-public class GadgetViewPoint extends  GadgetContent{
+public class GadgetViewPoint extends GadgetContent {
 
 
     public GadgetViewPoint(EntityGadget gadget) {
