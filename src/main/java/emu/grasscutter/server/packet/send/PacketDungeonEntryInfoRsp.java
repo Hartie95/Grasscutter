@@ -2,10 +2,10 @@ package emu.grasscutter.server.packet.send;
 
 import java.util.Comparator;
 
-import emu.grasscutter.data.excels.DungeonData;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.net.packet.BaseTypedPacket;
 import lombok.val;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonData;
 import org.anime_game_servers.multi_proto.gi.messages.dungeon.entry.DungeonEntryInfoRsp;
 import org.anime_game_servers.multi_proto.gi.messages.general.Retcode;
 

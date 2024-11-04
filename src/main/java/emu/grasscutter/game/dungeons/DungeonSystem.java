@@ -4,24 +4,24 @@ import emu.grasscutter.GameConstants;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.common.PointData;
-import emu.grasscutter.data.excels.DungeonData;
-import emu.grasscutter.data.excels.DungeonPassConfigData;
 import emu.grasscutter.game.dungeons.challenge.WorldChallenge;
 import emu.grasscutter.game.dungeons.dungeon_entry.DungeonEntries;
 import emu.grasscutter.game.dungeons.dungeon_entry.PlayerDungeonExitInfo;
-import emu.grasscutter.game.dungeons.enums.DungeonType;
 import emu.grasscutter.game.dungeons.handlers.DungeonBaseHandler;
 import emu.grasscutter.game.dungeons.pass_condition.BaseCondition;
 import emu.grasscutter.game.dungeons.settle_listeners.BasicDungeonSettleListener;
 import emu.grasscutter.game.dungeons.settle_listeners.DungeonSettleListener;
 import emu.grasscutter.game.player.Player;
-import emu.grasscutter.game.props.SceneType;
 import emu.grasscutter.server.game.BaseGameSystem;
 import emu.grasscutter.server.game.GameServer;
 import emu.grasscutter.utils.Position;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.val;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonData;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonPassData;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonType;
+import org.anime_game_servers.game_data_models.gi.data.scene.SceneType;
 import org.reflections.Reflections;
 
 import java.util.Optional;
@@ -56,7 +56,7 @@ public class DungeonSystem extends BaseGameSystem {
             });
     }
 
-    public boolean triggerCondition(DungeonPassConfigData.DungeonPassCondition condition, int... params) {
+    public boolean triggerCondition(DungeonPassData.DungeonPassCondition condition, int... params) {
         val handler = this.passCondHandlers.get(condition.getCondType().ordinal());
 
         if (handler == null) {

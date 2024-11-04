@@ -3,8 +3,8 @@ package emu.grasscutter.command.commands;
 import emu.grasscutter.command.Command;
 import emu.grasscutter.command.CommandHandler;
 import emu.grasscutter.game.avatar.Avatar;
-import emu.grasscutter.game.entity.EntityAvatar;
 import emu.grasscutter.game.player.Player;
+import lombok.val;
 
 import java.util.List;
 
@@ -24,15 +24,15 @@ public final class ResetConstCommand implements CommandHandler {
             targetPlayer.getAvatars().forEach(this::resetConstellation);
             CommandHandler.sendMessage(sender, translate(sender, "commands.resetConst.reset_all"));
         } else {
-            EntityAvatar entity = targetPlayer.getTeamManager().getCurrentAvatarEntity();
+            val entity = targetPlayer.getTeamManager().getCurrentAvatarEntity();
             if (entity == null) {
                 return;
             }
 
-            Avatar avatar = entity.getAvatar();
+            val avatar = entity.getAvatar();
             this.resetConstellation(avatar);
 
-            CommandHandler.sendMessage(sender, translate(sender, "commands.resetConst.success", avatar.getAvatarData().getName()));
+            CommandHandler.sendMessage(sender, translate(sender, "commands.resetConst.success", avatar.getAvatarData().getBaseName()));
         }
     }
 

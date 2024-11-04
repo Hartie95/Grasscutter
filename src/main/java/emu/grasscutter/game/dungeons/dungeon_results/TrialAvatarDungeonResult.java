@@ -1,12 +1,12 @@
 package emu.grasscutter.game.dungeons.dungeon_results;
 
-import emu.grasscutter.data.excels.DungeonData;
 import emu.grasscutter.game.dungeons.DungeonEndStats;
 import emu.grasscutter.game.player.Player;
 import lombok.Builder;
 import lombok.val;
 import org.anime_game_servers.multi_proto.gi.messages.activity.trial.TrialAvatarFirstPassDungeonNotify;
 import org.anime_game_servers.multi_proto.gi.messages.dungeon.progression.DungeonSettleNotify;
+import org.anime_game_servers.game_data_models.gi.data.dungeon.DungeonData;
 
 public class TrialAvatarDungeonResult extends BaseDungeonResult {
     int trialCharacterIndexId;

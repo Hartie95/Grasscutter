@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import emu.grasscutter.data.custom.AvatarDataCache;
 import lombok.*;
 import org.anime_game_servers.multi_proto.gi.messages.general.PropValue;
 import org.anime_game_servers.multi_proto.gi.messages.general.avatar.*;
@@ -45,7 +46,7 @@ public class Avatar {
     @Indexed @Getter private int ownerId;	// id of player that this avatar belongs to
 
     @Transient private Player owner;
-    @Transient @Getter protected AvatarData data;
+    @Transient @Getter protected AvatarDataCache data;
     @Transient @Getter protected AvatarSkillDepotData skillDepot;
     @Transient @Getter protected long guid;	// Player unique id
     @Getter protected int avatarId;			// id of avatar
@@ -89,14 +90,14 @@ public class Avatar {
 
     // On creation
     public Avatar(int avatarId) {
-        this(GameData.getAvatarDataMap().get(avatarId));
+        this(GameData.getAvatarInfoCacheMap().get(avatarId));
     }
 
-    public Avatar(AvatarData data) {
+    public Avatar(AvatarDataCache data) {
         this();
         this.avatarId = data.getId();
-        this.nameCardRewardId = data.getNameCardRewardId();
-        this.nameCardId = data.getNameCardId();
+        this.nameCardRewardId = GameData.getFetterCharacterCardDataMap().get(this.avatarId).getRewardId();
+        this.nameCardId = GameData.getRewardDataMap().get(this.nameCardRewardId).getRewardItemList().get(0).getItemId();
         this.data = data;
         this.bornTime = (int) (System.currentTimeMillis() / 1000);
         this.flyCloak = 140001;
@@ -111,7 +112,8 @@ public class Avatar {
             .forEach(id -> this.setFightProperty(id, 0f));
 
         // Skill depot
-        this.setSkillDepotData(data.getSkillDepot(), false);
+        val skillDepot = data.getSkillDepots().get(data.getDefaultSkillDepotId());
+        this.setSkillDepotData(skillDepot, false);
 
         // Set stats
         this.recalcStats();
@@ -130,11 +132,11 @@ public class Avatar {
         return id;
     }
 
-    public AvatarData getAvatarData() {
+    public AvatarDataCache getAvatarData() {
         return data;
     }
 
-    protected void setAvatarData(AvatarData data) {
+    protected void setAvatarData(AvatarDataCache data) {
         if (this.data != null) return;
         this.data = data; // Used while loading this from the database
     }
@@ -214,7 +216,7 @@ public class Avatar {
      * @return false if failed or already using that element, true if it actually changed
      */
     public boolean changeElement(@Nonnull ElementType elementTypeToChange) {
-        val candSkillDepotIdsList = data.getCandSkillDepotIds();
+        val candSkillDepotIdsList = data.getAvatarData().getCandSkillDepotIds();
         val candSkillDepotIndex = elementTypeToChange.getDepotIndex();
 
         // if no candidate skill to change or index out of bound
@@ -225,7 +227,7 @@ public class Avatar {
         int candSkillDepotId = candSkillDepotIdsList.get(candSkillDepotIndex);
 
         // Sanity checks for skill depots
-        val skillDepot = GameData.getAvatarSkillDepotDataMap().get(candSkillDepotId);
+        val skillDepot = data.getSkillDepots().get(candSkillDepotId);
         if (skillDepot == null || skillDepot.getId() == skillDepotId) {
             return false;
         }
@@ -386,7 +388,7 @@ public class Avatar {
     public void recalcStats(boolean forceSendAbilityChange) {
         // Setup
         var data = this.getAvatarData();
-        var promoteData = GameData.getAvatarPromoteData(data.getAvatarPromoteId(), this.getPromoteLevel());
+        var promoteData = data.getPromoteData().get(this.getPromoteLevel());
         var setMap = new Int2IntOpenHashMap();
 
         // Extra ability embryos

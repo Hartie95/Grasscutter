@@ -38,7 +38,7 @@ public class HandlerSetPlayerBornDataReq extends TypedPacketHandler<SetPlayerBor
         // Create avatar
         if (player.getAvatars().getAvatarCount() == 0) {
             Avatar mainCharacter = new Avatar(avatarId);
-            int startingSkillDepot = mainCharacter.getData().getSkillDepotId();
+            int startingSkillDepot = mainCharacter.getData().getDefaultSkillDepotId();
             mainCharacter.setSkillDepotData(GameData.getAvatarSkillDepotDataMap().get(startingSkillDepot), false);
             // Manually handle adding to team
             player.addAvatar(mainCharacter, false);

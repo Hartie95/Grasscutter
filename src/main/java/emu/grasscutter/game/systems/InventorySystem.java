@@ -501,9 +501,10 @@ public class InventorySystem extends BaseGameSystem {
             return;
         }
 
-        int nextPromoteLevel = avatar.getPromoteLevel() + 1;
-        AvatarPromoteData currentPromoteData = GameData.getAvatarPromoteData(avatar.getAvatarData().getAvatarPromoteId(), avatar.getPromoteLevel());
-        AvatarPromoteData nextPromoteData = GameData.getAvatarPromoteData(avatar.getAvatarData().getAvatarPromoteId(), nextPromoteLevel);
+        val promoteLevel = avatar.getPromoteLevel();
+        val nextPromoteLevel = promoteLevel + 1;
+        val currentPromoteData = avatar.getAvatarData().getPromoteData().get(promoteLevel);
+        val nextPromoteData = avatar.getAvatarData().getPromoteData().get(nextPromoteLevel);
         if (currentPromoteData == null || nextPromoteData == null) {
             return;
         }
@@ -550,14 +551,14 @@ public class InventorySystem extends BaseGameSystem {
     }
 
     public void upgradeAvatar(Player player, long guid, int itemId, int count) {
-        Avatar avatar = player.getAvatars().getAvatarByGuid(guid);
+        val avatar = player.getAvatars().getAvatarByGuid(guid);
 
         // Sanity checks
         if (avatar == null) {
             return;
         }
 
-        AvatarPromoteData promoteData = GameData.getAvatarPromoteData(avatar.getAvatarData().getAvatarPromoteId(), avatar.getPromoteLevel());
+        val promoteData = avatar.getData().getPromoteData().get(avatar.getPromoteLevel());
         if (promoteData == null) {
             return;
         }
@@ -565,7 +566,7 @@ public class InventorySystem extends BaseGameSystem {
         // Calc exp
         int expGain = 0;
 
-        var data = GameData.getItemDataMap().get(itemId);
+        val data = GameData.getItemDataMap().get(itemId);
         if (data != null) {
             var actions = data.getItemUseActions();
             if (actions != null) {
@@ -594,7 +595,7 @@ public class InventorySystem extends BaseGameSystem {
     }
 
     public void upgradeAvatar(Player player, Avatar avatar, int expGain) {
-        AvatarPromoteData promoteData = GameData.getAvatarPromoteData(avatar.getAvatarData().getAvatarPromoteId(), avatar.getPromoteLevel());
+        val promoteData = avatar.getData().getPromoteData().get(avatar.getPromoteLevel());
         if (promoteData == null) {
             return;
         }

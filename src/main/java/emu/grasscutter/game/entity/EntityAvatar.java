@@ -2,7 +2,7 @@ package emu.grasscutter.game.entity;
 
 import emu.grasscutter.GameConstants;
 import emu.grasscutter.data.GameData;
-import emu.grasscutter.data.excels.AvatarData;
+import emu.grasscutter.data.binout.config.fields.ConfigAbilityData;
 import emu.grasscutter.data.excels.AvatarSkillDepotData;
 import emu.grasscutter.game.avatar.Avatar;
 import emu.grasscutter.game.inventory.EquipType;
@@ -261,7 +261,7 @@ public class EntityAvatar extends GameEntity {
     }
 
     public AbilityControlBlock getAbilityControlBlock() {
-        AvatarData data = this.getAvatar().getAvatarData();
+        val data = this.getAvatar().getAvatarData();
         val abilityControlBlock = new AbilityControlBlock();
         val embryoId = new AtomicInteger(0);
         val embrioList = new ArrayList<AbilityEmbryo>();
@@ -269,8 +269,28 @@ public class EntityAvatar extends GameEntity {
         val abilities = data.getAbilities();
         // Add avatar abilities
         if (abilities != null) {
-            embrioList.addAll(abilities.stream().map(id -> new AbilityEmbryo(embryoId.incrementAndGet(), id, GameConstants.DEFAULT_ABILITY_NAME)).toList());
+            embrioList.addAll(abilities.intStream()
+                .mapToObj(id -> new AbilityEmbryo(embryoId.incrementAndGet(), id, GameConstants.DEFAULT_ABILITY_NAME))
+                .toList());
         }
+
+        // Add level entity abilities
+        val sceneData = getScene().getSceneData();
+        if(sceneData!=null) {
+            val specifiedAvatars = sceneData.getSpecifiedAvatarList();
+            if (specifiedAvatars == null || specifiedAvatars.isEmpty() || specifiedAvatars.contains(data.getAvatarId())){
+                val config = GameData.getConfigLevelEntityDataMap().get(sceneData.getLevelEntityConfig());
+                if(config != null && config.getMonsterAbilities() != null) {
+                    val configAbilitiesList = config.getAvatarAbilities().stream()
+                        .map(ConfigAbilityData::getAbilityName)
+                        .map(Utils::abilityHash)
+                        .map(id -> new AbilityEmbryo(embryoId.incrementAndGet(), id, GameConstants.DEFAULT_ABILITY_NAME))
+                        .toList();
+                    embrioList.addAll(configAbilitiesList);
+                }
+            }
+        }
+
         // Add default abilities
         embrioList.addAll(Arrays.stream(GameConstants.DEFAULT_ABILITY_HASHES).mapToObj(id -> new AbilityEmbryo(embryoId.incrementAndGet(), id, GameConstants.DEFAULT_ABILITY_NAME)).toList());
         // Add team resonances
@@ -281,7 +301,7 @@ public class EntityAvatar extends GameEntity {
             embrioList.addAll(skillDepot.getAbilities().stream().map(id -> new AbilityEmbryo(embryoId.incrementAndGet(), id, GameConstants.DEFAULT_ABILITY_NAME)).toList());
         }
         // Add equip abilities
-        if (this.getAvatar().getExtraAbilityEmbryos().size() > 0) {
+        if (!this.getAvatar().getExtraAbilityEmbryos().isEmpty()) {
             embrioList.addAll(this.getAvatar().getExtraAbilityEmbryos().stream().map(id -> new AbilityEmbryo(embryoId.incrementAndGet(), Utils.abilityHash(id), GameConstants.DEFAULT_ABILITY_NAME)).toList());
         }
         abilityControlBlock.setAbilityEmbryoList(embrioList);

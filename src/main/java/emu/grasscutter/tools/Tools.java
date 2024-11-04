@@ -22,7 +22,6 @@ import emu.grasscutter.command.CommandHandler;
 import emu.grasscutter.command.CommandMap;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.ResourceLoader;
-import emu.grasscutter.data.excels.AvatarData;
 import emu.grasscutter.data.excels.ItemData;
 import emu.grasscutter.server.http.handlers.GachaHandler;
 import emu.grasscutter.utils.Language;
@@ -30,8 +29,8 @@ import emu.grasscutter.utils.Language.TextStrings;
 import it.unimi.dsi.fastutil.ints.Int2IntRBTreeMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectRBTreeMap;
 import lombok.val;
+import org.anime_game_servers.game_data_models.gi.data.general.QualityType;
 
-import static emu.grasscutter.config.Configuration.*;
 import static emu.grasscutter.utils.FileUtils.getResourcePath;
 import static emu.grasscutter.utils.Language.getTextMapKey;
 
@@ -164,15 +163,16 @@ public final class Tools {
 
         // Avatars
         GameData.getAvatarDataMap().keySet().intStream().sorted().forEach(id -> {
-            AvatarData data = GameData.getAvatarDataMap().get(id);
+            val data = GameData.getAvatarDataMap().get(id);
             int avatarID = data.getId();
             if (avatarID >= 11000000) { // skip test avatar
                 return;
             }
-            String color = switch (data.getQualityType()) {
-                case "QUALITY_PURPLE" -> "purple";
-                case "QUALITY_ORANGE" -> "yellow";
-                case "QUALITY_BLUE" -> "blue";
+            val qualityType = data.getQualityType() !=null ? data.getQualityType() : QualityType.QUALITY_NONE;
+            String color = switch (qualityType) {
+                case QUALITY_PURPLE -> "purple";
+                case QUALITY_ORANGE -> "yellow";
+                case QUALITY_BLUE -> "blue";
                 default -> "";
             };
             Language.TextStrings avatarName = Language.getTextMapKey(data.getNameTextMapHash());

@@ -6,9 +6,7 @@ import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.config.ConfigLevelEntity;
 import emu.grasscutter.data.binout.config.fields.ConfigAbilityData;
-import emu.grasscutter.data.excels.AvatarData;
 import emu.grasscutter.data.excels.PlayerLevelData;
-import emu.grasscutter.data.excels.SceneTagData;
 import emu.grasscutter.data.excels.WeatherData;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.Account;
@@ -93,6 +91,7 @@ import org.anime_game_servers.multi_proto.gi.messages.scene.PlayerLocationInfo;
 import org.anime_game_servers.multi_proto.gi.messages.scene.PlayerWorldLocationInfo;
 import org.anime_game_servers.multi_proto.gi.messages.scene.entity.MpSettingType;
 import org.anime_game_servers.multi_proto.gi.messages.scene.entity.OnlinePlayerInfo;
+import org.anime_game_servers.game_data_models.gi.data.scene.SceneTagConfigData;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.DayOfWeek;
@@ -407,11 +406,11 @@ public class Player {
     }
 
     public void visitScene(int sceneId) {
-        val sceneTagData = GameData.getSceneTagDataMap().values();
+        val sceneTagData = GameData.getSceneTagConfigDataMap().values();
         val tags = this.sceneTags.computeIfAbsent(sceneId, k -> new HashMap<>());
         sceneTagData.stream()
                 .filter(tagData -> tagData.getSceneId() == sceneId && tagData.isDefaultValid())
-                .map(SceneTagData::getId)
+                .map(SceneTagConfigData::getId)
                 .forEach(k -> tags.putIfAbsent(k, true));
     }
 
@@ -963,45 +962,6 @@ public class Player {
         this.getServer().getChatSystem().sendPrivateMessageFromServer(getUid(), message.toString());
     }
 
-    public void setAvatarsAbilityForScene(Scene scene){
-        try{
-            String levelEntityConfig = scene.getSceneData().getLevelEntityConfig();
-            ConfigLevelEntity config = GameData.getConfigLevelEntityDataMap().get(levelEntityConfig);
-            if (config == null){
-                return;
-            }
-            List<Integer> avatarIds = scene.getSceneData().getSpecifiedAvatarList();
-            List<EntityAvatar> specifiedAvatarList = getTeamManager().getActiveTeam();
-
-            if (avatarIds != null && avatarIds.size() > 0){
-                // certain scene could limit specifc avatars' entry
-                specifiedAvatarList.clear();
-                for (int id : avatarIds){
-                    Avatar avatar = getAvatars().getAvatarById(id);
-                    if (avatar == null){
-                        continue;
-                    }
-                    specifiedAvatarList.add(new EntityAvatar(scene, avatar));
-                }
-            }
-
-            for (EntityAvatar entityAvatar : specifiedAvatarList){
-                AvatarData avatarData = entityAvatar.getAvatar().getAvatarData();
-                if (avatarData == null){
-                    continue;
-                }
-                avatarData.rebuildAbilityEmbryo();
-                if (config.getAvatarAbilities() == null){
-                    continue; // continue and not break because has to rebuild ability for the next avatar if any
-                }
-                for (ConfigAbilityData abilities : config.getAvatarAbilities()){
-                    avatarData.getAbilities().add(Utils.abilityHash(abilities.getAbilityName()));
-                }
-            }
-        } catch (Exception e){
-            Grasscutter.getLogger().error("Error applying level entity config for scene {}", scene.getSceneData().getId(), e);
-        }
-    }
     /**
      * Sends a message to another player.
      *
