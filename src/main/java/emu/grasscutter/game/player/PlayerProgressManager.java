@@ -8,11 +8,7 @@ import emu.grasscutter.game.props.ActionReason;
 import emu.grasscutter.game.quest.enums.ParentQuestState;
 import emu.grasscutter.game.quest.enums.QuestCond;
 import emu.grasscutter.game.quest.enums.QuestContent;
-import emu.grasscutter.server.packet.send.PacketOpenStateChangeNotify;
-import emu.grasscutter.server.packet.send.PacketOpenStateUpdateNotify;
-import emu.grasscutter.server.packet.send.PacketSceneAreaUnlockNotify;
-import emu.grasscutter.server.packet.send.PacketScenePointUnlockNotify;
-import emu.grasscutter.server.packet.send.PacketSetOpenStateRsp;
+import emu.grasscutter.server.packet.send.*;
 import lombok.val;
 import org.anime_game_servers.core.gi.enums.QuestState;
 import org.anime_game_servers.gi_lua.models.ScriptArgs;
@@ -284,6 +280,22 @@ public class PlayerProgressManager extends BasePlayerDataManager {
         // Send packet.
         this.player.sendPacket(new PacketSceneAreaUnlockNotify(sceneId, areaId));
         this.player.getQuestManager().queueEvent(QuestContent.QUEST_CONTENT_UNLOCK_AREA, sceneId, areaId);
+    }
+
+    public void unlockScene(int sceneId) {
+        //set the scene to locked: false
+        this.player.getUnlockedScenes().put(sceneId, true);
+
+        //Send packet.
+        this.player.sendPacket(new PacketPlayerWorldSceneInfoListNotify(this.player));
+    }
+
+    public void lockScene(int sceneId) {
+        //set the scene to locked: true
+        this.player.getUnlockedScenes().put(sceneId, false);
+
+        //Send packet.
+        this.player.sendPacket(new PacketPlayerWorldSceneInfoListNotify(this.player));
     }
 
     /**
