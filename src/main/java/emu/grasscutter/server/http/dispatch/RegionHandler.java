@@ -13,17 +13,16 @@ import io.javalin.http.Context;
 import lombok.val;
 import org.anime_game_servers.multi_proto.gi.messages.general.server.RegionInfo;
 import org.anime_game_servers.multi_proto.gi.messages.login.QueryCurrRegionHttpRsp;
-import org.anime_game_servers.core.base.Game;
 import org.anime_game_servers.core.base.Version;
 import org.anime_game_servers.multi_proto.gi.messages.login.QueryRegionListHttpRsp;
 import org.anime_game_servers.multi_proto.gi.messages.login.RegionSimpleInfo;
+import org.anime_game_servers.multi_proto.gi.utils.VersionIdentify;
 
 import javax.crypto.Cipher;
 import java.io.ByteArrayOutputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.security.Signature;
-import java.util.regex.Pattern;
 
 import static emu.grasscutter.config.Configuration.*;
 
@@ -181,15 +180,22 @@ public final class RegionHandler implements Router {
         String versionName = ctx.queryParam("version");
         var region = regions.get(regionName);
 
-        String[] versionCode = versionName.replaceAll(Pattern.compile("[a-zA-Z]").pattern(), "").split("\\.");
-        int versionMajor = Integer.parseInt(versionCode[0]);
-        int versionMinor = Integer.parseInt(versionCode[1]);
-        int versionFix   = Integer.parseInt(versionCode[2]);
-        val versionId = Version.idFromVersion(Game.GI, versionMajor, versionMinor, versionFix);
-        val version = Version.fromId(Game.GI, versionId);
+
+        if (versionName == null){
+            Grasscutter.getLogger().error("Client {} request: query_cur_region/{} with missing version", ctx.ip(), regionName);
+            return;
+        }
+
+        Version version;
+        try {
+            version = VersionIdentify.getClientVersionFromQueryRegion(versionName);
+        } catch (Exception e) {
+            Grasscutter.getLogger().error("Client {} request: query_cur_region/{} with invalid version {} and exception", ctx.ip(), regionName, versionName, e);
+            return;
+        }
 
         if (version == null){
-            Grasscutter.getLogger().error("Client {} request: query_cur_region/{} with invalid version {}", ctx.ip(), regionName, versionName);
+            Grasscutter.getLogger().error("Client {} request: query_cur_region/{} with unknown version {}", ctx.ip(), regionName, versionName);
             return;
         }
 
@@ -201,7 +207,7 @@ public final class RegionHandler implements Router {
         }
 
 
-        if (versionId > Version.GI_2_7_0.getId()) {
+        if (version.getId() > Version.GI_2_7_0.getId()) {
             try {
                 QueryCurrentRegionEvent event = new QueryCurrentRegionEvent(regionData); event.call();
 
