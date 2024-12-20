@@ -93,6 +93,7 @@ dependencies {
     implementation("org.anime_game_servers.lua:LuaJEngine:0.1")
     implementation("org.anime_game_servers.lua:JNLuaEngine:0.1")
 
+    implementation("org.anime_game_servers:grasskcpper:0.1")
     implementation("org.anime_game_servers.multi_proto:gi-jvm:0.2.32")
 
     implementation group:  'com.esotericsoftware', name : 'reflectasm', version: '1.11.9'
