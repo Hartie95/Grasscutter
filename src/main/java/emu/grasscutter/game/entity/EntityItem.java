@@ -13,6 +13,7 @@ import emu.grasscutter.utils.ProtoHelper;
 import it.unimi.dsi.fastutil.ints.Int2FloatMap;
 import lombok.Getter;
 import lombok.val;
+import org.anime_game_servers.core.base.Version;
 import org.anime_game_servers.multi_proto.gi.messages.gadget.GadgetInteractReq;
 import org.anime_game_servers.multi_proto.gi.messages.gadget.InteractType;
 import org.anime_game_servers.multi_proto.gi.messages.general.Vector;
@@ -106,8 +107,19 @@ public class EntityItem extends EntityBaseGadget {
         PropPair pair = new PropPair(PlayerProperty.PROP_LEVEL.getId(), ProtoHelper.newPropValue(PlayerProperty.PROP_LEVEL, 1));
         entityInfo.setPropList(List.of(pair));
 
+        val hostVersion = this.getWorld().getHost().getSession().getVersion();
+        val itemProto = this.getItem().toProto();
+
+        SceneGadgetInfo.Content<?> content;
+        if(hostVersion.getId() > Version.GI_4_0_0.getId()){
+            val trifleGadget = new TrifleGadget(itemProto);
+            content = new SceneGadgetInfo.Content.TrifleGadget(trifleGadget);
+        } else {
+            content = new SceneGadgetInfo.Content.TrifleItem(this.getItem().toProto());
+        }
+
         val gadgetInfo = new SceneGadgetInfo(this.getItemData().getGadgetId());
-        gadgetInfo.setContent(new SceneGadgetInfo.Content.TrifleItem(this.getItem().toProto()));
+        gadgetInfo.setContent(content);
         gadgetInfo.setBornType(GadgetBornType.GADGET_BORN_IN_AIR);
         gadgetInfo.setAuthorityPeerId(this.getWorld().getHostPeerId());
         gadgetInfo.setEnableInteract(true);

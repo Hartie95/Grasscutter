@@ -1,9 +1,7 @@
 package emu.grasscutter.server.packet.send;
 
-import emu.grasscutter.game.entity.EntityAvatar;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.net.packet.BaseTypedPacket;
-import emu.grasscutter.net.packet.PacketOpcodes;
 import lombok.val;
 import org.anime_game_servers.multi_proto.gi.messages.general.ability.AbilitySyncStateInfo;
 import org.anime_game_servers.multi_proto.gi.messages.scene.SceneTeamAvatar;

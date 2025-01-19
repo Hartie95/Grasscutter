@@ -90,6 +90,7 @@ public final class RegionHandler implements Router {
             // Create an updated region query.
             val updatedQuery = new QueryCurrRegionHttpRsp();
             updatedQuery.setRegionInfo(regionInfo);
+            updatedQuery.setClientSecretKey(Crypto.DISPATCH_SEED);
             regions.put(region.Name, new RegionData(updatedQuery));
         });
 

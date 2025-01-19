@@ -45,7 +45,6 @@ public class EntityWeapon extends EntityBaseGadget implements ConfigAbilityDataA
         }
 
         this.gadgetId = gadgetId;
-        this.gadgetId = gadgetId;
         this.bornPos = this.getPosition().clone();
         this.bornRot = this.getRotation().clone();
         fillFightProps(configGadget);
