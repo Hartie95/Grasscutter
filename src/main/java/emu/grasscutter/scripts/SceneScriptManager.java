@@ -9,6 +9,7 @@ import emu.grasscutter.data.server.Grid;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.entity.*;
 import emu.grasscutter.game.entity.gadget.platform.BaseRoute;
+import emu.grasscutter.game.props.EntityType;
 import emu.grasscutter.game.quest.GameQuest;
 import emu.grasscutter.game.quest.QuestGroupSuite;
 import emu.grasscutter.game.quest.enums.QuestContent;
@@ -569,13 +570,16 @@ public class SceneScriptManager {
 
         for (var region : this.regions.values()) {
             val metaRegion = region.getMetaRegion();
+            region.clearDeadEntities();
 
             getScene().getEntities().values().stream()
+                .filter(e -> e.getEntityType() == EntityType.Avatar)
                 .filter(e -> metaRegion.contains(e.getPosition()) && !region.getEntities().contains(e))
                 .forEach(region::addEntity);
 
-            region.getEntities().stream()
-                .filter(e -> !metaRegion.contains(e.getPosition()))
+            getScene().getEntities().values().stream()
+                .filter(e -> e.getEntityType() == EntityType.Avatar)
+                .filter(e -> !metaRegion.contains(e.getPosition()) && !region.getNotContainEntities().contains(e))
                 .forEach(region::removeEntity);
 
             // call enter region events for new entities
