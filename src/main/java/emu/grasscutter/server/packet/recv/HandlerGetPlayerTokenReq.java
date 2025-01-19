@@ -1,6 +1,5 @@
 package emu.grasscutter.server.packet.recv;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.database.DatabaseHelper;
@@ -24,9 +23,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import javax.crypto.Cipher;
 
 import static emu.grasscutter.config.Configuration.ACCOUNT;
-import static emu.grasscutter.config.Configuration.GAME_OPTIONS;
 
-import java.net.http.HttpRequest;
 import java.nio.ByteBuffer;
 import java.security.Signature;
 
@@ -45,6 +42,7 @@ public class HandlerGetPlayerTokenReq extends TypedPacketHandler<GetPlayerTokenR
         public int account_uid;
         public VerifyResultIpInfo ip_info;
     }
+
     @Override
     public void handle(GameSession session, byte[] header, GetPlayerTokenReq req) throws Exception {
 
